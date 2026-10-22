@@ -32,10 +32,11 @@ async def propose_plan(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
             billing = await c.billing()
         fetched_at = datetime.now(UTC)
         plans, source = catalogue(STATIC_PLANS, me.get("plans"))
-        items = choose(analysis.detected, plans)
+        db_plans, _ = catalogue(STATIC_PLANS, me.get("plans"), kind="databases")
+        items = choose(analysis.detected, plans, db_plans)
         if not items:
             return ToolError("nothing_to_price", fa.WARN_NO_APP)
-        balance = billing.get("balance", billing.get("credit"))
+        balance = billing.get("balance")
         balance_toman = int(balance) if isinstance(balance, int | float) else None
         tot = totals(items, balance_toman)
         app0 = next(i for i in items if i["kind"] == "app")

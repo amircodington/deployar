@@ -21,15 +21,32 @@ class Plan:
     toman_hour: int
 
 
-def catalogue(static: list[dict[str, Any]], live: dict[str, Any] | None = None) -> tuple[list[Plan], str]:
-    """Live plans when /v1/me gives a usable shape; otherwise the dated console table (labelled)."""
+def catalogue(
+    static: list[dict[str, Any]], live: dict[str, Any] | None = None, kind: str = "projects"
+) -> tuple[list[Plan], str]:
+    """Live plans from /v1/me when usable; otherwise the dated console table (labelled).
+
+    Live shape (confirmed 2026-10-22): plans[kind][plan_id] = {available, price (toman per HOUR),
+    RAM.amount (GB), CPU.amount, volume (GB)}. `-g2` plans need a paid bundle on top, so only the
+    first-generation plans are offered; their prices match the console's پایه tab.
+    """
     plans: list[Plan] = []
-    for pid, p in ((live or {}).get("projects") or {}).items():
+    for pid, p in ((live or {}).get(kind) or {}).items():
         try:
-            ram = float(p["RAM"]["amount"]) * 1024
-            plans.append(Plan(pid, p.get("name") or pid, int(ram), float(p["CPU"]["amount"]),
-                              int(p["price"]), int(p.get("hourlyPrice") or round(int(p["price"]) / 720))))  # fmt: skip
-        except (KeyError, TypeError, ValueError):
+            if not p.get("available") or pid.endswith("-g2"):
+                continue
+            hourly = float(p["price"])
+            plans.append(
+                Plan(
+                    pid,
+                    pid,
+                    int(float(p["RAM"]["amount"]) * 1024),
+                    float(p["CPU"]["amount"]),
+                    int(round(hourly * 720, -3)),
+                    round(hourly),
+                )
+            )  # fmt: skip  (console rounds to 1,000)
+        except (KeyError, TypeError, ValueError, AttributeError):
             plans = []
             break
     if plans:
@@ -42,7 +59,7 @@ def fit(plans: list[Plan], ram_mb: int) -> Plan:
     return next((p for p in plans if p.ram_mb >= ram_mb), plans[-1])
 
 
-def choose(detected: dict[str, Any], plans: list[Plan]) -> list[dict[str, Any]]:
+def choose(detected: dict[str, Any], plans: list[Plan], db_plans: list[Plan] | None = None) -> list[dict[str, Any]]:
     """One line per app, then the database (bigger when it carries PostGIS-style extensions)."""
     items: list[dict[str, Any]] = []
     for app in detected.get("apps", []):
@@ -55,7 +72,7 @@ def choose(detected: dict[str, Any], plans: list[Plan]) -> list[dict[str, Any]]:
     if db:
         ext = db.get("extensions", [])
         need = 1024 if ext else 512
-        p = fit(plans, need)
+        p = fit(db_plans or plans, need)
         items.append({"kind": "db", "engine": db["kind"], "extensions": ext, "plan_id": p.id, "plan_name": p.name,
                       "ram_mb": p.ram_mb, "cpu": p.cpu, "toman_month": p.toman_month, "toman_hour": p.toman_hour,
                       "why": f"{need}MB: {db['kind']} + {ext}"})  # fmt: skip

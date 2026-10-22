@@ -53,16 +53,17 @@ async def test_plan_card_with_price_source_time_and_balance() -> None:
     from deployar.tools.registry import REGISTRY
 
     respx.get(f"{API}/v1/billing").respond(json=json.loads((CASSETTES / "billing.json").read_text()))
-    respx.get(f"{API}/v1/me").respond(json={"user": {"email": "x@y.z"}, "plans": None})  # no usable plan shape
+    respx.get(f"{API}/v1/me").respond(json=json.loads((CASSETTES / "me.json").read_text()))
     emitted: list[tuple[str, dict[str, Any]]] = []
     ctx = await _ctx(emitted)
     for _ in range(2):  # a second proposal supersedes the first
         out = json.loads((await REGISTRY.run(ctx, "propose_plan", {}))["content"][0]["text"])
-    assert out["status"] == "ok" and out["source"] == "static:liara-console-2026-10-22"
+    assert out["status"] == "ok" and out["source"] == "liara:/v1/me"
     card = emitted[-1][1]
     assert emitted[-1][0] == "plan_proposal"
-    assert card["balance_toman"] == 2_000_000 and card["prices_fetched_at"] and not card["plan_ids_confirmed"]
-    assert card["totals"]["toman_month"] == 3 * 1_650_000
+    assert card["balance_toman"] == 2_000_000 and card["prices_fetched_at"] and card["plan_ids_confirmed"]
+    assert [i["plan_id"] for i in card["items"]] == ["ir-medium", "ir-medium", "ir-medium"]
+    assert card["totals"]["toman_hour"] == 3 * 2292
     conn = await asyncpg.connect(PG_TEST)
     try:
         rows = await conn.fetch("select status::text from plan_proposal where project_id = $1", ctx.project_id)

@@ -1,4 +1,100 @@
-{"user": {"_id": "64e7aaaaaaaaaaaaaaaaaaaa", "email": "owner@example.com", "nationalCode": "0011223344",
-  "storage": {"accessKey": "FAKEACCESSKEY123", "secretKey": "FAKE-SECRET-KEY-should-never-leave"}},
- "plans": {"projects": {"zamin": {"RAM": {"amount": 0.5}, "CPU": {"amount": 0.5}, "price": 950000}}},
- "databaseVersions": {"postgres": ["16.14", "17.10"]}}
+{
+ "user": {
+  "_id": "64e7aaaaaaaaaaaaaaaaaaaa",
+  "email": "owner@example.com",
+  "nationalCode": "0011223344",
+  "storage": {
+   "accessKey": "FAKEACCESSKEY123",
+   "secretKey": "FAKE-SECRET-KEY-should-never-leave"
+  }
+ },
+ "plans": {
+  "projects": {
+   "512mb": {
+    "available": false,
+    "price": 100,
+    "RAM": {
+     "amount": 0.5
+    },
+    "CPU": {
+     "amount": 1
+    },
+    "volume": 5
+   },
+   "ir-small": {
+    "available": true,
+    "price": 1319.44,
+    "RAM": {
+     "amount": 0.5
+    },
+    "CPU": {
+     "amount": 0.5
+    },
+    "volume": 5
+   },
+   "ir-medium": {
+    "available": true,
+    "price": 2291.66,
+    "RAM": {
+     "amount": 1
+    },
+    "CPU": {
+     "amount": 1
+    },
+    "volume": 10
+   },
+   "standard-base": {
+    "available": true,
+    "price": 4097.22,
+    "RAM": {
+     "amount": 2
+    },
+    "CPU": {
+     "amount": 1
+    },
+    "volume": 20
+   },
+   "medium-g2": {
+    "available": true,
+    "price": 1145.83,
+    "RAM": {
+     "amount": 1
+    },
+    "CPU": {
+     "amount": 1
+    },
+    "volume": 10
+   }
+  },
+  "databases": {
+   "ir-small": {
+    "available": true,
+    "price": 1319.44,
+    "RAM": {
+     "amount": 0.5
+    },
+    "CPU": {
+     "amount": 0.5
+    },
+    "volume": 5
+   },
+   "ir-medium": {
+    "available": true,
+    "price": 2291.66,
+    "RAM": {
+     "amount": 1
+    },
+    "CPU": {
+     "amount": 1
+    },
+    "volume": 10
+   }
+  }
+ },
+ "databaseVersions": {
+  "postgres": [
+   "16.14",
+   "17.10"
+  ]
+ }
+}

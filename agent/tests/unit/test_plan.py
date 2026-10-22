@@ -20,10 +20,15 @@ def test_torob_gard_gets_a_plan_per_app_and_a_bigger_db_for_postgis() -> None:
 
 
 def test_live_plans_win_over_the_table_when_their_shape_is_usable() -> None:
-    live = {"projects": {"zamin": {"RAM": {"amount": 0.5}, "CPU": {"amount": 0.5}, "price": 950000},
-                         "mars": {"RAM": {"amount": 1}, "CPU": {"amount": 1}, "price": 1650000}}}  # fmt: skip
+    live = {"projects": {
+        "512mb": {"available": False, "price": 100, "RAM": {"amount": 0.5}, "CPU": {"amount": 1}},
+        "ir-small": {"available": True, "price": 1319.44, "RAM": {"amount": 0.5}, "CPU": {"amount": 0.5}},
+        "ir-medium": {"available": True, "price": 2291.66, "RAM": {"amount": 1}, "CPU": {"amount": 1}},
+        "medium-g2": {"available": True, "price": 1145.83, "RAM": {"amount": 1}, "CPU": {"amount": 1}},
+    }}  # fmt: skip
     plans, source = catalogue(STATIC_PLANS, live)
-    assert source == "liara:/v1/me" and [p.id for p in plans] == ["zamin", "mars"]
+    assert source == "liara:/v1/me" and [p.id for p in plans] == ["ir-small", "ir-medium"]  # no legacy, no g2
+    assert plans[0].toman_hour == 1319 and plans[0].toman_month == 950_000  # price is per hour
     assert catalogue(STATIC_PLANS, {"projects": {"x": {"weird": 1}}})[1].startswith("static:")
 
 

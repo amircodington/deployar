@@ -38,3 +38,14 @@ has the YAML spec) and `docs.liara.ir/references/api/`. Supersedes the guessed t
 
 Not in the public spec (found in the console only): private networks list/create, plan prices with
 toman amounts (console shows hourly/monthly; `/v1/me` `plans` shape to confirm with the live token).
+
+## Confirmed on the live account (2026-10-22)
+
+- `GET /v1/billing` → `{"user": {"balance", "accountType", "minCreditAmount", "isManualMinCredit"}}`;
+  `balance` is toman. Without `teamID` it is the **personal** balance (0 here; the team holds the credit).
+- `GET /v1/me` → `plans.projects` / `plans.databases`: `{plan_id: {available, price, RAM.amount (GB),
+  CPU.amount, volume (GB)}}`. **`price` is toman per hour**; monthly in the console = price × 720,
+  rounded to 1,000. Available first-gen ids: `ir-small` (0.5 GB, 1,319/h = زمین), `ir-medium` (1 GB,
+  2,292/h = مریخ), `standard-base` (2 GB), `standard-plus` (4 GB; DB: `standard-pro`), `pro`, `pro-plus`,
+  `pro-max`. `-g2` ids are half price but need a `projectBundlePlans` bundle; not used yet.
+- `databaseVersions.postgres[]` = `{value, postgisValue, pgvectorValue}` (16.14 → PostGIS 3.6, pgvector 0.8.1).

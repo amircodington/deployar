@@ -18,7 +18,7 @@ from deployar.tools.registry import REGISTRY, ToolContext, deployar_tool
 from deployar.tools.results import Limitation, Ok, ToolError, ToolResult
 
 # Console prices on 2026-10-22, tier پایه (docs/evidence/liara-console-2026-10-22.md); VAT on top.
-# shortcut: static table until the live /v1/me `plans` shape is confirmed with a real token (T-01).
+# Fallback only: live /v1/me plans are used whenever the call works (shape confirmed 2026-10-22).
 STATIC_PLANS = [
     {"name": "زمین", "ram_mb": 512, "cpu": 0.5, "disk_gb": 5, "toman_month": 950_000, "toman_hour": 1_318},
     {"name": "مریخ", "ram_mb": 1024, "cpu": 1, "disk_gb": 10, "toman_month": 1_650_000, "toman_hour": 2_290},
@@ -73,8 +73,8 @@ async def get_balance(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
     async def run() -> ToolResult:
         async with await liara_client(ctx) as c:
             b = await c.billing()
-        # /v1/billing has no secrets; field names are confirmed by the live test (T-01).
-        return Ok({"balance_toman": b.get("balance", b.get("credit")), "billing": b}, source="liara:/v1/billing")
+        return Ok({"balance_toman": b.get("balance"), "min_credit_toman": b.get("minCreditAmount")},
+                  source="liara:/v1/billing")  # fmt: skip
 
     return await _guard(run())
 

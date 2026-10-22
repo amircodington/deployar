@@ -76,8 +76,10 @@ class LiaraClient:
     # --- reads -------------------------------------------------------------------------------
 
     async def billing(self) -> dict[str, Any]:
-        data: dict[str, Any] = await self.request("GET", "/v1/billing")
-        return data
+        """{balance (toman), accountType, minCreditAmount, isManualMinCredit}; the API nests it under `user`."""
+        data = await self.request("GET", "/v1/billing")
+        user: dict[str, Any] = (data or {}).get("user") or data or {}
+        return user
 
     async def me_summary(self) -> dict[str, Any]:
         """Only what we use: /v1/me also carries national code and Object Storage keys."""
