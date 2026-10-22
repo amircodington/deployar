@@ -1,11 +1,24 @@
 """FastAPI app factory and the `deployar-agent` entry point."""
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+from deployar.api import approvals
+from deployar.core.errors import DeployarError
+
+# HTTP status per error code; anything unlisted is a 400.
+_STATUS = {"approval_bad_signature": 403, "approval_not_pending": 409, "no_user": 401}
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Deployar agent")
+    app.include_router(approvals.router)
+
+    @app.exception_handler(DeployarError)
+    async def deployar_error(_request: Request, e: DeployarError) -> JSONResponse:
+        body = {"error": {"code": e.code, "message_fa": e.message_fa, "detail": e.detail}}
+        return JSONResponse(body, status_code=_STATUS.get(e.code, 400))
 
     @app.get("/api/health")
     async def health() -> dict[str, bool]:

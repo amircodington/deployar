@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import ENUM, JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from deployar.core.ids import new_id
+from deployar.models.enums import ENUMS
 
 
 class Base(DeclarativeBase):
@@ -23,7 +24,7 @@ class Base(DeclarativeBase):
 
 def pg_enum(name: str) -> ENUM:
     """Enum types are created by migration 0001."""
-    return ENUM(name=name, create_type=False)
+    return ENUM(*ENUMS[name], name=name, create_type=False)
 
 
 def id_pk() -> Mapped[uuid.UUID]:

@@ -42,7 +42,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-01 | Repo scaffold: agent, web, worker, Compose, Makefile, hooks | P0 | — | — | | ✓ |
 | B-02 | Core: config, ids, crypto vault, redactor, errors, Persian | P0 | B-01 | — | | ✓ |
 | B-03 | Schema v1: migrations 0001–0004 + models | P0 | B-02 | — | | ✓ |
-| B-04 | Approval gate (TDD) | P0 | B-03 | T-19 tests it later | | ○ |
+| B-04 | Approval gate (TDD) | P0 | B-03 | T-19 tests it later | | ✓ |
 | B-05 | Tool registry, result types, `tool_call` recording | P0 | B-03, B-00 | — | | ○ |
 | B-06 | LLM seam, Claude backend, orchestrator, event bus, runs API + SSE | P0 | B-04, B-05 | — | | ○ |
 | B-07 | Web shell: RTL layout, tokens, chat, checklist, approval card, SSE | P0 | B-06 (fake events ok) | T-16, T-21 | | ○ |
@@ -139,6 +139,9 @@ The 50 security points live here. Write the tests first.
   *Redis keys* (`approval:{id}:decision`).
 - **Files**: `agent/src/deployar/runtime/{approvals,gate}.py`, `agent/src/deployar/api/approvals.py`,
   `agent/tests/unit/test_gate.py`, `agent/tests/unit/test_approvals.py`.
+  Also touched: `messages_fa.py` (deny texts, human_only guides), `main.py` (router + error mapping),
+  `models/enums.py` (enum values for reads), migration `0001` (`approval_status` gains `invalidated`;
+  pre-release, so edited in place), `tests/unit/pgtest.py` (shared throwaway DB).
 - **Done when** (each a test): sensitive tool never runs without a consumed approval; expired (10 min),
   replayed, tampered-signature and wrong-user decisions are denied; args changed after approval →
   `invalidated`; a lost Redis push still resolves from Postgres on timeout; human_only tools are always

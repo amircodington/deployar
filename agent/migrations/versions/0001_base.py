@@ -27,7 +27,7 @@ ENUMS = {
     "tool_call_status": [
         "proposed", "awaiting_approval", "running", "succeeded", "failed", "rejected", "expired", "limitation",
     ],
-    "approval_status": ["pending", "approved", "rejected", "expired", "cancelled", "executed", "failed"],
+    "approval_status": ["pending", "approved", "rejected", "expired", "cancelled", "invalidated", "executed", "failed"],
     "approval_decision": ["approve", "reject"],
     "actor_type": ["user", "agent", "worker", "system"],
     "limitation_kind": ["human_only", "api_missing", "plan_restricted"],

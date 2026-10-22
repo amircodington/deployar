@@ -1050,12 +1050,14 @@ stateDiagram-v2
   pending --> approved: signed click, before expires_at
   pending --> rejected: user rejects
   pending --> expired: 10 min passed (sweeper or lazy on read)
-  pending --> cancelled: run cancelled / args changed (new approval issued)
+  pending --> cancelled: run cancelled / no decision before the gate's wait ended
+  approved --> invalidated: args changed before execution (revalidation)
   approved --> executed: tool_call succeeded
   approved --> failed: tool_call failed
   rejected --> [*]
   expired --> [*]
   cancelled --> [*]
+  invalidated --> [*]
   executed --> [*]
   failed --> [*]
 ```

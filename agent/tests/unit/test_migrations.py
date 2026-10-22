@@ -5,50 +5,18 @@ import hashlib
 import os
 import subprocess
 from collections.abc import Iterator
-from pathlib import Path
 
 import asyncpg
 import pytest
-from alembic import command
-from alembic.config import Config
-from sqlalchemy.engine import make_url
+from pgtest import AGENT_DIR, PG_TEST, TEST_URL_STR, fresh_schema
 
-from deployar.core.config import get_settings
 from deployar.models import Base
-
-AGENT_DIR = Path(__file__).resolve().parents[2]
-DEV_URL = make_url(get_settings().database_url)
-TEST_URL = DEV_URL.set(database="deployar_test")
-PG_TEST = TEST_URL.set(drivername="postgresql").render_as_string(hide_password=False)
-PG_ADMIN = DEV_URL.set(drivername="postgresql", database="postgres").render_as_string(hide_password=False)
-
-
-async def _recreate_db() -> None:
-    conn = await asyncpg.connect(PG_ADMIN, timeout=3)
-    try:
-        await conn.execute("drop database if exists deployar_test with (force)")
-        await conn.execute("create database deployar_test")
-    finally:
-        await conn.close()
-
-
-def _alembic() -> Config:
-    cfg = Config(str(AGENT_DIR / "alembic.ini"))
-    cfg.set_main_option("sqlalchemy.url", TEST_URL.render_as_string(hide_password=False))
-    cfg.attributes["configure_logger"] = False
-    return cfg
+from deployar.models.enums import ENUMS
 
 
 @pytest.fixture(scope="module", autouse=True)
 def schema() -> Iterator[None]:
-    try:
-        asyncio.run(_recreate_db())
-    except (OSError, asyncpg.PostgresError) as e:
-        pytest.skip(f"Compose Postgres not reachable ({e}); run `docker compose up -d`")
-    cfg = _alembic()
-    command.upgrade(cfg, "head")
-    command.downgrade(cfg, "base")
-    command.upgrade(cfg, "head")
+    fresh_schema(round_trip=True)
     yield
 
 
@@ -68,6 +36,18 @@ async def test_models_match_database_columns() -> None:
             in_db = {(r["column_name"], r["nullable"]) for r in rows}
             in_model = {(c.name, bool(c.nullable)) for c in table.columns}
             assert in_db == in_model, f"{table.name}: db-only {in_db - in_model}, model-only {in_model - in_db}"
+    finally:
+        await conn.close()
+
+
+async def test_models_match_database_enums() -> None:
+    conn = await _conn()
+    try:
+        rows = await conn.fetch(
+            "select t.typname, array_agg(e.enumlabel order by e.enumsortorder) as labels "
+            "from pg_type t join pg_enum e on e.enumtypid = t.oid group by t.typname"
+        )
+        assert {r["typname"]: list(r["labels"]) for r in rows} == ENUMS
     finally:
         await conn.close()
 
@@ -170,7 +150,7 @@ async def test_audit_log_is_append_only_and_chained() -> None:
 
 
 def test_seed_creates_the_single_user_once() -> None:
-    env = {**os.environ, "DATABASE_URL": TEST_URL.render_as_string(hide_password=False)}
+    env = {**os.environ, "DATABASE_URL": TEST_URL_STR}
     for _ in range(2):
         subprocess.run(
             ["uv", "run", "deployar-seed", "--email", "Mohammad@Deployar.ir"],
