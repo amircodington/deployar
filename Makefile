@@ -1,5 +1,5 @@
 # Deployar tasks. `make check` runs before every push (.githooks/pre-push).
-.PHONY: setup dev down check agent-check web-check migrate eval
+.PHONY: setup dev down check agent-check web-check migrate seed eval
 
 AGENT = cd agent &&
 WEB = cd web &&
@@ -32,8 +32,11 @@ web-check:
 	$(WEB) pnpm typecheck
 	$(WEB) pnpm test
 
-migrate:  ## alembic lands in B-03
+migrate:
 	$(AGENT) uv run alembic upgrade head
+
+seed:  ## make seed EMAIL=you@example.com — the single user (idempotent)
+	$(AGENT) uv run deployar-seed --email $(EMAIL)
 
 eval:  ## SRE eval set, lands in B-17
 	$(AGENT) uv run python -m deployar.evals.run

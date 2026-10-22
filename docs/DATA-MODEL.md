@@ -164,23 +164,25 @@ erDiagram
 - Check: `(status = 'revoked') = (revoked_at is not null)`.
 - Column privilege: role `deployar_readonly` has no `select` on `token_ciphertext`.
 
-### github_connection — a GitHub App installation
+### github_connection — a fine-grained GitHub token (BUILD.md defaults; GitHub App is P4-optional)
 
 | column | type | null | default | notes |
 |---|---|---|---|---|
-| id | uuid | no | `uuid_generate_v7()` | PK |
+| id | uuid | no | `uuid_generate_v7()` | PK; also part of the AES-GCM AAD |
 | user_id | uuid | no | | FK `"user"` **on delete cascade** |
-| installation_id | bigint | no | | GitHub App installation id |
-| account_login | text | no | | `amox` |
-| account_type | text | no | | check `in ('User','Organization')` |
-| repo_selection | text | no | | check `in ('all','selected')` |
-| permissions | jsonb | no | `'{}'` | as GitHub reports it: `{"contents":"write","pull_requests":"write","metadata":"read"}` |
-| suspended_at | timestamptz | yes | | from the `installation.suspend` webhook |
+| token_ciphertext | bytea | no | | same format and keys as `liara_connection` |
+| key_version | smallint | no | | |
+| token_last4 | text | no | | check `length(token_last4)=4` |
+| account_login | text | no | | `amox`, from `GET /user` when the token is saved |
+| status | connection_status | no | `'active'` | |
+| expires_at | timestamptz | yes | | fine-grained tokens expire; user enters it, or 401 marks `expired` |
+| last_verified_at | timestamptz | yes | | |
 | created_at | timestamptz | no | `now()` | |
+| revoked_at | timestamptz | yes | | check `(status = 'revoked') = (revoked_at is not null)` |
 
-- Unique: `installation_id`.
-- No token column: installation tokens (1 h) are minted per job from the App private key in env and
-  held in memory only.
+- Unique partial: `(user_id) where status = 'active'`.
+- Column privilege: role `deployar_readonly` has no `select` on `token_ciphertext`.
+- Needed permissions: contents read/write, pull requests write, metadata read (B-09, B-22).
 
 ## Projects & deploys
 
@@ -573,6 +575,11 @@ end $$;
 create trigger tool_call_gate before update of status on tool_call
   for each row execute function tool_call_gate();
 ```
+
+As built in `0003_agent_core` the trigger is stricter than this sketch: it fires on insert and on
+any update, treats `running` and `succeeded` as released states (so a row cannot be inserted or
+jumped straight to `succeeded`), and rejects an `args_hash` change once released. A sensitive call
+may still go `proposed → failed` without an approval, because nothing ran.
 
 ### approval — a one-time, signed, 10-minute release for one sensitive tool call
 

@@ -41,7 +41,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-00 | Agent SDK spike (local login, in-process MCP, can_use_tool) | P0 | — | — | | ✓ |
 | B-01 | Repo scaffold: agent, web, worker, Compose, Makefile, hooks | P0 | — | — | | ✓ |
 | B-02 | Core: config, ids, crypto vault, redactor, errors, Persian | P0 | B-01 | — | | ✓ |
-| B-03 | Schema v1: migrations 0001–0004 + models | P0 | B-02 | — | | ○ |
+| B-03 | Schema v1: migrations 0001–0004 + models | P0 | B-02 | — | | ✓ |
 | B-04 | Approval gate (TDD) | P0 | B-03 | T-19 tests it later | | ○ |
 | B-05 | Tool registry, result types, `tool_call` recording | P0 | B-03, B-00 | — | | ○ |
 | B-06 | LLM seam, Claude backend, orchestrator, event bus, runs API + SSE | P0 | B-04, B-05 | — | | ○ |
@@ -125,7 +125,8 @@ with an in-process MCP server and a `can_use_tool` callback that can block on an
 - **Read**: `DATA-MODEL.md` → *Identity & connections*, *Conversation, runs & approvals*,
   *Audit & evals* (`audit_log`, `limitation_event`), *Migration plan*.
 - **Files**: `agent/alembic.ini`, `agent/migrations/versions/0001_base.py` … `0004_audit_limits.py`,
-  `agent/src/deployar/models/*.py`, `agent/src/deployar/core/db.py`, `agent/tests/unit/test_migrations.py`.
+  `agent/src/deployar/models/*.py`, `agent/src/deployar/core/db.py`, `agent/tests/unit/test_migrations.py`,
+  `agent/src/deployar/seed.py` (`deployar-seed`, `make seed EMAIL=…`).
 - **Done when**: `alembic upgrade head && downgrade base && upgrade head` passes on the Compose PG16;
   the `tool_call` gate trigger rejects a sensitive row marked executed without a consumed approval;
   `audit_log` rejects UPDATE/DELETE; a seed command creates the single user.

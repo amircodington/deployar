@@ -36,9 +36,7 @@ def test_sensitive_keys_are_masked() -> None:
 
 
 def test_known_secret_shapes_are_scrubbed() -> None:
-    text = redact(
-        "DATABASE_URL=postgres://app:hunter2@db:5432/x APPROVAL_SECRET=abc123 Authorization: Bearer xyz.789"
-    )
+    text = redact("DATABASE_URL=postgres://app:hunter2@db:5432/x APPROVAL_SECRET=abc123 Authorization: Bearer xyz.789")
     assert "hunter2" not in text
     assert "abc123" not in text
     assert "xyz.789" not in text
