@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Icon } from "@/components/Icon";
+import { AppsCard, StatTiles } from "@/components/dash/Overview";
 import { RunChecklist } from "@/components/checklist/RunChecklist";
+import { StatusChip } from "@/components/ui";
 import { AgentError, api } from "@/lib/api";
 import { fa } from "@/lib/fa";
 import { addUserMessage, applyEvent, emptyView, setApproval, type View } from "@/lib/runState";
 import { subscribeRun } from "@/lib/sse";
+import { useDashboard } from "@/lib/useDashboard";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
 
@@ -20,18 +21,23 @@ const STATE_LINE: Record<View["phase"], string> = {
   cancelled: fa.stateFailed,
 };
 
-/** The shell: greeting, conversation with cards, live checklist (side panel on desktop, inline on phone). */
+/** Home: greeting, live tiles, the conversation with its cards, and the run checklist beside it. */
 export function Workspace({ projectId }: { projectId?: string }) {
   const [view, setView] = useState<View>(emptyView);
   const [reconnecting, setReconnecting] = useState(false);
   const conversation = useRef<string | undefined>(undefined);
   const unsubscribe = useRef<() => void>(() => {});
   const bottom = useRef<HTMLDivElement>(null);
+  const dash = useDashboard();
+  const { reload } = dash;
 
   useEffect(() => () => unsubscribe.current(), []);
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "end" }); // returns a Promise in newer browsers; never return it
+    if (view.items.length) bottom.current?.scrollIntoView({ block: "end", behavior: "smooth" }); // never return it
   }, [view.items.length]);
+  useEffect(() => {
+    if (view.phase === "succeeded" || view.phase === "failed") reload(); // an action may have changed credit or apps
+  }, [view.phase, reload]);
 
   const send = useCallback(
     async (text: string) => {
@@ -74,44 +80,74 @@ export function Workspace({ projectId }: { projectId?: string }) {
   const busy = view.phase === "running" || view.phase === "awaiting_approval";
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-[1280px] flex-col md:p-8">
-      <div className="flex flex-1 flex-col bg-shell md:rounded-[36px] md:shadow-shell">
-        <header className="flex items-center gap-3 px-4 pb-2 pt-[calc(16px+env(safe-area-inset-top,0px))] md:px-8 md:pt-8">
-          <span className="text-[15px] font-bold">{fa.brand}</span>
-          <span className="flex-1" />
-          <Link href="/settings/connections" className="pressable grid size-11 place-items-center rounded-full hover:bg-raised" aria-label={fa.settings}>
-            <Icon name="settings" />
-          </Link>
-        </header>
+    <div className="flex flex-1 flex-col gap-5 px-4 pb-4 pt-4 md:gap-6 md:px-8">
+      <section>
+        <p className="text-[32px] font-light leading-10 text-ink-faint md:text-[44px] md:leading-[52px]">{fa.hello}</p>
+        <p key={view.phase} className="rise text-[32px] font-extrabold leading-10 md:text-[44px] md:leading-[52px]">
+          {STATE_LINE[view.phase]}
+        </p>
+        {view.summary_fa && <p className="rise mt-2 text-[15px] text-ink-muted">{view.summary_fa}</p>}
+      </section>
 
-        <section className="px-4 pb-6 pt-4 md:px-8 md:pb-12">
-          <p className="text-[32px] font-light leading-10 text-ink-faint md:text-[44px] md:leading-[52px]">{fa.hello}</p>
-          <p className="text-[32px] font-extrabold leading-10 md:text-[44px] md:leading-[52px]">{STATE_LINE[view.phase]}</p>
-          {view.summary_fa && <p className="mt-2 text-[15px] text-ink-muted">{view.summary_fa}</p>}
-        </section>
+      <StatTiles data={dash.data} phase={view.phase} />
 
-        <div className="grid flex-1 gap-6 px-4 md:px-8 lg:grid-cols-[1fr_320px]">
-          <main className="flex min-w-0 flex-col gap-4 pb-4">
+      <div className="grid flex-1 grid-cols-[minmax(0,1fr)] gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <section
+          className="tile-in flex min-h-[460px] min-w-0 flex-col rounded-[28px] bg-card"
+          style={{ "--i": 4 } as React.CSSProperties}
+        >
+          <header className="flex items-center gap-3 px-5 pt-5">
+            <h2 className="flex-1 text-lg font-medium">{fa.conversation}</h2>
+            <StatusChip tone={busy ? (view.phase === "awaiting_approval" ? "warn" : "ok") : "off"} live={busy}>
+              {fa.phase[view.phase]}
+            </StatusChip>
+          </header>
+
+          <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-5">
             {view.steps.length > 0 && (
-              <div className="rounded-[24px] bg-card p-4 lg:hidden">
+              <div className="rounded-[20px] bg-raised/50 p-3 lg:hidden">
                 <RunChecklist steps={view.steps} />
               </div>
             )}
-            <MessageList items={view.items} onDecide={decide} />
+            {view.items.length === 0 ? (
+              <div className="flex flex-1 flex-col justify-end gap-3">
+                <p className="text-[13px] text-ink-muted">{fa.tryThese}</p>
+                <div className="flex flex-wrap gap-2">
+                  {fa.suggestions.map((s, i) => (
+                    <button
+                      key={s.label}
+                      type="button"
+                      onClick={() => send(s.text)}
+                      className="pressable tile-in max-w-full truncate rounded-full border border-line px-4 py-2.5 text-start text-[14px] hover:bg-raised"
+                      style={{ "--i": 6 + i } as React.CSSProperties}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <MessageList items={view.items} onDecide={decide} />
+            )}
             {reconnecting && busy && <p className="text-[13px] text-ink-muted">{fa.connectionLost}</p>}
             <div ref={bottom} />
-          </main>
-          <aside className="hidden lg:block">
-            <div className="sticky top-8 rounded-[36px] bg-card p-5">
-              <h2 className="mb-3 text-lg font-medium">{fa.checklist}</h2>
-              <RunChecklist steps={view.steps} />
-            </div>
-          </aside>
-        </div>
+          </div>
 
-        <div className="sticky bottom-0 bg-shell/90 px-4 pb-[calc(12px+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur md:rounded-b-[36px] md:px-8 md:pb-8">
-          <Composer onSend={send} busy={busy} />
-        </div>
+          <div className="sticky bottom-0 rounded-b-[28px] bg-card/90 px-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))] pt-2 backdrop-blur md:px-4 md:pb-4">
+            <Composer onSend={send} busy={busy} />
+          </div>
+        </section>
+
+        <aside className="flex flex-col gap-4 md:gap-6">
+          <section
+            className="tile-in hidden rounded-[28px] bg-card p-5 lg:block"
+            style={{ "--i": 5 } as React.CSSProperties}
+          >
+            <h2 className="mb-3 text-lg font-medium">{fa.checklist}</h2>
+            <RunChecklist steps={view.steps} />
+          </section>
+          <AppsCard data={dash.data} />
+        </aside>
       </div>
     </div>
   );

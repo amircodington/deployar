@@ -17,7 +17,7 @@ export function Composer({ onSend, busy }: { onSend: (text: string) => void; bus
         e.preventDefault();
         send();
       }}
-      className="flex items-end gap-2 rounded-[24px] bg-card p-2"
+      className="flex items-end gap-2 rounded-[24px] bg-raised p-2 transition-shadow duration-150 focus-within:shadow-[0_0_0_1px_var(--line)]"
     >
       <textarea
         value={text}

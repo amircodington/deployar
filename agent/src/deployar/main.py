@@ -4,20 +4,20 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from deployar.api import approvals, connections, events, runs, session
+from deployar.api import approvals, connections, dashboard, events, runs, session
 from deployar.core.errors import DeployarError
 
 # HTTP status per error code; anything unlisted is a 400.
 _STATUS = {
     "approval_bad_signature": 403, "approval_not_pending": 409, "no_user": 401, "unauthorized": 401,
     "bad_passphrase": 401, "not_found": 404, "no_liara_connection": 404, "liara_unauthorized": 400,
-    "liara_unreachable": 502, "no_github_connection": 404, "github_unauthorized": 400,
+    "liara_unreachable": 502, "app_not_found": 404, "no_github_connection": 404, "github_unauthorized": 400,
 }  # fmt: skip
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Deployar agent")
-    for module in (session, runs, events, approvals, connections):
+    for module in (session, runs, events, approvals, connections, dashboard):
         app.include_router(module.router)
 
     @app.exception_handler(DeployarError)

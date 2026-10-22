@@ -32,7 +32,50 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
+/** Every block carries where and when it came from (hard rule 3). */
+export interface Sourced {
+  source: string;
+  observed_at?: string;
+}
+export interface LiaraApp {
+  name: string;
+  type: string | null;
+  status: string | null;
+  plan: string | null;
+  deployed: boolean | null;
+}
+export interface Dashboard {
+  observed_at: string;
+  liara: null | {
+    token_last4: string;
+    team_id: string | null;
+    account: string | null;
+    verified_at: string;
+    balance?: Sourced & { toman: number | null };
+    apps?: Sourced & { items: LiaraApp[] };
+    error?: ApiError;
+  };
+  github: null | { login: string; token_last4: string; verified_at: string };
+}
+export interface LogLine {
+  ts: string | null;
+  type: string | null;
+  message: string | null;
+}
+export interface Monitor {
+  name: string;
+  minutes: number;
+  observed_at: string;
+  status: Sourced & { status: string | null; plan: string | null; scale: number | null; type: string | null };
+  logs: Sourced & { lines: LogLine[] };
+  metrics: null | (Sourced & { memory: [number, number][]; cpu: [number, number][] });
+  releases: Sourced & { current: string | null; items: { id: string; state: string; created_at: string }[] };
+}
+
 export const api = {
+  dashboard: () => call<Dashboard>("/api/dashboard"),
+  monitor: (name: string, minutes: number) =>
+    call<Monitor>(`/api/apps/${encodeURIComponent(name)}/monitor?minutes=${minutes}`),
   me: () => call<{ user_id: string }>("/api/session"),
   login: (passphrase: string) =>
     call<{ user_id: string }>("/api/session", { method: "POST", body: JSON.stringify({ passphrase }) }),

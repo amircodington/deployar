@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { Workspace } from "@/components/chat/Workspace";
 
@@ -15,7 +16,9 @@ async function Project({ params }: Pick<PageProps<"/p/[projectId]">, "params">) 
   const { projectId } = await params;
   return (
     <AuthGate>
-      <Workspace projectId={projectId} />
+      <AppShell>
+        <Workspace projectId={projectId} />
+      </AppShell>
     </AuthGate>
   );
 }

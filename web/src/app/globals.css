@@ -163,7 +163,110 @@ a,
   animation: pulse 1.6s ease-in-out infinite;
 }
 
+
+/* Tiles enter once, staggered 50ms (page load is occasional, so it may delight; never blocks input). */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.tile-in {
+  animation: tile-in 420ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+
+/* A chart reveals left to right on first paint (clip-path is composited; no path-length math). */
+.reveal-x {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 900ms var(--ease-out);
+  @starting-style {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+.fade-area {
+  transition: opacity 600ms ease;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/* Disclosure: grid rows 0fr → 1fr animates to the content's real height. */
+.disclose {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 260ms var(--ease-out), opacity 200ms ease;
+}
+.disclose[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.disclose > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* State swaps (saved ✓, copied) cross-fade through a short blur so two states never show side by side. */
+.swap {
+  transition: opacity 200ms ease, filter 200ms ease, transform 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.94);
+  }
+}
+
+/* The one ambient loop: the health pulse. */
+@keyframes ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.ping::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: ping 2.2s var(--ease-out) infinite;
+}
+
+.glow {
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in oklab, var(--amber) 14%, transparent), transparent 60%),
+    radial-gradient(90% 70% at 0% 100%, color-mix(in oklab, var(--violet) 12%, transparent), transparent 60%),
+    var(--card);
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .tile-in {
+    animation-name: fade-only;
+  }
+  .reveal-x {
+    transition: none;
+  }
+  .swap {
+    @starting-style {
+      transform: none;
+      filter: none;
+    }
+  }
+  .ping::after {
+    animation: none;
+  }
+
   .rise {
     transition: opacity 240ms ease;
     @starting-style {
@@ -176,5 +279,11 @@ a,
   .spinner,
   .pulse {
     animation-duration: 3s;
+  }
+}
+
+@keyframes fade-only {
+  from {
+    opacity: 0;
   }
 }

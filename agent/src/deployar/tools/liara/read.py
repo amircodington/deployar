@@ -8,6 +8,7 @@ import uuid
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from deployar import messages_fa as fa
 from deployar.clients.liara import LiaraClient, LiaraNotFound
@@ -29,10 +30,14 @@ STATIC_SOURCE = "static:liara-console-2026-10-22"
 
 
 async def liara_client(ctx: ToolContext) -> LiaraClient:
+    return await liara_client_for(ctx.sessions, ctx.user_id)
+
+
+async def liara_client_for(sessions: async_sessionmaker[AsyncSession], user_id: uuid.UUID) -> LiaraClient:
     """The user's active connection, decrypted for this call only."""
-    async with ctx.sessions() as s:
+    async with sessions() as s:
         conn = await s.scalar(
-            select(LiaraConnection).where(LiaraConnection.user_id == ctx.user_id, LiaraConnection.status == "active")
+            select(LiaraConnection).where(LiaraConnection.user_id == user_id, LiaraConnection.status == "active")
         )
     if conn is None:
         raise DeployarError("no_liara_connection", fa.NO_LIARA_CONNECTION)
