@@ -1,0 +1,51 @@
+/** Typed client for the agent (ARCHITECTURE.md §8). Same-origin: /api is rewritten to the agent. */
+
+export type RunStatus = "queued" | "running" | "awaiting_approval" | "succeeded" | "failed" | "cancelled";
+export type Risk = "read" | "sensitive" | "human_only";
+export type StepStatus = "pending" | "running" | "blocked" | "done" | "failed" | "skipped";
+
+export interface ApiError {
+  code: string;
+  message_fa: string;
+  detail?: string;
+}
+
+export class AgentError extends Error {
+  constructor(
+    public status: number,
+    public error: ApiError,
+  ) {
+    super(error.message_fa);
+  }
+}
+
+async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    credentials: "same-origin",
+    headers: { "content-type": "application/json", ...init.headers },
+  });
+  const body = res.status === 204 ? null : await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new AgentError(res.status, body?.error ?? { code: `http_${res.status}`, message_fa: "خطای ارتباط با دستیار" });
+  }
+  return body as T;
+}
+
+export const api = {
+  me: () => call<{ user_id: string }>("/api/session"),
+  login: (passphrase: string) =>
+    call<{ user_id: string }>("/api/session", { method: "POST", body: JSON.stringify({ passphrase }) }),
+  startRun: (body: { text: string; project_id?: string; conversation_id?: string; mode?: string }) =>
+    call<{ run_id: string; conversation_id: string }>("/api/runs", { method: "POST", body: JSON.stringify(body) }),
+  decide: (approvalId: string, decision: "approve" | "reject", signature: string) =>
+    call<{ status: string }>(`/api/approvals/${approvalId}/decision`, {
+      method: "POST",
+      body: JSON.stringify({ decision, signature }),
+    }),
+  connectLiara: (token: string) =>
+    call<{ id: string; token_last4: string }>("/api/connections/liara", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+};

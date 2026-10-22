@@ -14,6 +14,7 @@ from deployar.core.config import get_settings
 from deployar.core.db import get_sessionmaker
 from deployar.core.errors import DeployarError
 from deployar.llm.claude_backend import ClaudeBackend
+from deployar.llm.fake_backend import FakeBackend, demo_registry
 from deployar.runtime.approvals import ApprovalService
 from deployar.runtime.events import EventBus
 from deployar.runtime.orchestrator import Runtime
@@ -32,6 +33,8 @@ def get_runtime() -> Runtime:
     s = get_settings()
     sessions = get_sessionmaker()
     approvals = ApprovalService(sessions, get_redis(), base64.b64decode(s.approval_secret.get_secret_value()))
+    if s.llm_backend == "fake":
+        return Runtime(sessions, EventBus(get_redis()), approvals, FakeBackend(delay_s=0.8), demo_registry())
     return Runtime(sessions, EventBus(get_redis()), approvals, ClaudeBackend(), REGISTRY)
 
 

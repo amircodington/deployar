@@ -45,7 +45,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-04 | Approval gate (TDD) | P0 | B-03 | T-19 tests it later | | ✓ |
 | B-05 | Tool registry, result types, `tool_call` recording | P0 | B-03, B-00 | — | | ✓ |
 | B-06 | LLM seam, Claude backend, orchestrator, event bus, runs API + SSE | P0 | B-04, B-05 | — | | ✓ |
-| B-07 | Web shell: RTL layout, tokens, chat, checklist, approval card, SSE | P0 | B-06 (fake events ok) | T-16, T-21 | | ○ |
+| B-07 | Web shell: RTL layout, tokens, chat, checklist, approval card, SSE | P0 | B-06 (fake events ok) | T-16, T-21 | | ✓ |
 | B-08 | LiaraClient + connections + read tools | P0 | B-05 | T-01, T-04 | | ○ |
 | B-09 | GitHub client + repo analyzer + `analyze_repo` | P1 | B-05 | T-06, T-13 | | ○ |
 | B-10 | Plan proposal (`list_plans`, price, plan card) + migration 0101 | P1 | B-08, B-09 | T-04 | | ○ |
@@ -181,6 +181,8 @@ The 50 security points live here. Write the tests first.
   (ApprovalCard, LimitationBox, HumanOnlyCard first; other cards land with their task),
   `web/src/lib/{api,sse,persian,money,fa}.ts`, `web/public/fonts/` (Vazirmatn, self-hosted),
   `web/src/app/globals.css` (`@theme` from `tokens.json`).
+  Also: `LLM_BACKEND=fake` (agent) plays a scripted turn through the real gate for UI work without
+  Claude usage; `next.config.ts` has `compress: false` because gzip buffered the proxied SSE stream.
 - **Done when**: RTL at 360 px and desktop; SSE reconnects; tapping approve posts the signed decision
   and the checklist moves on; no request leaves localhost (rule 5, check the network tab); cards render
   from fixtures in vitest.

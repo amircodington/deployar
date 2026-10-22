@@ -5,12 +5,11 @@ import base64
 import json
 import os
 import uuid
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import Iterator
 from typing import Any
 
 import httpx
 import pytest
-from claude_agent_sdk import PermissionResultAllow, ToolPermissionContext
 from pgtest import PG_TEST, REDIS_TEST, TEST_URL_STR, fresh_schema
 
 PASSPHRASE = "test-passphrase"
@@ -40,43 +39,6 @@ def _clear_caches() -> None:
 
     for f in (config.get_settings, db.get_engine, db.get_sessionmaker, deps.get_redis, deps.get_runtime):
         f.cache_clear()
-
-
-class FakeLLM:
-    """Plays a fixed turn: text, a read tool, a sensitive tool, closing text — asking can_use_tool like the SDK."""
-
-    async def run(self, *, prompt: str, system_prompt: str, registry: Any, tool_ctx: Any, can_use_tool: Any,
-                  max_turns: int, resume: str | None = None) -> AsyncIterator[Any]:  # fmt: skip
-        from deployar.llm.client import Done, TextDelta, ToolResult, ToolUse
-
-        yield TextDelta("بررسی می‌کنم.")
-        for i, (name, args) in enumerate([("get_logs", {"since": "1h"}), ("restart_app", {"project": "p"})]):
-            yield ToolUse(f"tu{i}", f"mcp__deployar__{name}", args)
-            perm = await can_use_tool(f"mcp__deployar__{name}", args, ToolPermissionContext(tool_use_id=f"tu{i}"))
-            if isinstance(perm, PermissionResultAllow):
-                out = await registry.run(tool_ctx, name, args)
-                yield ToolResult(f"tu{i}", json.loads(out["content"][0]["text"])["status"])
-            else:
-                yield ToolResult(f"tu{i}", "error")
-        yield TextDelta("انجام شد.")
-        yield Done(session_id="fake-session")
-
-
-def fake_registry() -> Any:
-    from deployar.tools.registry import Registry
-    from deployar.tools.results import Ok
-
-    reg = Registry()
-
-    @reg.tool("get_logs", group="liara", risk="read", description="logs", input_schema={"since": str})
-    async def get_logs(ctx: Any, args: dict[str, Any]) -> Ok:
-        return Ok({"lines": ["ok"]}, source="liara:logs")
-
-    @reg.tool("restart_app", group="liara", risk="sensitive", description="restart", input_schema={"project": str})
-    async def restart_app(ctx: Any, args: dict[str, Any]) -> Ok:
-        return Ok({"restarted": True}, source="liara:restart")
-
-    return reg
 
 
 async def _project_for_first_user() -> uuid.UUID:
@@ -109,12 +71,13 @@ def parse_sse(body: str) -> list[tuple[str, str, dict[str, Any]]]:
 
 async def test_run_streams_events_and_replays_after_last_event_id() -> None:
     from deployar.api.deps import get_runtime
+    from deployar.llm.fake_backend import FakeBackend, demo_registry
     from deployar.main import app
     from deployar.runtime.events import EVENT_MODELS, Envelope
 
     project_id = await _project_for_first_user()
     rt = get_runtime()
-    rt.llm, rt.registry = FakeLLM(), fake_registry()
+    rt.llm, rt.registry = FakeBackend(), demo_registry()
 
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:

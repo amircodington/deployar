@@ -1,24 +1,181 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/Vazirmatn[wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* Brand tokens (docs/design/brand/tokens.json). Dark is the face; light is complete. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ground: #0e0d10;
+  --shell: #141217;
+  --card: #1b191e;
+  --raised: #24212a;
+  --line: #2f2b35;
+  --ink: #f3f0eb;
+  --ink-muted: #a39dab;
+  --ink-faint: #7a7482;
+  --amber: #ffb547;
+  --amber-ink: #ffb547;
+  --amber-soft: #3a2a12;
+  --on-amber: #1b1203;
+  --peach: #f7d9b5;
+  --mint: #7ee0c3;
+  --mint-soft: #12302a;
+  --violet: #8e8af2;
+  --red: #f26b6b;
+  --red-soft: #2e1517;
+  --limit: #b4aebb;
+  --limit-soft: #221f26;
+  --shadow-shell: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --ground: #f4f2ee;
+    --shell: #fbfaf8;
+    --card: #ffffff;
+    --raised: #eeebe6;
+    --line: #dedad3;
+    --ink: #17151a;
+    --ink-muted: #625c68;
+    --ink-faint: #8a8490;
+    --amber: #b86e00;
+    --amber-ink: #8a5200;
+    --amber-soft: #fbebd3;
+    --peach: #e9c49a;
+    --mint: #0d5e46;
+    --mint-soft: #ddf3ea;
+    --violet: #5550c8;
+    --red: #b03030;
+    --red-soft: #f9e1e1;
+    --limit: #5e5965;
+    --limit-soft: #eceae6;
+    --shadow-shell: 0 30px 60px -24px rgba(23, 21, 26, 0.18);
+    color-scheme: light;
   }
 }
 
+@theme inline {
+  --color-ground: var(--ground);
+  --color-shell: var(--shell);
+  --color-card: var(--card);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-amber: var(--amber);
+  --color-amber-ink: var(--amber-ink);
+  --color-amber-soft: var(--amber-soft);
+  --color-on-amber: var(--on-amber);
+  --color-mint: var(--mint);
+  --color-mint-soft: var(--mint-soft);
+  --color-violet: var(--violet);
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+  --color-limit: var(--limit);
+  --color-limit-soft: var(--limit-soft);
+  --font-sans: "Vazirmatn", "IRANYekan", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 36px;
+  --shadow-shell: var(--shadow-shell);
+  --ease-out: var(--ease-out);
+}
+
+/* Mobile baseline (mobile-native skill): no tap flash, no input zoom, no pull-to-refresh hijack. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  background: var(--ground);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
+}
+
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Press feedback on every pressable thing; hover only where hover exists (Tailwind v4 hover: is gated). */
+.pressable {
+  transition: transform 140ms var(--ease-out), background-color 140ms ease;
+}
+.pressable:active {
+  transform: scale(0.97);
+}
+
+/* Enter: opacity + 6px rise, 240ms (brand Motion). */
+.rise {
+  transition: opacity 240ms var(--ease-out), transform 240ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.mono {
+  font-family: var(--font-mono);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.pulse {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    transition: opacity 240ms ease;
+    @starting-style {
+      transform: none;
+    }
+  }
+  .pressable:active {
+    transform: none;
+  }
+  .spinner,
+  .pulse {
+    animation-duration: 3s;
+  }
 }

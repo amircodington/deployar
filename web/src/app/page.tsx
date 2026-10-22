@@ -1,7 +1,10 @@
+import { AuthGate } from "@/components/AuthGate";
+import { Workspace } from "@/components/chat/Workspace";
+
 export default function Home() {
   return (
-    <main className="flex flex-1 items-center justify-center">
-      <h1 className="text-2xl font-semibold">دیپلویار</h1>
-    </main>
+    <AuthGate>
+      <Workspace />
+    </AuthGate>
   );
 }
