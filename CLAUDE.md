@@ -4,6 +4,12 @@ Persian assistant that deploys a developer's app to Liara and runs an SRE loop (
 causes → approval → action → verify). Starcoach hackathon, Liara challenge (300 pts). Talk with
 Mohammad in Persian; code, commits and docs in English; UI text in Persian.
 
+## Start here (picking up a task cold)
+- Code tasks: `docs/BUILD.md` (ids `B-xx`, board + per-task Read / Files / Done when / Depends).
+  Student tasks: `docs/TASKS.md` (`T-xx`). Do the task's Read list, not every doc.
+- State lives on the BUILD.md board; tick it in the same commit that finishes a task.
+- Commits: `B-xx: <what>`. Day one: `cp .env.example .env`, `docker compose up -d`, then B-00, B-01.
+
 ## Read first
 - `docs/00-BRAINSTORM-AND-PLAN.md`, `docs/decisions.md` (numbered; never reverse silently).
 - `docs/SYSTEM-DESIGN.md`, `docs/ARCHITECTURE.md`, `docs/DATA-MODEL.md`, `docs/TASKS.md`.
@@ -14,6 +20,8 @@ Mohammad in Persian; code, commits and docs in English; UI text in Persian.
 `web/` Next.js 16 + TS + Tailwind v4 (pnpm) · `agent/` Python 3.13 FastAPI on uv with the Claude
 Agent SDK driving the local Claude Code login (LLMClient seam; BoxAPI later) · `worker/` arq ·
 PostgreSQL 16 · Redis 7 · Docker Compose · Makefile `dev / check / push-test`. No amox-os.
+Worker code lives in `agent/src/hamkar/worker/` (same package, own Compose service); the agent runs
+on the host because the Claude login is there. Layout: `ARCHITECTURE.md §10`.
 
 ## Hard rules
 1. Approval is enforced in code (`can_use_tool` + DB trigger), never only in the prompt. Risk

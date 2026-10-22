@@ -1,0 +1,19 @@
+# B-01 adds the web and worker services. The agent runs on the host (ADR 11).
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: hamkar
+      POSTGRES_PASSWORD: hamkar
+      POSTGRES_DB: hamkar
+    command: ["postgres", "-c", "log_parameter_max_length=0", "-c", "log_statement=ddl"]
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hamkar"]
+      interval: 5s
+  redis:
+    image: redis:7
+    ports: ["127.0.0.1:6379:6379"]
+volumes:
+  pgdata:
