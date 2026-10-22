@@ -1089,10 +1089,10 @@ tool,risk_class_expected,called,result(ok/pending/limitation/error),executed_wit
 
 **Needs Mohammad:** Real money on the demo account. Mohammad drives and clicks every approval; you time and record.
 
-**Why:** Decision #5: the demo deploys the Torob app (راهبر خرید) with this assistant. Find every slow or failing step before the camera does.
+**Why:** Decision #5: the demo deploys the Torob app (ترب‌گرد) with this assistant. Find every slow or failing step before the camera does.
 
 **Inputs:**
-- Torob repo `~/Workspace/In-Store-Agent (Torob)` (GitHub URL from Mohammad)
+- Torob repo `~/Workspace/torob-gard` (GitHub URL from Mohammad)
 - T-04 prices, T-11 messages
 - Stopwatch
 
@@ -1150,7 +1150,7 @@ phase(deploy/sre),step,tool,start,end,seconds,ok(yes/no),error_text,fix_or_narra
 
 **Template:**
 ```markdown
-# همکار فنی — <one-line what it is>
+# دیپلویار — <one-line what it is>
 
 ## 1. Architecture (short)
 <diagram> + one paragraph: web, agent, tools by risk class, approval gate, jobs, Liara/GitHub/LLM.

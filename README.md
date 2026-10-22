@@ -1,4 +1,4 @@
-# همکار فنی (Hamkar)
+# دیپلویار (Deployar)
 
 Persian DevOps/SRE assistant for Liara. Starcoach hackathon, Liara challenge.
 

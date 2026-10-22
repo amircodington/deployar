@@ -731,8 +731,8 @@ T(
 T(
     id="T-26", title="Torob app deploy dry-run (timed)", type="Test", owner="A", est="4 h", phase="P4", deps=["T-14", "T-19"],
     approval="Real money on the demo account. Mohammad drives and clicks every approval; you time and record.",
-    why="Decision #5: the demo deploys the Torob app (راهبر خرید) with this assistant. Find every slow or failing step before the camera does.",
-    inputs=["Torob repo `~/Workspace/In-Store-Agent (Torob)` (GitHub URL from Mohammad)", "T-04 prices, T-11 messages", "Stopwatch"],
+    why="Decision #5: the demo deploys the Torob app (ترب‌گرد) with this assistant. Find every slow or failing step before the camera does.",
+    inputs=["Torob repo `~/Workspace/torob-gard` (GitHub URL from Mohammad)", "T-04 prices, T-11 messages", "Stopwatch"],
     steps=[
         "Check balance and plan prices before starting; write them down.",
         "Run «این را آنلاین کن» with the Torob repo. Time every checklist row (template).",
@@ -765,7 +765,7 @@ T(
     evidence="docs/evidence/T-27/draft-link.md (link to the file/PR)",
     report="T-27 · draft ready · link to PR",
     lang="markdown",
-    template="""# همکار فنی — <one-line what it is>
+    template="""# دیپلویار — <one-line what it is>
 
 ## 1. Architecture (short)
 <diagram> + one paragraph: web, agent, tools by risk class, approval gate, jobs, Liara/GitHub/LLM.

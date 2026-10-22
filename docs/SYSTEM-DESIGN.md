@@ -3,7 +3,7 @@
 The "what and why" above the architecture. Read with `ARCHITECTURE.md` (how) and `DATA-MODEL.md`
 (tables). Scope source: the Starcoach Liara brief. Agreed decisions: `decisions.md`.
 
-Product: **«همکار فنی»** (Hamkar), a Persian DevOps/SRE colleague for a developer who has built an app
+Product: **«دیپلویار»** (Deployar), a Persian DevOps/SRE colleague for a developer who has built an app
 but knows nothing about deploying it. Persian RTL UI; English code and docs. Times stored in UTC,
 shown in Jalali with Persian digits.
 
@@ -14,7 +14,7 @@ connect GitHub, set env vars, wire a database, connect a domain at the registrar
 site later gets slow or returns 500, they read raw logs and graphs they don't understand and guess
 between "restart", "bigger plan" and "my code".
 
-Hamkar turns that into a conversation with cards: «این را آنلاین کن» + a GitHub link → a priced plan →
+Deployar turns that into a conversation with cards: «این را آنلاین کن» + a GitHub link → a priced plan →
 one approval → a live URL. «سایتم کند شده» → evidence, ranked causes, a proposed fix (including a code
 fix by a coding agent), one approval → action → **re-measured proof that it worked**. It never spends
 money, restarts, or deploys without a click, and it says plainly when Liara's API can't do something.
@@ -24,7 +24,7 @@ money, restarts, or deploys without a click, and it says plainly when Liara's AP
 | User | Job | Success |
 |---|---|---|
 | Developer, first deploy | "Put my Next.js + Prisma repo online; I know nothing about servers." | Live `*.liara.run` URL in < 10 min, one approval, no console visits except top-up |
-| Developer, domain | "Connect `rahbar.ir`." | Domain added on Liara; 3 illustrated registrar steps; «الان بررسی کن» says when DNS is right |
+| Developer, domain | "Connect `torobgard.ir`." | Domain added on Liara; 3 illustrated registrar steps; «الان بررسی کن» says when DNS is right |
 | Developer, incident | "Since this morning the site is very slow." | Ranked causes with evidence in < 60 s; a fix applied after approval; before/after numbers |
 | Developer, code-rooted bug | "/products is slow." | A PR with a readable diff, deployed on approval, latency verified |
 | Developer, routine | "Tell me if something's off." | Scheduled checks (health, RAM trend, plan headroom) and a short digest; no paging |
@@ -63,12 +63,12 @@ money, restarts, or deploys without a click, and it says plainly when Liara's AP
 ### Scope and non-goals
 
 In scope: one Liara account, one or a few apps per project, Node/Next.js and Python apps, Postgres DB,
-GitHub repos, the Torob app («راهبر خرید») as the real demo target.
+GitHub repos, the Torob app («ترب‌گرد») as the real demo target.
 
 Out of scope (MVP): 24/7 monitoring or paging (Prometheus, Grafana, alertmanager); multi-user teams
 and RBAC; non-GitHub hosts; paying or topping up on the user's behalf; registrar automation (IRNIC
 has no public API); an "auto" mode for sensitive tools; other PaaS adapters; a hosted multi-tenant
-Hamkar (needs the BoxAPI backend, later).
+Deployar (needs the BoxAPI backend, later).
 
 ## 4. Agent modes and the run model
 
@@ -94,7 +94,7 @@ sequenceDiagram
   participant G as GitHub API
   participant L as Liara API
   participant K as worker
-  U->>W: "این را آنلاین کن" + github.com/amox/rahbar
+  U->>W: "این را آنلاین کن" + github.com/amox/torob-gard
   W->>A: POST /api/runs (mode=deploy)
   A-->>W: SSE run.started, step.started analyze
   A->>G: analyze_repo: tree, package.json, prisma/schema.prisma, .env.example
@@ -112,7 +112,7 @@ sequenceDiagram
   A->>K: enqueue watch_deployment
   K->>L: poll release status and build logs
   K-->>W: SSE step.progress (build log tail)
-  K->>L: http_probe https://rahbar.liara.run/api/health
+  K->>L: http_probe https://torob-gard.liara.run/api/health
   K-->>W: SSE step.done, card live_url
   A-->>W: SSE card domain_guide (human_only, 3 steps + check now)
 ```
@@ -255,11 +255,11 @@ endpoint marked "to verify" is mapped to a limitation, not a crash.
 
 ## 11. Security model
 
-- **Tokens at rest**: Liara and GitHub tokens in `liara_connection` / `github_connection` encrypted with AES-GCM (key `HAMKAR_SECRET_KEY` in env, key id stored with the ciphertext for rotation). Only the last 4 characters are shown.
+- **Tokens at rest**: Liara and GitHub tokens in `liara_connection` / `github_connection` encrypted with AES-GCM (key `DEPLOYAR_SECRET_KEY` in env, key id stored with the ciphertext for rotation). Only the last 4 characters are shown.
 - **Never in LLM context**: tools take `project_id`; the token is resolved server-side inside the tool. Tool outputs pass a redactor (token patterns, `postgres://user:pass@`, `*_SECRET`, `*_KEY` values) before reaching the model or SSE. `get_env_keys` returns names only; `create_database` returns "DATABASE_URL set (value hidden)".
 - **Never logged**: structured logger with a deny-list of fields and the same redactor; HTTP client logs method, path and status only; tests assert a fake token never appears in logs, SSE frames or `tool_call` rows.
-- **Agent sandbox**: the main agent may use only `mcp__hamkar__*` tools; Claude Code built-ins (Bash, Read, Write, WebFetch) are disallowed; no user/project settings or CLAUDE.md are loaded.
-- **Coder sandbox**: Read/Edit/Bash limited to the worktree `~/.hamkar/work/<project>/`; Bash allow-list (package manager test/build, `git diff`, `git status`); no network push from the subagent. Our code commits, pushes and opens the PR with the GitHub token the subagent never sees.
+- **Agent sandbox**: the main agent may use only `mcp__deployar__*` tools; Claude Code built-ins (Bash, Read, Write, WebFetch) are disallowed; no user/project settings or CLAUDE.md are loaded.
+- **Coder sandbox**: Read/Edit/Bash limited to the worktree `~/.deployar/work/<project>/`; Bash allow-list (package manager test/build, `git diff`, `git status`); no network push from the subagent. Our code commits, pushes and opens the PR with the GitHub token the subagent never sees.
 - **Prompt injection**: logs, repo files and README text are wrapped as data (`<untrusted source="liara.logs">…</untrusted>`); a sensitive action requested by such text still needs the user's approval, and the card says where the idea came from.
 - **Web auth**: single-user MVP with a session cookie (httpOnly, SameSite=Lax) from a local login; approval decisions also require the per-approval signature from the SSE event.
 - **Audit**: every tool call (args hash, risk, result status, duration) and every decision in `tool_call` / `audit_log`.
@@ -293,15 +293,15 @@ the user's tap. Nothing pages anyone, and no sensitive action runs from a schedu
 
 ## 14. Demo scenario script (~5 min)
 
-Target: the Torob app «راهبر خرید» (Next.js + Prisma + Postgres) on a real Liara account (~2M toman).
+Target: the Torob app «ترب‌گرد» (Django API + Postgres with PostGIS and pgvector) on a real Liara account (~2M toman).
 
 | Time | Beat | Shows (criterion) |
 |---|---|---|
 | 0:00 | Problem in one line; Liara's 5 manual steps vs one sentence | context |
-| 0:20 | «این را آنلاین کن» + repo link; analysis card (Next.js 16, Node 22, Postgres from `prisma/schema.prisma`, env keys, ~512 MB) | intelligence, integration |
+| 0:20 | «این را آنلاین کن» + repo link; analysis card (Django, Python version, Postgres + PostGIS + pgvector from `pyproject.toml` and settings, env keys, ~512 MB) | intelligence, integration |
 | 0:50 | Plan card with real prices + balance; tap approve | UX, approval |
-| 1:10 | Live checklist: app, DB, env, build logs streaming, health check, `rahbar.liara.run` opens | integration |
-| 1:50 | «دامنه rahbar.ir را وصل کن» → `add_domain` approval → registrar guide (human_only) → «الان بررسی کن» says "not yet" honestly | UX, limits |
+| 1:10 | Live checklist: app, DB, env, build logs streaming, health check, `torob-gard.liara.run` opens | integration |
+| 1:50 | «دامنه torobgard.ir را وصل کن» → `add_domain` approval → registrar guide (human_only) → «الان بررسی کن» says "not yet" honestly | UX, limits |
 | 2:20 | Break it: fault switch turns on a memory leak (OOM restarts) and a slow unpaginated `/products` query | — |
 | 2:40 | «از صبح سایت خیلی کند شده» → evidence (heap OOM, 3 restarts/h, `/products` 4.2 s, slow SQL in app logs) + limitation box (DB query log not in API) | intelligence, limits |
 | 3:10 | Ranked causes; two proposals: resize to 1 GB (cost delta) and code fix; approve both | intelligence, approval |
@@ -325,8 +325,8 @@ set through `set_env` with approval, so the failures are real and repeatable.
 
 | Phase | Gate |
 |---|---|
-| P0 Foundation | Compose + Makefile + CI; T-01 Liara capability report; agent SDK + `hamkar` MCP server hello-world; schema v1; brand tokens |
-| P1 First deploy | Torob app live on Liara through Hamkar with one approval; domain guide |
+| P0 Foundation | Compose + Makefile + CI; T-01 Liara capability report; agent SDK + `deployar` MCP server hello-world; schema v1; brand tokens |
+| P1 First deploy | Torob app live on Liara through Deployar with one approval; domain guide |
 | P2 SRE loop | OOM + slow query found, fixed (resize/restart) and verified; limitation boxes; incident timeline |
 | P3 Coding fix + recurring checks | Coder PR → diff → merge-and-deploy → verified; scheduled checks and digest |
 | P4 Ship | md doc (architecture, Liara API usage, limits, interaction); eval run; ~5 min demo video |

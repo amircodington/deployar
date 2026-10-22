@@ -8,17 +8,17 @@ contract, tool registry, repo layout, conventions, testing and ADRs. Read with `
 
 ```mermaid
 flowchart LR
-  dev(("Developer<br/>browser, Persian RTL")) -->|HTTPS + SSE| sys["همکار فنی<br/>Hamkar"]
+  dev(("Developer<br/>browser, Persian RTL")) -->|HTTPS + SSE| sys["دیپلویار<br/>Deployar"]
   team(("Students<br/>R&D, evals")) -->|make eval, docs| sys
   sys -->|"REST, Bearer token"| liara[("Liara API<br/>api.iran.liara.ir")]
   sys -->|"REST, App or fine-grained token"| gh[("GitHub API")]
   sys -->|"Claude Agent SDK"| claude[("Claude<br/>via local Claude Code login")]
   sys -->|"A / CNAME / NS lookups"| dns[("DNS resolver")]
-  sys -->|"HTTP probes"| app["Target app on Liara<br/>راهبر خرید"]
+  sys -->|"HTTP probes"| app["Target app on Liara<br/>ترب‌گرد"]
   liara -->|runs| app
 ```
 
-Hamkar is a single-user tool in the MVP: it runs on Mohammad's Mac and drives his Liara account. The
+Deployar is a single-user tool in the MVP: it runs on Mohammad's Mac and drives his Liara account. The
 target app runs on Liara. Nothing outside this diagram is called at runtime.
 
 ## 2. Containers
@@ -33,8 +33,8 @@ flowchart TB
       rd[("redis 7<br/>queue, event streams, approval pub/sub")]
     end
     subgraph host["host process (needs Claude Code login)"]
-      agent["agent<br/>Python 3.13, FastAPI, Claude Agent SDK<br/>in-process MCP server: hamkar"]
-      coder["coder<br/>Claude Code subagent<br/>git worktree ~/.hamkar/work/project"]
+      agent["agent<br/>Python 3.13, FastAPI, Claude Agent SDK<br/>in-process MCP server: deployar"]
+      coder["coder<br/>Claude Code subagent<br/>git worktree ~/.deployar/work/project"]
     end
   end
   web -->|"REST + SSE, localhost:8000"| agent
@@ -54,7 +54,7 @@ flowchart TB
 | Container | Owns | Does not |
 |---|---|---|
 | **web** | Chat, cards, live checklist, status side panel, approval UI, SSE client, Jalali/Persian digits | No business logic, no DB, never sees tokens |
-| **agent** | Runs, orchestration, the `hamkar` MCP tool server, approval gate (`can_use_tool`), Liara/GitHub clients, repo analysis, SRE ranking, SSE endpoint, migrations (Alembic) | No long polling loops (delegated to worker) |
+| **agent** | Runs, orchestration, the `deployar` MCP tool server, approval gate (`can_use_tool`), Liara/GitHub clients, repo analysis, SRE ranking, SSE endpoint, migrations (Alembic) | No long polling loops (delegated to worker) |
 | **worker** | Deployment watcher, `verify_after_action`, scheduled checks, DNS re-checks | **No LLM calls**: deterministic, so it can run in a container without the Claude login |
 | **coder** | Editing code in a worktree and running the repo's tests | No git push, no network credentials, no access outside the worktree |
 | **postgres** | Source of truth: runs, steps, approvals, incidents, audit | |
@@ -70,7 +70,7 @@ flowchart LR
   llm -.later.-> bab["BoxAPIBackend<br/>OpenAI-compatible"]
   cab --> perm["Permission gate<br/>can_use_tool"]
   perm --> appr["Approval service<br/>create, sign, wait, revalidate"]
-  cab --> mcp["SDK MCP server: hamkar"]
+  cab --> mcp["SDK MCP server: deployar"]
   mcp --> reg["Tool registry<br/>name, risk, schema"]
   reg --> tl["liara.* tools"]
   reg --> tg["github.* tools"]
@@ -90,11 +90,11 @@ flowchart LR
   with the mode prompt, streams model text as `message.delta`, maps tool calls to `run_step` rows and
   checklist events. Model output for cards is structured (pydantic-validated JSON blocks); the UI draws
   cards, the model never writes layout.
-- **SDK options (main agent)**: `mcp_servers={"hamkar": sdk_server}`, `allowed_tools` = **read tools by name only**
+- **SDK options (main agent)**: `mcp_servers={"deployar": sdk_server}`, `allowed_tools` = **read tools by name only**
   (a wildcard or any sensitive tool there skips `can_use_tool`; B-00 finding), `tools=[]` plus built-ins
   disallowed (Bash, Read, Write, Edit, WebFetch, WebSearch), `strict_mcp_config=True`, `setting_sources=[]`
   (no user CLAUDE.md), `can_use_tool=gate`, `max_turns` per mode (deploy 40, incident 30).
-- **Tool registry**: every tool is a typed async function with `@hamkar_tool(name, group, risk)`. The
+- **Tool registry**: every tool is a typed async function with `@deployar_tool(name, group, risk)`. The
   decorator registers it with the SDK MCP server, records `tool_call` rows, runs the redactor on output,
   converts known API gaps into `Limitation` results, and for `sensitive` tools re-checks the approval.
 - **Vault**: decrypts the token for one call, passes it to the client, drops it. Tokens are never
@@ -128,14 +128,14 @@ violet for metrics/info, red for errors, grey for limitations.
 ```mermaid
 flowchart LR
   subgraph mac["Mac (MVP runtime)"]
-    a["agent: uv run hamkar-agent<br/>:8000, host, ~/.claude login"]
+    a["agent: uv run deployar-agent<br/>:8000, host, ~/.claude login"]
     subgraph dc["docker compose"]
       w["web :3000"]
       k["worker"]
       p[("postgres :5432<br/>volume pgdata")]
       r[("redis :6379")]
     end
-    wt[("~/.hamkar/work/project<br/>git worktrees")]
+    wt[("~/.deployar/work/project<br/>git worktrees")]
   end
   w -->|host.docker.internal:8000| a
   a --> p
@@ -144,8 +144,8 @@ flowchart LR
   k --> r
   a --> wt
   subgraph liara["Liara (iran)"]
-    t["rahbar app<br/>Next.js"]
-    tdb[("rahbar Postgres")]
+    t["torob-gard app<br/>Django"]
+    tdb[("torob-gard Postgres")]
   end
   a -->|API| liara
   k -->|API + probes| liara
@@ -171,7 +171,7 @@ sequenceDiagram
   participant R as redis
   participant W as web
   actor U as Developer
-  participant T as hamkar tool
+  participant T as deployar tool
   M->>G: tool_use resize_plan(project, plan=1GB)
   G->>G: registry lookup, risk = sensitive
   G->>S: create(tool, args, run_step)
@@ -214,7 +214,7 @@ sequenceDiagram
   participant K as worker
   actor U as Developer
   A->>A: apply_code_fix approved (incident, hypothesis, brief)
-  X->>X: git fetch, worktree add -b hamkar/fix-inc42-products
+  X->>X: git fetch, worktree add -b deployar/fix-inc42-products
   X->>C: brief + evidence excerpt + success criteria
   C->>C: Read, Edit in worktree only
   C->>C: Bash allow-list: pnpm test, pnpm build
@@ -410,7 +410,7 @@ through the model.
 ```
 agent/
   pyproject.toml  uv.lock  alembic.ini
-  src/hamkar/
+  src/deployar/
     main.py                 FastAPI app factory
     api/                    runs.py approvals.py connections.py projects.py events.py probes.py
     core/                   config.py db.py crypto.py redact.py logging.py persian.py ids.py
@@ -436,7 +436,7 @@ docker-compose.yml  Makefile  .env.example  .githooks/
 ## 11. Code conventions
 
 - **Python**: 3.13, uv, ruff (lint + format), mypy strict on `tools/`, `runtime/`, `core/`; async everywhere (`httpx.AsyncClient`, SQLAlchemy 2 async, asyncpg); pydantic v2 models for every tool input/output and SSE payload.
-- **Tools**: one function per tool, `@hamkar_tool(name, group, risk)`; returns `Ok[T] | Limitation | ToolError`; never raises for an API gap; never takes or returns a secret.
+- **Tools**: one function per tool, `@deployar_tool(name, group, risk)`; returns `Ok[T] | Limitation | ToolError`; never raises for an API gap; never takes or returns a secret.
 - **Errors**: stable `code` (snake_case) + `message_fa` for the UI + English `detail` for logs.
 - **Persian strings**: in `messages_fa.py` / `web/src/lib/fa.ts`, not inline; digits stored ASCII, rendered Persian; dates stored `timestamptz` UTC, rendered Jalali.
 - **Money**: integer toman (`bigint`), formatted only in the UI.
@@ -466,7 +466,7 @@ docker-compose.yml  Makefile  .env.example  .githooks/
 |---|---|---|---|
 | 1 | Python FastAPI agent + Next.js web, no Django | no data-entry workload; one Python service; reuse Torob patterns | admin needs appear |
 | 2 | Claude Agent SDK driving local Claude Code (Mohammad's subscription) behind an `LLMClient` seam | no paid API; best tool use; BoxAPI backend later by env var | hosted multi-user version, or subscription limits hurt the demo |
-| 3 | Tools as an in-process SDK MCP server `hamkar` | no extra process; the same registry can later be served over stdio MCP to the user's own Claude Code | external MCP clients are needed |
+| 3 | Tools as an in-process SDK MCP server `deployar` | no extra process; the same registry can later be served over stdio MCP to the user's own Claude Code | external MCP clients are needed |
 | 4 | Approval gate in `can_use_tool` + re-check inside the tool, wait via Redis pub/sub with Postgres as truth | enforced in code, two layers; survives a lost publish | never |
 | 5 | Signed one-time decisions, 10 min expiry, re-validation before execution | stale or replayed clicks can't spend money | never |
 | 6 | Coder = Claude Code subagent in a git worktree; our code pushes and opens the PR | real multi-file fixes; the subagent holds no credentials | fixes need services (DB) the worktree can't run |

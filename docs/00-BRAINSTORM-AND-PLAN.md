@@ -8,7 +8,7 @@ Source of truth for scope: the Starcoach hackathon Liara brief
 (`~/Workspace/starcoach-hackathon/challenges/liara.html`). Same hackathon and same team as
 In-Store Agent (Torob), so this plan reuses its conventions and decisions where they fit.
 
-Working name: **همکار فنی** (working title, from the brief: «همکار فنی برای صاحب وب‌سایت»).
+Working name: **همکار فنی**, renamed «دیپلویار» (Deployar) in decision 10 (working title, from the brief: «همکار فنی برای صاحب وب‌سایت»).
 
 ---
 
@@ -50,7 +50,7 @@ limits, interaction), a ~5-minute demo video.
 | 11 | **Recurring checks** (the brief's "automate repetitive ops"): scheduled health probe + backup check + "your plan is 90% RAM all week" digest. No 24/7 paging (video says not needed). |
 | 12 | **Incident timeline**: every incident saved with evidence, hypotheses, actions, verification — exportable as a post-mortem. |
 | 13 | **MCP server** exposing the same tools, so Claude Code (the user's coding agent) can call "deploy" and "read logs" directly. |
-| 14 | **CLI** (`hamkar deploy`, `hamkar why-slow`) as a thin client of the same API. |
+| 14 | **CLI** (`deployar deploy`, `deployar why-slow`) as a thin client of the same API. |
 
 ### Tier 3 — later
 

@@ -6,4 +6,4 @@ COPY pyproject.toml uv.lock .python-version ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY src src
 RUN uv sync --frozen --no-dev
-CMD ["uv", "run", "--no-sync", "arq", "hamkar.worker.settings.WorkerSettings"]
+CMD ["uv", "run", "--no-sync", "arq", "deployar.worker.settings.WorkerSettings"]

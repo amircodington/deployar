@@ -1,7 +1,7 @@
 [project]
-name = "hamkar"
+name = "deployar"
 version = "0.1.0"
-description = "Hamkar agent: Liara deploy + SRE loop on the Claude Agent SDK"
+description = "Deployar agent: Liara deploy + SRE loop on the Claude Agent SDK"
 authors = [
     { name = "amircodington", email = "amircodington@gmail.com" }
 ]
@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.scripts]
-hamkar-agent = "hamkar.main:run"
+deployar-agent = "deployar.main:run"
 
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13.0"]
@@ -49,7 +49,7 @@ python_version = "3.13"
 files = ["src"]
 # Strict where the gate and secrets live (ARCHITECTURE.md §11).
 [[tool.mypy.overrides]]
-module = ["hamkar.core.*", "hamkar.runtime.*", "hamkar.tools.*"]
+module = ["deployar.core.*", "deployar.runtime.*", "deployar.tools.*"]
 strict = true
 
 [tool.pytest.ini_options]

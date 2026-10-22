@@ -1,4 +1,4 @@
-# همکار فنی (Server Assistant, Liara challenge)
+# دیپلویار · Deployar (Server Assistant, Liara challenge)
 
 Persian assistant that deploys a developer's app to Liara and runs an SRE loop (evidence → ranked
 causes → approval → action → verify). Starcoach hackathon, Liara challenge (300 pts). Talk with
@@ -20,7 +20,7 @@ Mohammad in Persian; code, commits and docs in English; UI text in Persian.
 `web/` Next.js 16 + TS + Tailwind v4 (pnpm) · `agent/` Python 3.13 FastAPI on uv with the Claude
 Agent SDK driving the local Claude Code login (LLMClient seam; BoxAPI later) · `worker/` arq ·
 PostgreSQL 16 · Redis 7 · Docker Compose · Makefile `dev / check / push-test`. No amox-os.
-Worker code lives in `agent/src/hamkar/worker/` (same package, own Compose service); the agent runs
+Worker code lives in `agent/src/deployar/worker/` (same package, own Compose service); the agent runs
 on the host because the Claude login is there. Layout: `ARCHITECTURE.md §10`.
 
 ## Hard rules

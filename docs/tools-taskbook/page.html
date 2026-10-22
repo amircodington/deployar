@@ -1,4 +1,4 @@
-<title>همکار فنی · Task Book</title>
+<title>دیپلویار · Task Book</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -103,7 +103,7 @@ footer{color:var(--muted);font-size:13px;margin-top:40px}
 const DATA = /*__DATA__*/null;
 (function(){
   const TYPE_COLOR={"R&D":"var(--violet)","Docs":"var(--peach)","Test":"var(--mint)","Data":"var(--muted)","Video":"var(--red)"};
-  const KEY="hamkar-taskbook-v1";
+  const KEY="deployar-taskbook-v1";
   let ticks={};
   try{ticks=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){ticks={}}
   const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(ticks))}catch(e){}};
@@ -204,7 +204,7 @@ const DATA = /*__DATA__*/null;
 })();
 </script>
 <main>
-  <h1>همکار فنی · Task Book</h1>
+  <h1>دیپلویار · Task Book</h1>
   <p class="lede">For Student A and Student B. Mohammad builds the software with Claude Code; you do R&amp;D, tests, docs, checks and evidence. Each card: why, inputs, steps, done criteria (tick them, they are remembered on this device), evidence path, what to post in chat, and the template to fill. Amber means a step needs Mohammad present.</p>
 
   <section class="panel" aria-labelledby="rules-h">

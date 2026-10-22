@@ -1,4 +1,4 @@
-# Hamkar tasks. `make check` runs before every push (.githooks/pre-push).
+# Deployar tasks. `make check` runs before every push (.githooks/pre-push).
 .PHONY: setup dev down check agent-check web-check migrate eval
 
 AGENT = cd agent &&
@@ -13,7 +13,7 @@ setup:  ## once per clone
 dev:  ## web :3000, worker, postgres, redis in Docker; agent :8000 on the host (Ctrl+C stops the agent)
 	docker compose up -d --build
 	@echo "web http://localhost:3000 · agent http://localhost:8000/api/health · logs: docker compose logs -f"
-	$(AGENT) uv run hamkar-agent
+	$(AGENT) uv run deployar-agent
 
 down:
 	docker compose down
@@ -36,4 +36,4 @@ migrate:  ## alembic lands in B-03
 	$(AGENT) uv run alembic upgrade head
 
 eval:  ## SRE eval set, lands in B-17
-	$(AGENT) uv run python -m hamkar.evals.run
+	$(AGENT) uv run python -m deployar.evals.run

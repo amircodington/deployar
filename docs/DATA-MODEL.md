@@ -1,6 +1,6 @@
 # Data model
 
-Source of truth for the schema of «همکار فنی». PostgreSQL 16 + Redis 7. The `agent/` service
+Source of truth for the schema of «دیپلویار». PostgreSQL 16 + Redis 7. The `agent/` service
 (FastAPI + Claude Agent SDK) and the `arq` worker share one database through SQLAlchemy 2; Alembic
 (in `agent/migrations/`) owns every migration. No other service writes to the database.
 
@@ -149,7 +149,7 @@ erDiagram
 | user_id | uuid | no | | FK `"user"` **on delete cascade** |
 | label | text | no | `'Liara'` | user-chosen («حساب اصلی») |
 | token_ciphertext | bytea | no | | `nonce(12) ‖ ciphertext ‖ tag(16)`, AES-256-GCM; see Secrets |
-| key_version | smallint | no | | which key in `HAMKAR_TOKEN_KEYS` encrypted it |
+| key_version | smallint | no | | which key in `DEPLOYAR_TOKEN_KEYS` encrypted it |
 | token_last4 | text | no | | last 4 chars, for display («…9f2c»); check `length(token_last4)=4` |
 | liara_account_email | text | yes | | from Liara `/me`, shown to confirm the right account |
 | team_id | text | yes | | Liara team, if the token is a team token |
@@ -162,7 +162,7 @@ erDiagram
 - Unique partial: `(user_id) where status = 'active'` — one active Liara account per user (MVP).
 - Index `(expires_at) where status = 'active'` — nightly "token expires in 7 days" nudge.
 - Check: `(status = 'revoked') = (revoked_at is not null)`.
-- Column privilege: role `hamkar_readonly` has no `select` on `token_ciphertext`.
+- Column privilege: role `deployar_readonly` has no `select` on `token_ciphertext`.
 
 ### github_connection — a GitHub App installation
 
@@ -239,15 +239,15 @@ erDiagram
 | user_id | uuid | no | | FK `"user"` on delete cascade |
 | liara_connection_id | uuid | no | | FK `liara_connection` **no action** (revoking = status change, never delete; `no action` lets a user-delete cascade finish) |
 | github_connection_id | uuid | yes | | FK `github_connection` on delete set null (repo can't be re-read; deploys stay) |
-| name | text | no | | display name, «راهبر خرید» |
-| repo_full_name | text | yes | | `amox/rahbar-kharid`; check `~ '^[\w.-]+/[\w.-]+$'` |
+| name | text | no | | display name, «ترب‌گرد» |
+| repo_full_name | text | yes | | `amox/torob-gard`; check `~ '^[\w.-]+/[\w.-]+$'` |
 | repo_default_branch | text | yes | | `main` |
 | liara_app_name | text | yes | | set by `create_app`; check `~ '^[a-z0-9-]{3,32}$'` |
 | platform | text | yes | | Liara platform (`next`, `node`, `django`, `docker`, …) validated against the API's list |
 | plan_id | text | yes | | current Liara plan id; changed by `resize_plan` |
 | liara_db_name | text | yes | | set by `create_database` |
 | db_kind | text | yes | | check `in ('postgres','mysql','mariadb','mongodb','redis')` |
-| live_url | text | yes | | `https://rahbar-kharid.liara.run` |
+| live_url | text | yes | | `https://torob-gard.liara.run` |
 | status | project_status | no | `'draft'` | `draft`, `provisioning`, `live`, `degraded`, `down`, `archived` |
 | current_deployment_id | uuid | yes | | FK `deployment` on delete set null; added in P1 after `deployment` exists |
 | created_at | timestamptz | no | `now()` | |
@@ -357,7 +357,7 @@ erDiagram
 | hostname | citext | no | | check `~ '^([a-z0-9-]+\.)+[a-z]{2,}$'` |
 | liara_domain_id | text | yes | | from `add_domain` |
 | status | domain_status | no | `'pending_dns'` | `pending_dns`, `active`, `failed`, `removed` |
-| required_records | jsonb | no | | `[{"type":"CNAME","name":"www","value":"rahbar-kharid.liara.run"}]` — shown in the 3-step registrar guide |
+| required_records | jsonb | no | | `[{"type":"CNAME","name":"www","value":"torob-gard.liara.run"}]` — shown in the 3-step registrar guide |
 | last_check | jsonb | yes | | `check_dns` result: `{"found":[{"type":"CNAME","value":"…"}],"matches":false}` |
 | last_checked_at | timestamptz | yes | | |
 | verified_at | timestamptz | yes | | |
@@ -613,7 +613,7 @@ create trigger tool_call_gate before update of status on tool_call
   "title_fa": "ارتقای پلن از small به medium",
   "what_fa": "حافظهٔ اپ از ۵۱۲ به ۱۰۲۴ مگابایت می‌رسد. اپ حدود ۲۰ ثانیه ری‌استارت می‌شود.",
   "why_fa": "در یک ساعت گذشته ۶ بار به‌خاطر کمبود حافظه (OOMKilled) ری‌استارت شده است.",
-  "target": {"project": "راهبر خرید", "liara_app": "rahbar-kharid"},
+  "target": {"project": "ترب‌گرد", "liara_app": "torob-gard"},
   "cost": {
     "current_monthly_rial": 1500000, "new_monthly_rial": 3000000, "delta_monthly_rial": 1500000,
     "balance_rial": 17300000, "source": "liara:list_plans", "fetched_at": "2026-10-25T09:13:40Z"
@@ -627,7 +627,7 @@ create trigger tool_call_gate before update of status on tool_call
 }
 ```
 
-`diff` variants: `{"kind":"env","set":["DATABASE_URL","NEXT_PUBLIC_AGENT_URL"],"masked":{"DATABASE_URL":"…/rahbar?sslmode=require"}}`
+`diff` variants: `{"kind":"env","set":["DATABASE_URL","NEXT_PUBLIC_AGENT_URL"],"masked":{"DATABASE_URL":"…/torobgard?sslmode=require"}}`
 (keys + masked tail, never values); `{"kind":"release","from_release":"r-17","to_release":"r-16"}`;
 `{"kind":"code","pr_url":"…","files":[{"path":"app/api/products/route.ts","additions":31,"deletions":6}],"patch_ref":"code_fix:0193…cf1"}`
 (the diff body is read from `code_fix.diff_patch`, not copied).
@@ -724,7 +724,7 @@ erDiagram
 | run_id | uuid | no | | FK `run` on delete cascade |
 | tool_call_id | uuid | yes | | FK `tool_call` on delete set null — the read tool that produced it |
 | kind | evidence_kind | no | | `status`, `metrics`, `logs`, `releases`, `env_keys`, `http_probe`, `dns`, `note` |
-| source | text | no | | `liara:get_metrics`, `probe:hamkar-worker` — every number carries this |
+| source | text | no | | `liara:get_metrics`, `probe:deployar-worker` — every number carries this |
 | window_start | timestamptz | yes | | check `window_end >= window_start` |
 | window_end | timestamptz | yes | | |
 | summary_fa | text | no | | one line the user reads; kept forever |
@@ -750,8 +750,8 @@ erDiagram
           {"ts":"2026-10-25T08:11:09Z","text":"FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory"}],
  "patterns":[{"signature":"heap out of memory","count":6,"first_ts":"2026-10-25T08:11:09Z","preceded_by":"GET /api/products"}]}
 
-{"kind":"http_probe","url":"https://rahbar-kharid.liara.run/api/products","samples_ms":[3870,4180,4410,3990],
- "p50_ms":4080,"p95_ms":4180,"status_codes":{"200":18,"502":2},"from":"hamkar-worker (Tehran)"}
+{"kind":"http_probe","url":"https://torob-gard.liara.run/api/products","samples_ms":[3870,4180,4410,3990],
+ "p50_ms":4080,"p95_ms":4180,"status_codes":{"200":18,"502":2},"from":"deployar-worker (Tehran)"}
 
 {"kind":"releases","releases":[{"id":"r-1","commit_sha":"9c1e…","created_at":"2026-10-24T06:39:40Z","status":"live"}]}
 ```
@@ -831,7 +831,7 @@ keys from `get_env_keys` marked secret).
 | brief_md | text | no | | what the coding agent was asked (cause, files, acceptance test) |
 | base_sha | text | no | | check `~ '^[0-9a-f]{40}$'` |
 | head_sha | text | yes | | |
-| branch_name | text | yes | | `hamkar/fix-products-pagination` |
+| branch_name | text | yes | | `deployar/fix-products-pagination` |
 | pr_number | int | yes | | |
 | pr_url | text | yes | | |
 | diff_stats | jsonb | yes | | `{"files":2,"additions":38,"deletions":6}` |
@@ -986,8 +986,8 @@ erDiagram
 | row_hash | bytea | no | | sha256(`prev_hash ‖ canonical json of the row without hashes`) |
 
 - No FKs on purpose: the log must outlive what it describes.
-- Append-only: `revoke update, delete, truncate on audit_log from hamkar_app;` plus a trigger that
-  raises on `update`/`delete` for every role except `hamkar_migrator`. Inserts go through one SQL
+- Append-only: `revoke update, delete, truncate on audit_log from deployar_app;` plus a trigger that
+  raises on `update`/`delete` for every role except `deployar_migrator`. Inserts go through one SQL
   function `audit_append(...)` that takes `pg_advisory_xact_lock(hashtext('audit_log'))`, reads the
   last `row_hash`, and inserts — so the chain has no forks. `make audit-verify` walks the chain.
 - Index `(project_id, occurred_at desc)`, `(target_type, target_id)`, `(approval_id) where approval_id is not null`.
@@ -1173,9 +1173,9 @@ can move to native monthly range partitions on `occurred_at` / `captured_at` whe
 1. User pastes the token into a form that posts straight to `POST /connections/liara` (never into chat).
 2. Agent calls Liara `/me` with it; on 200, encrypts with **AES-256-GCM**: random 12-byte nonce,
    AAD = `"liara_connection:{id}:{user_id}"` (a ciphertext copied to another row fails to decrypt),
-   key = `HAMKAR_TOKEN_KEYS[HAMKAR_TOKEN_KEY_VERSION]`. Stores `nonce‖ciphertext‖tag`,
+   key = `DEPLOYAR_TOKEN_KEYS[DEPLOYAR_TOKEN_KEY_VERSION]`. Stores `nonce‖ciphertext‖tag`,
    `key_version`, `token_last4`.
-3. `HAMKAR_TOKEN_KEYS` is an env var, JSON `{"1":"<base64 32 bytes>","2":"…"}`; it is never in the
+3. `DEPLOYAR_TOKEN_KEYS` is an env var, JSON `{"1":"<base64 32 bytes>","2":"…"}`; it is never in the
    database, the repo, or a Docker image layer.
 4. Decryption happens only inside `LiaraClient` in the tool executor (agent tool-runner and worker),
    which builds the `Authorization` header itself. Tools receive a `connection_id`, never the token;
@@ -1184,7 +1184,7 @@ can move to native monthly range partitions on `occurred_at` / `captured_at` whe
    redaction processor drops keys matching `token|authorization|secret|password|cookie` and scrubs
    any string equal to a decrypted token; httpx request logging is off for the Liara client;
    Postgres runs with `log_parameter_max_length = 0` and `log_statement = 'ddl'`.
-6. **Rotation**: add key `"3"`, set `HAMKAR_TOKEN_KEY_VERSION=3`, deploy; the arq job
+6. **Rotation**: add key `"3"`, set `DEPLOYAR_TOKEN_KEY_VERSION=3`, deploy; the arq job
    `rotate_token_keys` re-encrypts rows `where key_version < 3` in batches; when the count is 0, remove
    key `"2"` from env. `key_version` makes the mixed state safe.
 7. **Revoke**: status `revoked`, `revoked_at = now()`, `token_ciphertext = '\x'`; audit `connection.revoked`.
@@ -1196,8 +1196,8 @@ passing through the agent's context. Previews show keys and a masked tail only.
 **Approvals**: `APPROVAL_SECRET` (env, 32 bytes) signs approvals; rotating it simply invalidates
 pending approvals (max 10 minutes of loss).
 
-**Database roles**: `hamkar_migrator` owns the schema (Alembic only); `hamkar_app` has DML on all
-tables except `update/delete` on `audit_log`; `hamkar_readonly` (students, evals, debugging) has
+**Database roles**: `deployar_migrator` owns the schema (Alembic only); `deployar_app` has DML on all
+tables except `update/delete` on `audit_log`; `deployar_readonly` (students, evals, debugging) has
 `select` everywhere except `liara_connection.token_ciphertext` and `tool_call.secret_args_ciphertext`.
 
 ## Sample rows — one demo story
@@ -1224,9 +1224,9 @@ Prices are illustrative until the T-01 capability report confirms Liara's plan l
 
 | id | name | repo_full_name | liara_app_name | platform | plan_id | db_kind | status | current_deployment_id |
 |---|---|---|---|---|---|---|---|---|
-| …p1 | راهبر خرید | amox/rahbar-kharid | rahbar-kharid | next | small → medium (day 2) | postgres | live | …d1 → …d2 |
+| …p1 | ترب‌گرد | amox/torob-gard | torob-gard | next | small → medium (day 2) | postgres | live | …d1 → …d2 |
 
-`conversation` …c1 (project …p1). `message` seq 1 user: «این را آنلاین کن https://github.com/amox/rahbar-kharid».
+`conversation` …c1 (project …p1). `message` seq 1 user: «این را آنلاین کن https://github.com/amox/torob-gard».
 `run` …r1: kind `deploy`, trigger `user_message`, status `succeeded`, 06:32:05 → 06:41:30.
 
 `run_step` of …r1 (the live checklist)
@@ -1257,7 +1257,7 @@ Prices are illustrative until the T-01 capability report confirms Liara's plan l
 | …a5 | …t9 add_domain | executed | approve | 06:42:15 | 0 |
 
 `deployment` …d1: commit `9c1e…`, release `r-1`, status `live` 06:39:40, health `{"status":200,"latency_ms":212}`.
-`domain` …dm1: `rahbar.amox.ir`, status `pending_dns` → `active` (day 1, 08:05) after the user set the CNAME.
+`domain` …dm1: `torobgard.amox.ir`, status `pending_dns` → `active` (day 1, 08:05) after the user set the CNAME.
 `limitation_event` …l1: capability `registrar_dns_records`, kind `human_only`, guide `irnic_ns_3_steps`,
 message «ثبت رکورد در پنل ثبت‌کنندهٔ دامنه از API لیارا ممکن نیست؛ این سه قدم را خودتان انجام دهید.»
 
@@ -1275,7 +1275,7 @@ verifying → mitigating → verifying → resolved` (resolved 10:02:40), root c
 | …e1 | status | liara:get_app_status | ۶ ری‌استارت در یک ساعت؛ آخرین علت OOMKilled | `restarts_1h:6, ram_limit_mb:512` |
 | …e2 | metrics | liara:get_metrics | حافظه هر بار به سقف ۵۱۲ مگابایت می‌رسد | memory_mb peaks 511/512 |
 | …e3 | logs | liara:get_logs | پیش از هر کرش: GET /api/products و heap out of memory | pattern count 6 |
-| …e4 | http_probe | probe:hamkar-worker | p95 پاسخ /api/products: ۴۱۸۰ میلی‌ثانیه | `p95_ms:4180`, 2× 502 |
+| …e4 | http_probe | probe:deployar-worker | p95 پاسخ /api/products: ۴۱۸۰ میلی‌ثانیه | `p95_ms:4180`, 2× 502 |
 | …e5 | releases | liara:list_releases | فقط یک انتشار؛ مشکل از روز اول بوده | 1 release |
 
 `limitation_event` …l2: capability `db_slow_query_log`, kind `api_missing`,
@@ -1298,7 +1298,7 @@ by …u1 at 09:15:40, status `executed`.
 `passed = true`. p95 still 1,900 ms in …e6 → the agent says the root cause is in code (h1) and
 starts `code_fix` …cf1.
 
-`code_fix` …cf1: branch `hamkar/fix-products-pagination`, PR #42, `diff_stats {"files":2,"additions":38,"deletions":6}`
+`code_fix` …cf1: branch `deployar/fix-products-pagination`, PR #42, `diff_stats {"files":2,"additions":38,"deletions":6}`
 (`app/api/products/route.ts` paginates with `limit 24` + cursor; `app/products/page.tsx` loads pages),
 tests `pnpm test` passed. Approvals: …a7 `apply_code_fix` (…t21) approved 09:41:12 → `pr_open`;
 …a8 `merge_and_deploy` (…t22) approved 09:52:30 → `merging` → `deployed` (`deployment` …d2,
@@ -1312,7 +1312,7 @@ release `r-2`, commit `4be0…`, `code_fix_id` …cf1, live 09:58:10) → `verif
 | http_p95_ms | ۲۰ درخواست به /api/products از ورکر، ۳۰ ثانیه پس از استقرار | ms | 4180 | 320 | 800 | true | …e4 | …e7 |
 
 Afterwards the user accepts «هر ۵ دقیقه چک کنم؟»: `scheduled_check` …sc1 `http_health`
-`{"url":"https://rahbar.amox.ir/api/products","max_p95_ms":800,"samples":5}`; first `check_result`
+`{"url":"https://torobgard.amox.ir/api/products","max_p95_ms":800,"samples":5}`; first `check_result`
 id 1, outcome `ok`, value 318 ms.
 
 `audit_log` (excerpt)
@@ -1321,7 +1321,7 @@ id 1, outcome `ok`, value 318 ms.
 |---|---|---|---|---|---|
 | 1 | 10-24 06:30:44 | user …u1 | connection.created | liara_connection …lc1 | `{"last4":"9f2c"}` |
 | 9 | 10-24 06:34:51 | user …u1 | approval.decided | approval …a1 | `{"tool":"create_app","decision":"approve","delta_monthly_rial":1500000}` |
-| 10 | 10-24 06:35:02 | worker | tool.executed | tool_call …t4 | `{"liara_app":"rahbar-kharid","http_status":201}` |
+| 10 | 10-24 06:35:02 | worker | tool.executed | tool_call …t4 | `{"liara_app":"torob-gard","http_status":201}` |
 | 41 | 10-25 09:15:40 | user …u1 | approval.decided | approval …a6 | `{"tool":"resize_plan","decision":"approve","delta_monthly_rial":1500000}` |
 | 58 | 10-25 10:02:40 | agent | incident.resolved | incident …i1 | `{"root_cause":"unbounded_query_memory","p95_before_ms":4180,"p95_after_ms":320}` |
 

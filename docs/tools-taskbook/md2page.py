@@ -1,4 +1,4 @@
-"""Tiny md -> card-page HTML for the two Hamkar docs. Handles only what those docs use."""
+"""Tiny md -> card-page HTML for the two Deployar docs. Handles only what those docs use."""
 import html, re, sys
 
 CSS = r"""
@@ -168,14 +168,14 @@ def page(md_path, out_path, page_title, sub):
     secs = "".join(
         f'<section class="card" id="{s["id"]}"><h2>{f"<span class=n>{s["num"]}</span>" if s["num"] else ""}{inline(s["name"])}</h2>{"".join(s["body"])}</section>'
         for s in sections)
-    out = f"""<title>همکار فنی · {page_title}</title>
+    out = f"""<title>دیپلویار · {page_title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>{CSS}</style>
 <div class="page" lang="en" dir="ltr">
 <header class="hero">
-  <div class="eyebrow"><b lang="fa" dir="rtl">همکار فنی</b><span>Hamkar</span><span class="pill">Starcoach hackathon · Liara challenge</span><span class="pill">{sub}</span></div>
+  <div class="eyebrow"><b lang="fa" dir="rtl">دیپلویار</b><span>Deployar</span><span class="pill">Starcoach hackathon · Liara challenge</span><span class="pill">{sub}</span></div>
   <h1>{page_title}</h1>
   {"".join(lede).replace("<p>", '<p class="lede">')}
   <div class="legend"><span><i style="background:var(--mint)"></i>read / healthy / automatic</span><span><i style="background:var(--amber)"></i>sensitive / needs approval</span><span><i style="background:var(--violet)"></i>human_only / info</span><span><i style="background:var(--red)"></i>error</span></div>

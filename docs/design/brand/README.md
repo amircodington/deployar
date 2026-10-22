@@ -1,4 +1,4 @@
-# همکار فنی
+# دیپلویار
 
 **Working title.** The brand book and design system for the Liara challenge assistant: a Persian
 DevOps/SRE colleague that puts a developer's app online and keeps it healthy, with the developer's

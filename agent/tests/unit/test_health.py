@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from hamkar.main import app
+from deployar.main import app
 
 
 def test_health() -> None:
