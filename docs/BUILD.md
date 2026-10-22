@@ -191,6 +191,9 @@ The 50 security points live here. Write the tests first.
   `get_metrics`, `list_releases`, `get_env_keys`; every value `{value, source, observed_at}`.
 - **Done when**: pasting a token in settings validates it with `get_balance`, stores it encrypted, shows
   last4; each read tool passes against a cassette; one `-m live` test reads the real balance.
+- **Also**: add `make push-test` → `cd agent && uv run pytest -m live` (Mohammad's call, 2026-10-22).
+  Register the `live` marker and keep it out of `make check` (`addopts = "-m 'not live'"`). Live tests
+  that create or change anything on Liara spend balance: ask Mohammad before adding them.
 
 ---
 
