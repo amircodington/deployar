@@ -6,3 +6,7 @@ graphify-out/
 __pycache__/
 .DS_Store
 docs/evidence/**/*.jpg
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/

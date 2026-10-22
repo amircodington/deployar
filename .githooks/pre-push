@@ -1,0 +1,3 @@
+#!/bin/sh
+# Runs the full check before anything leaves this machine.
+exec make check

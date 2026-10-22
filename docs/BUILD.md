@@ -39,7 +39,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | id | title | phase | depends | students feed it | cut? | state |
 |---|---|---|---|---|---|---|
 | B-00 | Agent SDK spike (local login, in-process MCP, can_use_tool) | P0 | — | — | | ✓ |
-| B-01 | Repo scaffold: agent, web, worker, Compose, Makefile, hooks | P0 | — | — | | ○ |
+| B-01 | Repo scaffold: agent, web, worker, Compose, Makefile, hooks | P0 | — | — | | ✓ |
 | B-02 | Core: config, ids, crypto vault, redactor, errors, Persian | P0 | B-01 | — | | ○ |
 | B-03 | Schema v1: migrations 0001–0004 + models | P0 | B-02 | — | | ○ |
 | B-04 | Approval gate (TDD) | P0 | B-03 | T-19 tests it later | | ○ |
