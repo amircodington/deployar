@@ -1,44 +1,16 @@
 """analyze_repo against a mocked GitHub (B-09): fetch only deciding files, card out, reconnect on no access."""
 
-import base64
 import json
-import os
 import uuid
-from collections.abc import Iterator
 from typing import Any
 
 import asyncpg
 import httpx
-import pytest
 import respx
-from pgtest import PG_TEST, REDIS_TEST, TEST_URL_STR, fresh_schema
+from pgtest import PG_TEST
 
 GH = "https://api.github.com"
 SHA = "8c17bc2" + "0" * 33
-
-
-@pytest.fixture(scope="module", autouse=True)
-def env() -> Iterator[None]:
-    fresh_schema()
-    keys = {"DATABASE_URL": TEST_URL_STR, "REDIS_URL": REDIS_TEST, "DEPLOYAR_PASSPHRASE": "p",
-            "APPROVAL_SECRET": base64.b64encode(os.urandom(32)).decode(),
-            "DEPLOYAR_TOKEN_KEYS": json.dumps({"1": base64.b64encode(os.urandom(32)).decode()})}  # fmt: skip
-    saved = {k: os.environ.get(k) for k in keys}
-    os.environ.update(keys)
-    _clear()
-    yield
-    for k, v in saved.items():
-        os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
-    _clear()
-
-
-def _clear() -> None:
-    from deployar.api import deps
-    from deployar.core import config, crypto, db
-
-    for f in (config.get_settings, db.get_engine, db.get_sessionmaker, deps.get_redis, deps.get_runtime,
-              crypto.get_vault):  # fmt: skip
-        f.cache_clear()
 
 
 async def _ctx(emitted: list[tuple[str, dict[str, Any]]]) -> Any:

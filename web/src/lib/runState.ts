@@ -1,5 +1,6 @@
 /** Pure reducer from SSE events to what the workspace shows; tested without a browser. */
 import type { ApprovalState } from "@/components/cards/ApprovalCard";
+import type { PlanProposal } from "@/components/cards/PlanCard";
 import type { RepoAnalysis } from "@/components/cards/RepoAnalysisCard";
 import type { Step } from "@/components/checklist/RunChecklist";
 import type { Risk } from "./api";
@@ -13,7 +14,8 @@ export type ChatItem =
   | { kind: "limitation"; id: string; message_fa: string; workaround_fa?: string }
   | { kind: "human_only"; id: string; task: string; steps_fa: string[] }
   | { kind: "repo_analysis"; id: string; data: RepoAnalysis }
-  | { kind: "github_reconnect"; id: string; message_fa: string };
+  | { kind: "github_reconnect"; id: string; message_fa: string }
+  | { kind: "plan_proposal"; id: string; data: PlanProposal };
 
 export type RunPhase = "idle" | "running" | "awaiting_approval" | "succeeded" | "failed" | "cancelled";
 
@@ -116,6 +118,9 @@ export function applyEvent(v: View, e: RunEvent): View {
       }
       if (e.data.card_type === "repo_analysis") {
         return { ...v, items: [...v.items, { kind: "repo_analysis", id: localId("r"), data: p as unknown as RepoAnalysis }] };
+      }
+      if (e.data.card_type === "plan_proposal") {
+        return { ...v, items: [...v.items, { kind: "plan_proposal", id: localId("p"), data: p as unknown as PlanProposal }] };
       }
       if (e.data.card_type === "github_reconnect") {
         return { ...v, items: [...v.items, { kind: "github_reconnect", id: localId("g"), message_fa: String(p.message_fa ?? "") }] };

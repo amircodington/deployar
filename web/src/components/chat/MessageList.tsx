@@ -5,6 +5,7 @@ import { RiskChip } from "@/components/RiskChip";
 import { ApprovalCard } from "@/components/cards/ApprovalCard";
 import { HumanOnlyCard } from "@/components/cards/HumanOnlyCard";
 import { LimitationBox } from "@/components/cards/LimitationBox";
+import { PlanCard } from "@/components/cards/PlanCard";
 import { RepoAnalysisCard } from "@/components/cards/RepoAnalysisCard";
 import { fa } from "@/lib/fa";
 import Link from "next/link";
@@ -66,6 +67,8 @@ export function MessageList({
             return <LimitationBox key={item.id} message_fa={item.message_fa} workaround_fa={item.workaround_fa} />;
           case "human_only":
             return <HumanOnlyCard key={item.id} task={item.task} steps_fa={item.steps_fa} />;
+          case "plan_proposal":
+            return <PlanCard key={item.id} data={item.data} />;
           case "repo_analysis":
             return <RepoAnalysisCard key={item.id} data={item.data} />;
           case "github_reconnect":

@@ -17,4 +17,10 @@ ENUMS = {
     "approval_decision": ["approve", "reject"],
     "actor_type": ["user", "agent", "worker", "system"],
     "limitation_kind": ["human_only", "api_missing", "plan_restricted"],
+    # 0101_deploy
+    "proposal_status": ["proposed", "accepted", "rejected", "superseded"],
+    "deployment_status": [
+        "queued", "uploading", "building", "releasing", "health_check", "live", "failed", "superseded", "rolled_back",
+    ],
+    "domain_status": ["pending_dns", "active", "failed", "removed"],
 }  # fmt: skip

@@ -324,6 +324,11 @@ below sit in an `apps[]` list (a monorepo like ترب‌گرد gives `api` + `we
 | decided_at | timestamptz | yes | | |
 
 - Unique partial: `(project_id) where status = 'proposed'` — one open card per project; a new one supersedes.
+- As built in `0101`: an `items` jsonb (one line per app plus the database; a monorepo has several
+  apps), `total_hourly_rial` (Liara bills hourly) and `price_source` (`liara:/v1/me` or the dated
+  console table). The `total = app + db` check is dropped: the total is the sum of `items`.
+- `project.app_root` (0101): one project per deployable app, so ترب‌گرد is two projects on one repo;
+  `deployment` carries `app_root`, `liara_app_name` and `liara_source_id`.
 - Accepting the card is **not** an approval by itself: it queues the `create_app` tool call, whose
   approval preview repeats the price. The plan card and that approval render as one card in the UI.
 

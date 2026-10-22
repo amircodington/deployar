@@ -109,3 +109,32 @@ describe("repo analysis card", () => {
     expect(html).toContain("سرور توسعه");
   });
 });
+
+describe("plan card", () => {
+  it("shows each line, the monthly total, daily cost, balance with days covered, and the price source", async () => {
+    const { PlanCard } = await import("./PlanCard");
+    const html = renderToStaticMarkup(
+      <PlanCard
+        data={{
+          proposal_id: "p1",
+          items: [
+            { kind: "app", root: "api", plan_id: null, plan_name: "مریخ", ram_mb: 1024, cpu: 1, toman_month: 1650000, toman_hour: 2290 },
+            { kind: "db", engine: "postgres", extensions: ["postgis"], plan_id: null, plan_name: "مریخ", ram_mb: 1024, cpu: 1, toman_month: 1650000, toman_hour: 2290 },
+          ],
+          totals: { toman_month: 3300000, toman_hour: 4580, toman_day: 109920, days_covered: 18.2 },
+          balance_toman: 2000000,
+          price_source: "static:liara-console-2026-10-22",
+          prices_fetched_at: "2026-10-22T09:00:00Z",
+          plan_ids_confirmed: false,
+          note_fa: "قیمت‌ها از جدول ثابت",
+        }}
+      />,
+    );
+    expect(html).toContain("۳٬۳۰۰٬۰۰۰ تومان");
+    expect(html).toContain("روزی حدود ۱۰۹٬۹۲۰ تومان");
+    expect(html).toContain("حدود ۱۸.۲ روز");
+    expect(html).toContain("static:liara-console-2026-10-22");
+    expect(html).toContain("+postgis");
+    expect(html).toContain("قیمت‌ها از جدول ثابت");
+  });
+});

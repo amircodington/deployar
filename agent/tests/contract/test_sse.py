@@ -1,44 +1,13 @@
 """Runs API + SSE contract (B-06), driven by a fake LLM through the real gate, registry and event bus."""
 
 import asyncio
-import base64
 import json
-import os
 import uuid
-from collections.abc import Iterator
 from typing import Any
 
 import httpx
-import pytest
-from pgtest import PG_TEST, REDIS_TEST, TEST_URL_STR, fresh_schema
-
-PASSPHRASE = "test-passphrase"
-
-
-@pytest.fixture(scope="module", autouse=True)
-def env() -> Iterator[None]:
-    fresh_schema()
-    saved = {k: os.environ.get(k) for k in ("DATABASE_URL", "REDIS_URL", "DEPLOYAR_PASSPHRASE", "APPROVAL_SECRET")}
-    os.environ.update({
-        "DATABASE_URL": TEST_URL_STR, "REDIS_URL": REDIS_TEST, "DEPLOYAR_PASSPHRASE": PASSPHRASE,
-        "APPROVAL_SECRET": base64.b64encode(os.urandom(32)).decode(),
-    })  # fmt: skip
-    _clear_caches()
-    yield
-    for k, v in saved.items():
-        if v is None:
-            os.environ.pop(k, None)
-        else:
-            os.environ[k] = v
-    _clear_caches()
-
-
-def _clear_caches() -> None:
-    from deployar.api import deps
-    from deployar.core import config, db
-
-    for f in (config.get_settings, db.get_engine, db.get_sessionmaker, deps.get_redis, deps.get_runtime):
-        f.cache_clear()
+from conftest import PASSPHRASE
+from pgtest import PG_TEST
 
 
 async def _project_for_first_user() -> uuid.UUID:

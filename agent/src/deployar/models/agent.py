@@ -30,6 +30,10 @@ class Project(Base):
     created_at: Mapped[datetime] = now_default()
     updated_at: Mapped[datetime] = now_default()
     archived_at: Mapped[datetime | None]
+    current_deployment_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("deployment.id", ondelete="SET NULL", use_alter=True)
+    )
+    app_root: Mapped[str] = mapped_column(server_default=".")
 
 
 class Conversation(Base):
