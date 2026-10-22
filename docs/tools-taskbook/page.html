@@ -1,0 +1,238 @@
+<title>همکار فنی · Task Book</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#111014;--card:#1A181D;--raised:#232027;--line:#2E2A33;--fg:#F3F0EB;--muted:#A09AA8;
+  --amber:#FFB547;--peach:#F7D9B5;--mint:#7EE0C3;--violet:#8E8AF2;--red:#F26B6B;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#F4F2EE;--card:#FFFFFF;--raised:#EEEBE6;--line:#DEDAD3;--fg:#17151A;--muted:#625C68;
+    --amber:#B86E00;--peach:#8A5A1E;--mint:#127A5C;--violet:#5550C8;--red:#C23B3B;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#F4F2EE;--card:#FFFFFF;--raised:#EEEBE6;--line:#DEDAD3;--fg:#17151A;--muted:#625C68;
+  --amber:#B86E00;--peach:#8A5A1E;--mint:#127A5C;--violet:#5550C8;--red:#C23B3B;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 Vazirmatn,system-ui,sans-serif;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px));overflow-x:hidden}
+main{max-width:1040px;margin:0 auto;min-width:0}
+a{color:var(--violet)}
+code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+code{font-size:.86em;background:var(--raised);padding:.1em .35em;border-radius:6px;overflow-wrap:anywhere}
+:focus-visible{outline:2px solid var(--violet);outline-offset:2px;border-radius:8px}
+h1{font-size:clamp(26px,5vw,38px);font-weight:800;margin:40px 0 4px;letter-spacing:-.01em}
+h2{font-size:20px;font-weight:800;margin:40px 0 12px}
+.lede{color:var(--muted);margin:0 0 24px;max-width:70ch}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px}
+.rules{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.rules li{display:grid;grid-template-columns:110px 1fr;gap:12px}
+.rules b{font-weight:700}
+.rules li.safety b{color:var(--amber)}
+@media (max-width:560px){.rules li{grid-template-columns:1fr;gap:0}}
+.names{color:var(--muted);font-size:13.5px;margin-top:14px;white-space:pre-line}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0;margin-top:24px;border-bottom:1px solid var(--line)}
+.search{width:100%;font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+.groups{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px}
+.group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.group>span{color:var(--muted);font-size:12px;margin-right:2px}
+.chip{font:inherit;font-size:13px;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;cursor:pointer;min-height:32px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.amb[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#17151A}
+.count{color:var(--muted);font-size:13px;margin-top:8px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:24px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:720px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:500;background:var(--raised)}
+tr:last-child td{border-bottom:0}
+td a{color:var(--fg);text-decoration:none}
+td a:hover{text-decoration:underline}
+.cards{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px 20px;scroll-margin-top:150px}
+.card.needs{border-left:4px solid var(--amber)}
+.head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.id{font-family:"JetBrains Mono",monospace;color:var(--muted);font-size:13px}
+.card h3{margin:2px 0 8px;font-size:18px;font-weight:700;line-height:1.35}
+.meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px}
+.pill{background:var(--raised);border-radius:999px;padding:2px 10px;color:var(--muted)}
+.pill.t::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:var(--c);vertical-align:1px}
+.pill.amb{background:transparent;border:1px solid var(--amber);color:var(--amber);font-weight:700}
+.btn{font:inherit;font-size:13px;color:var(--fg);background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:6px 12px;cursor:pointer;white-space:nowrap;min-height:36px}
+.btn:hover{border-color:var(--muted)}
+.why{margin:12px 0 0;color:var(--fg)}
+.safety{margin:10px 0 0;padding:10px 14px;border-radius:14px;border:1px solid var(--amber);color:var(--fg);font-size:14px}
+.safety b{color:var(--amber)}
+details.body{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+details.body>summary{cursor:pointer;color:var(--muted);font-size:13.5px;list-style:none;display:flex;align-items:center;gap:8px;min-height:32px}
+details.body>summary::-webkit-details-marker{display:none}
+details.body>summary::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .18s ease-out}
+details.body[open]>summary::before{transform:rotate(45deg)}
+.prog{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:12px}
+.prog.full{color:var(--mint)}
+h4{font-size:13px;font-weight:700;color:var(--muted);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.06em}
+ol,ul.plain{margin:0;padding-left:22px}
+ol li,ul.plain li{margin:4px 0}
+.done{list-style:none;padding:0;margin:0}
+.done label{display:flex;gap:10px;align-items:flex-start;padding:4px 0;cursor:pointer}
+.done input{margin-top:5px;width:16px;height:16px;accent-color:var(--mint);flex:none}
+.done input:checked+span{color:var(--muted);text-decoration:line-through}
+pre{background:var(--raised);border-radius:14px;padding:12px 14px;overflow-x:auto;font-size:12.5px;line-height:1.55;margin:0;unicode-bidi:plaintext;white-space:pre}
+.ev{overflow-wrap:anywhere}
+textarea.fallback{width:100%;min-height:160px;margin-top:10px;font:12px/1.5 "JetBrains Mono",monospace;background:var(--raised);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px}
+.toast{color:var(--mint);font-size:12.5px;margin-left:8px}
+.empty{color:var(--muted);padding:24px;text-align:center}
+.phase-h{display:flex;align-items:baseline;gap:10px}
+.phase-h small{color:var(--muted);font-weight:500;font-size:13px}
+footer{color:var(--muted);font-size:13px;margin-top:40px}
+@media (max-width:640px){.bar{position:static}.card{scroll-margin-top:16px}}
+@media (max-width:480px){.head{flex-direction:column}.card{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+<script>
+const DATA = /*__DATA__*/null;
+(function(){
+  const TYPE_COLOR={"R&D":"var(--violet)","Docs":"var(--peach)","Test":"var(--mint)","Data":"var(--muted)","Video":"var(--red)"};
+  const KEY="hamkar-taskbook-v1";
+  let ticks={};
+  try{ticks=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){ticks={}}
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(ticks))}catch(e){}};
+  const state={phase:"all",type:"all",owner:"all",mo:false,q:""};
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const inl=s=>esc(s)
+    .replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)]+[^\s<).,])/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  const deps=t=>t.deps.length?t.deps.join(", "):"—";
+  const hay=t=>[t.id,t.title,t.why,t.type,t.owner,...t.inputs,...t.steps,...t.done,t.evidence].join(" ").toLowerCase();
+
+  function chips(el,key,values){
+    el.innerHTML='<span>'+key+'</span>'+["all",...values].map(v=>
+      `<button class="chip" type="button" data-k="${key}" data-v="${esc(v)}" aria-pressed="${state[key]===v}">${v==="all"?"All":esc(v)}</button>`).join("");
+  }
+  function card(t){
+    const n=t.done.length, got=t.done.filter((_,i)=>ticks[t.id+":"+i]).length;
+    return `<article class="card${t.approval?" needs":""}" id="${t.id}">
+  <div class="head"><div>
+    <div class="id">${t.id} · ${t.phase} ${esc(DATA.phases[t.phase])}</div>
+    <h3>${esc(t.title)}</h3>
+    <div class="meta">
+      <span class="pill t" style="--c:${TYPE_COLOR[t.type]}">${esc(t.type)}</span>
+      <span class="pill">Owner ${esc(t.owner)}</span>
+      <span class="pill">${esc(t.est)}</span>
+      <span class="pill">Depends ${esc(deps(t))}</span>
+      ${t.approval?'<span class="pill amb">Needs Mohammad</span>':""}
+    </div></div>
+    <div><button class="btn" type="button" data-copy="${t.id}">Copy as markdown</button><span class="toast" aria-live="polite"></span></div>
+  </div>
+  <p class="why"><strong>Why:</strong> ${inl(t.why)}</p>
+  ${t.approval?`<p class="safety"><b>Needs Mohammad:</b> ${inl(t.approval)}</p>`:""}
+  <details class="body"><summary>Inputs, steps, done, evidence <span class="prog${got===n?" full":""}" data-prog="${t.id}">${got}/${n} done</span></summary>
+    <h4>Inputs</h4><ul class="plain">${t.inputs.map(x=>`<li>${inl(x)}</li>`).join("")}</ul>
+    <h4>Steps</h4><ol>${t.steps.map(x=>`<li>${inl(x)}</li>`).join("")}</ol>
+    <h4>Done when</h4><ul class="done">${t.done.map((x,i)=>`<li><label><input type="checkbox" data-tick="${t.id}:${i}"${ticks[t.id+":"+i]?" checked":""}><span>${inl(x)}</span></label></li>`).join("")}</ul>
+    <h4>Evidence</h4><p class="ev"><code>${esc(t.evidence)}</code></p>
+    <h4>Report in chat</h4><p class="ev"><code>${esc(t.report)}</code></p>
+    ${t.template?`<h4>Template (${esc(t.lang)})</h4><pre tabindex="0">${esc(t.template)}</pre>`:""}
+  </details>
+</article>`;
+  }
+  function render(){
+    const q=state.q.trim().toLowerCase();
+    const list=DATA.tasks.filter(t=>(state.phase==="all"||t.phase===state.phase)&&(state.type==="all"||t.type===state.type)
+      &&(state.owner==="all"||t.owner===state.owner)&&(!state.mo||t.approval)&&(!q||hay(t).includes(q)));
+    document.getElementById("count").textContent=`${list.length} of ${DATA.tasks.length} tasks`;
+    document.getElementById("board").innerHTML=list.map(t=>`<tr><td class="mono"><a href="#${t.id}">${t.id}</a></td><td><a href="#${t.id}">${esc(t.title)}</a></td><td>${esc(t.type)}</td><td>${esc(t.owner)}</td><td>${t.phase}</td><td>${esc(t.est)}</td><td class="mono">${esc(deps(t))}</td><td>${t.approval?'<span style="color:var(--amber);font-weight:700">yes</span>':""}</td></tr>`).join("")
+      ||'<tr><td colspan="8" class="empty">No tasks match.</td></tr>';
+    let html="";
+    for(const p of Object.keys(DATA.phases)){
+      const ts=list.filter(t=>t.phase===p); if(!ts.length) continue;
+      html+=`<h2 class="phase-h">${p} — ${esc(DATA.phases[p])} <small>${ts.length} tasks</small></h2><div class="cards">${ts.map(card).join("")}</div>`;
+    }
+    document.getElementById("cards").innerHTML=html||'<p class="empty">No tasks match these filters.</p>';
+    ["phase","type","owner"].forEach(k=>document.querySelectorAll(`.chip[data-k="${k}"]`).forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===state[k]))));
+    document.getElementById("mo").setAttribute("aria-pressed",String(state.mo));
+  }
+  function fallback(btn,md){
+    const art=btn.closest(".card"); let ta=art.querySelector("textarea.fallback");
+    if(!ta){ta=document.createElement("textarea");ta.className="fallback";ta.readOnly=true;ta.setAttribute("aria-label","Task as markdown");art.appendChild(ta)}
+    ta.value=md; ta.focus(); ta.select();
+    btn.nextElementSibling.textContent="Selected, press Cmd/Ctrl+C";
+  }
+  function init(){
+    const r=document.getElementById("rules");
+    r.innerHTML=DATA.rules.map(([k,v])=>`<li${k==="Safety"?' class="safety"':""}><b>${esc(k)}</b><span>${inl(v)}</span></li>`).join("");
+    document.getElementById("names").innerHTML=inl(DATA.names);
+    document.getElementById("checks").innerHTML=DATA.checklists.map(([k,v])=>`<li><b>${esc(k)}</b><span>${inl(v)}</span></li>`).join("");
+    chips(document.getElementById("g-phase"),"phase",Object.keys(DATA.phases));
+    chips(document.getElementById("g-type"),"type",["R&D","Docs","Test","Data","Video"]);
+    chips(document.getElementById("g-owner"),"owner",["A","B","either"]);
+    document.addEventListener("click",e=>{
+      const c=e.target.closest(".chip[data-k]");
+      if(c){state[c.dataset.k]=c.dataset.v;render();return}
+      if(e.target.closest("#mo")){state.mo=!state.mo;render();return}
+      const b=e.target.closest("[data-copy]");
+      if(b){
+        const t=DATA.tasks.find(x=>x.id===b.dataset.copy);
+        try{
+          navigator.clipboard.writeText(t.md).then(()=>{b.nextElementSibling.textContent="Copied"; setTimeout(()=>{b.nextElementSibling.textContent=""},1600)}).catch(()=>fallback(b,t.md));
+        }catch(err){fallback(b,t.md)}
+      }
+    });
+    document.addEventListener("change",e=>{
+      const k=e.target.dataset&&e.target.dataset.tick; if(!k) return;
+      if(e.target.checked) ticks[k]=true; else delete ticks[k];
+      save();
+      const id=k.split(":")[0], t=DATA.tasks.find(x=>x.id===id), got=t.done.filter((_,i)=>ticks[id+":"+i]).length;
+      const p=document.querySelector(`[data-prog="${id}"]`); p.textContent=`${got}/${t.done.length} done`; p.classList.toggle("full",got===t.done.length);
+    });
+    document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value;render()});
+    render();
+    if(location.hash){const el=document.getElementById(location.hash.slice(1)); if(el) el.scrollIntoView()}
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init); else init();
+})();
+</script>
+<main>
+  <h1>همکار فنی · Task Book</h1>
+  <p class="lede">For Student A and Student B. Mohammad builds the software with Claude Code; you do R&amp;D, tests, docs, checks and evidence. Each card: why, inputs, steps, done criteria (tick them, they are remembered on this device), evidence path, what to post in chat, and the template to fill. Amber means a step needs Mohammad present.</p>
+
+  <section class="panel" aria-labelledby="rules-h">
+    <h2 id="rules-h" style="margin-top:0">Rules for every task</h2>
+    <ul class="rules" id="rules"></ul>
+    <p class="names" id="names"></p>
+  </section>
+
+  <div class="bar" role="search">
+    <input class="search" id="q" type="search" placeholder="Search tasks (e.g. token, eval, domain, T-17)" aria-label="Search tasks">
+    <div class="groups">
+      <div class="group" id="g-phase" role="group" aria-label="Phase"></div>
+      <div class="group" id="g-type" role="group" aria-label="Type"></div>
+      <div class="group" id="g-owner" role="group" aria-label="Owner"></div>
+      <div class="group"><button class="chip amb" id="mo" type="button" aria-pressed="false">Needs Mohammad</button></div>
+    </div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </div>
+
+  <h2>Board</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>id</th><th>title</th><th>type</th><th>owner</th><th>phase</th><th>estimate</th><th>depends</th><th>Mohammad</th></tr></thead>
+    <tbody id="board"></tbody>
+  </table></div>
+
+  <div id="cards"></div>
+
+  <h2>Checklists used by every task</h2>
+  <section class="panel"><ul class="rules" id="checks"></ul></section>
+  <footer>Source of truth: <code>docs/TASKS.md</code>. Ticks live only in this browser.</footer>
+</main>

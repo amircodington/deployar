@@ -1,0 +1,899 @@
+<title>همکار فنی · Database Design</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#111014; --card:#1A181D; --raised:#232027; --line:#2E2A33; --fg:#F3F0EB; --muted:#A09AA8;
+  --amber:#FFB547; --peach:#F7D9B5; --mint:#7EE0C3; --violet:#8E8AF2; --red:#F26B6B;
+  --f-ui:"Vazirmatn",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#F4F2EE; --card:#FFFFFF; --raised:#EEEBE6; --line:#DEDAD3; --fg:#17151A; --muted:#625C68;
+  --amber:#B86E00; --peach:#8A5A1E; --mint:#127A5C; --violet:#5550C8; --red:#C23B3B; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#F4F2EE; --card:#FFFFFF; --raised:#EEEBE6; --line:#DEDAD3; --fg:#17151A; --muted:#625C68;
+  --amber:#B86E00; --peach:#8A5A1E; --mint:#127A5C; --violet:#5550C8; --red:#C23B3B; color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:40px 80px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:28px;min-width:0}
+.wrap>*{min-width:0}
+h1,h2,h3{margin:0;line-height:1.25;text-wrap:balance}
+h1{font-size:clamp(32px,6vw,52px);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(22px,3.4vw,30px);font-weight:800;letter-spacing:-.01em;padding-top:12px}
+h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;font-size:16px}
+p,ul,ol{margin:0;max-width:78ch;overflow-wrap:anywhere}
+ul,ol{padding-left:22px;display:grid;gap:6px}
+a{color:var(--violet)}
+.eyebrow{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.hero{display:grid;gap:14px}
+.hero p:not(.eyebrow){color:var(--muted)}
+.sec{display:grid;gap:16px;min-width:0;scroll-margin-top:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;display:grid;gap:14px;min-width:0}
+.card.sensitive{border-color:color-mix(in srgb,var(--amber) 55%,var(--line));box-shadow:inset 3px 0 0 var(--amber)}
+.tname{font-family:var(--f-mono);font-size:17px;font-weight:500;color:var(--mint)}
+.sensitive .tname{color:var(--amber)}
+.tdesc{color:var(--muted);font-weight:500}
+.toc ol{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.toc a{display:inline-block;padding:6px 12px;border-radius:999px;background:var(--raised);border:1px solid var(--line);
+  color:var(--fg);text-decoration:none;font-size:13px}
+.toc a:hover{border-color:var(--violet)}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--raised);border-radius:6px;padding:1px 5px}
+.scroll{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{font-family:var(--f-mono);font-size:12.5px;white-space:nowrap}
+td code{white-space:nowrap}
+td{min-width:90px}
+td:last-child{min-width:240px}
+tr:last-child td{border-bottom:0}
+pre{margin:0;font-family:var(--f-mono);font-size:12.5px;line-height:1.6}
+pre.code{background:var(--raised);border-radius:16px;padding:14px 16px;width:max-content;min-width:100%}
+pre.code code{background:none;padding:0;font-size:inherit}
+.diagram{background:var(--raised);border-radius:16px;padding:12px}
+pre.mermaid{min-width:560px;text-align:center}
+.map svg{display:block;width:100%;min-width:760px;height:auto}
+.map text{font-family:var(--f-mono)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+@media (max-width:520px){.card{padding:14px;border-radius:20px}body{font-size:14.5px}}
+</style>
+<main class="wrap"><header class="hero">
+<p class="eyebrow">همکار فنی · Database design</p>
+<h1>Database Design</h1>
+<p>Source of truth for the schema of <bdi dir="rtl">«همکار فنی»</bdi>. PostgreSQL 16 + Redis 7. The <code>agent/</code> service (FastAPI + Claude Agent SDK) and the <code>arq</code> worker share one database through SQLAlchemy 2; Alembic (in <code>agent/migrations/</code>) owns every migration. No other service writes to the database.</p>
+<p>Conventions:</p>
+<ul><li><strong>IDs = uuid v7</strong> everywhere, with two exceptions (<code>audit_log</code>, <code>check_result</code> use <code>bigint generated always as identity</code>). Why v7: ids appear in URLs, SSE events and signed approval tokens, so they must not be guessable or enumerable (rules out bare <code>bigint</code> there); v7 is time-ordered, so btree inserts stay append-like and <code>order by id</code> ≈ <code>order by created_at</code> (rules out v4); the app can mint the id before insert, which the approval signer needs (it signs the approval id before the row commits). The two exceptions are append-only, high-row-count, never addressed by URL, and <code>audit_log</code> needs a strict total order for its hash chain. PG16 has no native <code>uuidv7()</code>, so migration <code>0001</code> adds <code>uuid_generate_v7()</code> (below) as the column default; the app uses <code>uuid_utils.uuid7()</code>. When we move to PG18, swap the function for <code>uuidv7()</code>.</li><li><strong>Times</strong>: <code>timestamptz</code>, stored UTC, rendered Jalali in the UI (<bdi dir="rtl">«۳ آبان ۱۴۰۵، ۱۲:۴۰»</bdi>).</li><li><strong>Money</strong>: <code>bigint</code> <strong>rial</strong>, suffix <code>_rial</code>. The UI divides by 10 and shows toman. Liara prices are copied with their source (<code>"source":"liara:list_plans"</code>) — never estimated.</li><li><strong>Persian text</strong> columns end in <code>_fa</code>; stored as written.</li><li><strong><code>user</code> is a reserved word</strong> in PostgreSQL: SQL must write <code>"user"</code>. SQLAlchemy quotes it for us.</li><li><strong>Enums</strong> are PostgreSQL enum types for closed sets (statuses, kinds). Tool names are <code>text</code> with a check constraint, because the list grows with the tool registry. Adding an enum value is <code>ALTER TYPE … ADD VALUE</code> in its own Alembic migration (it cannot be used in the same transaction).</li><li><strong>JSONB</strong> only for payloads whose shape belongs to one feature (analysis, preview, evidence). Every JSONB column has a documented shape below and a Pydantic model in <code>agent/app/schemas/</code>.</li><li><strong>Secrets</strong> (Liara token, env var values) live only as AES-GCM ciphertext. They never enter a JSONB column, a log line, the LLM context, or an SSE event.</li></ul>
+<div class="card"><div class="scroll"><pre class="code" data-lang="sql"><code>-- 0001: extensions + uuid v7 (version bits 0111 set on a v4 base; 48-bit unix-ms prefix)
+create extension if not exists pgcrypto;
+create extension if not exists citext;
+create function uuid_generate_v7() returns uuid language sql volatile as $$
+  select encode(set_bit(set_bit(overlay(uuid_send(gen_random_uuid())
+    placing substring(int8send(floor(extract(epoch from clock_timestamp()) * 1000)::bigint) from 3)
+    from 1 for 6), 52, 1), 53, 1), 'hex')::uuid;
+$$;</code></pre></div></div>
+</header><nav class="card toc" aria-label="Contents"><p class="eyebrow">Contents</p><ol><li><a href="#overview-map">Overview map</a></li><li><a href="#groups">Groups</a></li><li><a href="#overview-erd">Overview ERD</a></li><li><a href="#identity-connections">Identity &amp; connections</a></li><li><a href="#projects-deploys">Projects &amp; deploys</a></li><li><a href="#conversation-runs-approvals">Conversation, runs &amp; approvals</a></li><li><a href="#incidents-sre">Incidents &amp; SRE</a></li><li><a href="#checks">Checks</a></li><li><a href="#audit-evals">Audit &amp; evals</a></li><li><a href="#state-machines">State machines</a></li><li><a href="#data-lifecycle-retention">Data lifecycle &amp; retention</a></li><li><a href="#secrets-handling">Secrets handling</a></li><li><a href="#sample-rows-one-demo-story">Sample rows — one demo story</a></li><li><a href="#migration-plan-alembic">Migration plan (Alembic)</a></li><li><a href="#key-queries">Key queries</a></li><li><a href="#redis-keys">Redis keys</a></li></ol></nav><section class="sec" id="overview-map"><h2>Overview map</h2>
+<div class="card map"><div class="legend"><span style="--c:var(--amber)">approval / secret</span><span style="--c:var(--violet)">identity</span><span style="--c:var(--mint)">projects, checks</span><span style="--c:var(--peach)">runs</span><span style="--c:var(--red)">incidents</span><span style="--c:var(--muted)">audit (no FKs)</span></div>
+<div class="scroll"><svg viewBox="0 0 1130 530" role="img" aria-label="Overview ERD: 26 tables grouped by domain, lines are foreign keys" xmlns="http://www.w3.org/2000/svg">
+<rect x="20" y="40" width="200" height="230" rx="18" fill="var(--raised)" stroke="var(--line)"/>
+<text x="34" y="62" font-size="12" font-weight="500" fill="var(--violet)">Identity & connections</text>
+<rect x="240" y="40" width="345" height="230" rx="18" fill="var(--raised)" stroke="var(--line)"/>
+<text x="254" y="62" font-size="12" font-weight="500" fill="var(--mint)">Projects & deploys</text>
+<rect x="600" y="40" width="340" height="230" rx="18" fill="var(--raised)" stroke="var(--line)"/>
+<text x="614" y="62" font-size="12" font-weight="500" fill="var(--peach)">Conversation · runs · approvals</text>
+<rect x="20" y="300" width="560" height="200" rx="18" fill="var(--raised)" stroke="var(--line)"/>
+<text x="34" y="322" font-size="12" font-weight="500" fill="var(--red)">Incidents & SRE</text>
+<rect x="600" y="300" width="340" height="200" rx="18" fill="var(--raised)" stroke="var(--line)"/>
+<text x="614" y="322" font-size="12" font-weight="500" fill="var(--mint)">Checks</text>
+<rect x="955" y="300" width="165" height="200" rx="18" fill="var(--raised)" stroke="var(--line)"/>
+<text x="969" y="322" font-size="12" font-weight="500" fill="var(--muted)">Audit & evals</text>
+<path d="M120 112 V140" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M45 96 C30 96 30 216 45 216" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M195 96 H255" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M195 156 H228 V104 H255" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M195 216 H233 V108 H255" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M405 96 H425" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M500 112 V140" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M330 112 V140" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M405 104 H415 V216 H425" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M765 96 H785" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M690 112 V140" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M765 156 H785" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M690 172 V200" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M765 216 H785" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linejoin="round" opacity="1"/>
+<path d="M330 80 V70 H590 V156 H615" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M615 216 H594 V186 H330 V172" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M255 100 H247 V285 H110 V340" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M460 340 V290 H690 V232" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M860 372 V515 H28 V356 H35" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M185 356 H210" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M360 356 H385" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M110 372 V400" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M185 416 H210" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M385 416 H360" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M460 372 V400" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M765 356 H785" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<path d="M1037 432 V460" fill="none" stroke="var(--muted)" stroke-width="1.25" stroke-linejoin="round" opacity="0.7"/>
+<rect x="45" y="80" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--violet)" stroke-width="1.25"/>
+<text x="120.0" y="100.5" font-size="12" text-anchor="middle" fill="var(--fg)">user</text>
+<rect x="45" y="140" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--amber)" stroke-width="2"/>
+<text x="120.0" y="160.5" font-size="12" text-anchor="middle" fill="var(--fg)">liara_connection</text>
+<rect x="45" y="200" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--violet)" stroke-width="1.25"/>
+<text x="120.0" y="220.5" font-size="12" text-anchor="middle" fill="var(--fg)">github_connection</text>
+<rect x="255" y="80" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="330.0" y="100.5" font-size="12" text-anchor="middle" fill="var(--fg)">project</text>
+<rect x="425" y="80" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="500.0" y="100.5" font-size="12" text-anchor="middle" fill="var(--fg)">repo_analysis</text>
+<rect x="255" y="140" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="330.0" y="160.5" font-size="12" text-anchor="middle" fill="var(--fg)">deployment</text>
+<rect x="425" y="140" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="500.0" y="160.5" font-size="12" text-anchor="middle" fill="var(--fg)">plan_proposal</text>
+<rect x="425" y="200" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="500.0" y="220.5" font-size="12" text-anchor="middle" fill="var(--fg)">domain</text>
+<rect x="615" y="80" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--peach)" stroke-width="1.25"/>
+<text x="690.0" y="100.5" font-size="12" text-anchor="middle" fill="var(--fg)">conversation</text>
+<rect x="785" y="80" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--peach)" stroke-width="1.25"/>
+<text x="860.0" y="100.5" font-size="12" text-anchor="middle" fill="var(--fg)">message</text>
+<rect x="615" y="140" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--peach)" stroke-width="1.25"/>
+<text x="690.0" y="160.5" font-size="12" text-anchor="middle" fill="var(--fg)">run</text>
+<rect x="785" y="140" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--peach)" stroke-width="1.25"/>
+<text x="860.0" y="160.5" font-size="12" text-anchor="middle" fill="var(--fg)">run_step</text>
+<rect x="615" y="200" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--peach)" stroke-width="1.25"/>
+<text x="690.0" y="220.5" font-size="12" text-anchor="middle" fill="var(--fg)">tool_call</text>
+<rect x="785" y="200" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--amber)" stroke-width="2"/>
+<text x="860.0" y="220.5" font-size="12" text-anchor="middle" fill="var(--fg)">approval</text>
+<rect x="35" y="340" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--red)" stroke-width="1.25"/>
+<text x="110.0" y="360.5" font-size="12" text-anchor="middle" fill="var(--fg)">incident</text>
+<rect x="210" y="340" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--red)" stroke-width="1.25"/>
+<text x="285.0" y="360.5" font-size="12" text-anchor="middle" fill="var(--fg)">hypothesis</text>
+<rect x="385" y="340" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--red)" stroke-width="1.25"/>
+<text x="460.0" y="360.5" font-size="12" text-anchor="middle" fill="var(--fg)">incident_action</text>
+<rect x="35" y="400" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--red)" stroke-width="1.25"/>
+<text x="110.0" y="420.5" font-size="12" text-anchor="middle" fill="var(--fg)">evidence</text>
+<rect x="210" y="400" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--red)" stroke-width="1.25"/>
+<text x="285.0" y="420.5" font-size="12" text-anchor="middle" fill="var(--fg)">verification</text>
+<rect x="385" y="400" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--red)" stroke-width="1.25"/>
+<text x="460.0" y="420.5" font-size="12" text-anchor="middle" fill="var(--fg)">code_fix</text>
+<rect x="615" y="340" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="690.0" y="360.5" font-size="12" text-anchor="middle" fill="var(--fg)">scheduled_check</text>
+<rect x="785" y="340" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="860.0" y="360.5" font-size="12" text-anchor="middle" fill="var(--fg)">check_result</text>
+<rect x="615" y="400" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--mint)" stroke-width="1.25"/>
+<text x="690.0" y="420.5" font-size="12" text-anchor="middle" fill="var(--fg)">limitation_event</text>
+<rect x="962" y="340" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--muted)" stroke-width="1.25"/>
+<text x="1037.0" y="360.5" font-size="12" text-anchor="middle" fill="var(--fg)">audit_log</text>
+<rect x="962" y="400" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--muted)" stroke-width="1.25"/>
+<text x="1037.0" y="420.5" font-size="12" text-anchor="middle" fill="var(--fg)">eval_case</text>
+<rect x="962" y="460" width="150" height="32" rx="9" fill="var(--card)" stroke="var(--muted)" stroke-width="1.25"/>
+<text x="1037.0" y="480.5" font-size="12" text-anchor="middle" fill="var(--fg)">eval_run</text>
+<text x="970" y="62" font-size="11" fill="var(--muted)">lines = foreign keys</text>
+<text x="970" y="80" font-size="11" fill="var(--muted)">parent → child</text>
+<text x="970" y="110" font-size="11" fill="var(--amber)">amber = approval gate</text>
+<text x="970" y="128" font-size="11" fill="var(--amber)">and encrypted secrets</text>
+<text x="970" y="158" font-size="11" fill="var(--muted)">audit_log keeps no FKs:</text>
+<text x="970" y="176" font-size="11" fill="var(--muted)">it outlives its targets</text>
+</svg></div></div></section>
+<section class="sec" id="groups"><h2>Groups</h2>
+<div class="card"><div class="scroll"><pre class="code" data-lang="text"><code>identity &amp; connections        user, liara_connection, github_connection
+projects &amp; deploys            project, repo_analysis, plan_proposal, deployment, domain
+conversation, runs, approvals conversation, message, run, run_step, tool_call, approval
+incidents &amp; SRE               incident, evidence, hypothesis, incident_action, verification, code_fix
+checks                        scheduled_check, check_result, limitation_event
+audit &amp; evals                 audit_log, eval_case, eval_run</code></pre></div></div>
+<p>26 tables. Auth sessions and magic-link tokens live in Redis, not in Postgres (see Redis keys).</p>
+</section>
+<section class="sec" id="overview-erd"><h2>Overview ERD</h2>
+<div class="card"><div class="scroll diagram"><pre class="mermaid">erDiagram
+  user ||--o{ liara_connection : owns
+  user ||--o{ github_connection : installs
+  user ||--o{ project : owns
+  liara_connection ||--o{ project : "deploys with"
+  github_connection |o--o{ project : "reads repo via"
+  project ||--o{ repo_analysis : analyzed
+  repo_analysis ||--o{ plan_proposal : "basis of"
+  project ||--o{ deployment : has
+  project ||--o{ domain : has
+  user ||--o{ conversation : starts
+  project |o--o{ conversation : about
+  conversation ||--o{ message : has
+  conversation |o--o{ run : spawns
+  project ||--o{ run : "runs on"
+  run ||--o{ run_step : "checklist"
+  run ||--o{ tool_call : makes
+  tool_call |o--o| run_step : fulfils
+  tool_call ||--o| approval : "released by"
+  tool_call |o--o| deployment : starts
+  project ||--o{ incident : has
+  incident ||--o{ run : "investigated by"
+  incident ||--o{ evidence : collects
+  tool_call |o--o{ evidence : produced
+  incident ||--o{ hypothesis : ranks
+  incident ||--o{ incident_action : takes
+  hypothesis |o--o{ incident_action : motivates
+  tool_call ||--o| incident_action : executes
+  incident ||--o{ code_fix : "fixed by"
+  code_fix |o--o| deployment : ships
+  incident |o--o{ verification : proves
+  deployment |o--o{ verification : proves
+  project ||--o{ scheduled_check : schedules
+  scheduled_check ||--o{ check_result : records
+  check_result |o--o| incident : opens
+  user ||--o{ limitation_event : "was told"
+  eval_case ||--o{ eval_run : "scored in"
+  audit_log }o..o| project : "logs (no FK)"</pre></div></div>
+</section>
+<section class="sec" id="identity-connections"><h2>Identity &amp; connections</h2>
+<div class="card"><div class="scroll diagram"><pre class="mermaid">erDiagram
+  user ||--o{ liara_connection : owns
+  user ||--o{ github_connection : installs
+  user {
+    uuid id PK
+    citext email UK
+    text display_name
+    user_role role
+  }
+  liara_connection {
+    uuid id PK
+    uuid user_id FK
+    bytea token_ciphertext
+    smallint key_version
+    text token_last4
+    connection_status status
+    timestamptz expires_at
+  }
+  github_connection {
+    uuid id PK
+    uuid user_id FK
+    bigint installation_id UK
+    text account_login
+  }</pre></div></div>
+<article class="card tcard" id="t-user"><h3><span class="tname">user</span><span class="tdesc">a developer who signs in by email magic link</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>email</td><td>citext</td><td>no</td><td></td><td>unique; magic-link login</td></tr><tr><td>display_name</td><td>text</td><td>yes</td><td></td><td>from the user, shown in the header</td></tr><tr><td>role</td><td>user_role</td><td>no</td><td><code>'member'</code></td><td><code>member</code>, <code>admin</code> (admin sees evals + all audit)</td></tr><tr><td>locale</td><td>text</td><td>no</td><td><code>'fa-IR'</code></td><td>check <code>locale in ('fa-IR','en')</code></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>last_seen_at</td><td>timestamptz</td><td>yes</td><td></td><td>updated at most once per 5 min</td></tr><tr><td>deleted_at</td><td>timestamptz</td><td>yes</td><td></td><td>soft-delete mark; hard delete runs 30 days later</td></tr></tbody></table></div>
+<ul><li>Unique: <code>email</code>.</li><li>Account deletion: the hard-delete job deletes the <code>"user"</code> row; every owned table cascades. <code>audit_log</code> has no FK and keeps the rows with <code>actor_user_id</code> set to null by that same job.</li></ul>
+</article>
+<article class="card tcard sensitive" id="t-liara-connection"><h3><span class="tname">liara_connection</span><span class="tdesc">an encrypted Liara API token</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK; also part of the AES-GCM AAD</td></tr><tr><td>user_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>"user"</code> <strong>on delete cascade</strong></td></tr><tr><td>label</td><td>text</td><td>no</td><td><code>'Liara'</code></td><td>user-chosen (<bdi dir="rtl">«حساب اصلی»</bdi>)</td></tr><tr><td>token_ciphertext</td><td>bytea</td><td>no</td><td></td><td><code>nonce(12) ‖ ciphertext ‖ tag(16)</code>, AES-256-GCM; see Secrets</td></tr><tr><td>key_version</td><td>smallint</td><td>no</td><td></td><td>which key in <code>HAMKAR_TOKEN_KEYS</code> encrypted it</td></tr><tr><td>token_last4</td><td>text</td><td>no</td><td></td><td>last 4 chars, for display («…9f2c»); check <code>length(token_last4)=4</code></td></tr><tr><td>liara_account_email</td><td>text</td><td>yes</td><td></td><td>from Liara <code>/me</code>, shown to confirm the right account</td></tr><tr><td>team_id</td><td>text</td><td>yes</td><td></td><td>Liara team, if the token is a team token</td></tr><tr><td>status</td><td>connection_status</td><td>no</td><td><code>'active'</code></td><td><code>active</code>, <code>expired</code>, <code>revoked</code>, <code>invalid</code></td></tr><tr><td>expires_at</td><td>timestamptz</td><td>yes</td><td></td><td>Liara tokens expire 1 h – 1 y; user enters it, or 401 marks <code>expired</code></td></tr><tr><td>last_verified_at</td><td>timestamptz</td><td>yes</td><td></td><td>last successful <code>/me</code> call</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>revoked_at</td><td>timestamptz</td><td>yes</td><td></td><td>set with status <code>revoked</code>; ciphertext overwritten with <code>'\x'</code></td></tr></tbody></table></div>
+<ul><li>Unique partial: <code>(user_id) where status = 'active'</code> — one active Liara account per user (MVP).</li><li>Index <code>(expires_at) where status = 'active'</code> — nightly "token expires in 7 days" nudge.</li><li>Check: <code>(status = 'revoked') = (revoked_at is not null)</code>.</li><li>Column privilege: role <code>hamkar_readonly</code> has no <code>select</code> on <code>token_ciphertext</code>.</li></ul>
+</article>
+<article class="card tcard" id="t-github-connection"><h3><span class="tname">github_connection</span><span class="tdesc">a GitHub App installation</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>user_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>"user"</code> <strong>on delete cascade</strong></td></tr><tr><td>installation_id</td><td>bigint</td><td>no</td><td></td><td>GitHub App installation id</td></tr><tr><td>account_login</td><td>text</td><td>no</td><td></td><td><code>amox</code></td></tr><tr><td>account_type</td><td>text</td><td>no</td><td></td><td>check <code>in ('User','Organization')</code></td></tr><tr><td>repo_selection</td><td>text</td><td>no</td><td></td><td>check <code>in ('all','selected')</code></td></tr><tr><td>permissions</td><td>jsonb</td><td>no</td><td><code>'{}'</code></td><td>as GitHub reports it: <code>{"contents":"write","pull_requests":"write","metadata":"read"}</code></td></tr><tr><td>suspended_at</td><td>timestamptz</td><td>yes</td><td></td><td>from the <code>installation.suspend</code> webhook</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>installation_id</code>.</li><li>No token column: installation tokens (1 h) are minted per job from the App private key in env and held in memory only.</li></ul>
+</article>
+</section>
+<section class="sec" id="projects-deploys"><h2>Projects &amp; deploys</h2>
+<div class="card"><div class="scroll diagram"><pre class="mermaid">erDiagram
+  project ||--o{ repo_analysis : analyzed
+  repo_analysis ||--o{ plan_proposal : "basis of"
+  project ||--o{ plan_proposal : has
+  project ||--o{ deployment : has
+  project ||--o{ domain : has
+  deployment |o--o| project : "current of"
+  deployment |o--o| deployment : "rolled back from"
+  project {
+    uuid id PK
+    uuid user_id FK
+    uuid liara_connection_id FK
+    uuid github_connection_id FK
+    text liara_app_name
+    project_status status
+    uuid current_deployment_id FK
+  }
+  repo_analysis {
+    uuid id PK
+    uuid project_id FK
+    text commit_sha
+    jsonb detected
+  }
+  plan_proposal {
+    uuid id PK
+    uuid project_id FK
+    uuid repo_analysis_id FK
+    bigint total_monthly_rial
+    proposal_status status
+  }
+  deployment {
+    uuid id PK
+    uuid project_id FK
+    uuid tool_call_id FK
+    uuid code_fix_id FK
+    text commit_sha
+    deployment_status status
+  }
+  domain {
+    uuid id PK
+    uuid project_id FK
+    citext hostname
+    domain_status status
+  }</pre></div></div>
+<article class="card tcard" id="t-project"><h3><span class="tname">project</span><span class="tdesc">one app on Liara built from one GitHub repo</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>user_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>"user"</code> on delete cascade</td></tr><tr><td>liara_connection_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>liara_connection</code> <strong>no action</strong> (revoking = status change, never delete; <code>no action</code> lets a user-delete cascade finish)</td></tr><tr><td>github_connection_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>github_connection</code> on delete set null (repo can't be re-read; deploys stay)</td></tr><tr><td>name</td><td>text</td><td>no</td><td></td><td>display name, <bdi dir="rtl">«راهبر خرید»</bdi></td></tr><tr><td>repo_full_name</td><td>text</td><td>yes</td><td></td><td><code>amox/rahbar-kharid</code>; check <code>~ '^[\w.-]+/[\w.-]+$'</code></td></tr><tr><td>repo_default_branch</td><td>text</td><td>yes</td><td></td><td><code>main</code></td></tr><tr><td>liara_app_name</td><td>text</td><td>yes</td><td></td><td>set by <code>create_app</code>; check <code>~ '^[a-z0-9-]{3,32}$'</code></td></tr><tr><td>platform</td><td>text</td><td>yes</td><td></td><td>Liara platform (<code>next</code>, <code>node</code>, <code>django</code>, <code>docker</code>, …) validated against the API's list</td></tr><tr><td>plan_id</td><td>text</td><td>yes</td><td></td><td>current Liara plan id; changed by <code>resize_plan</code></td></tr><tr><td>liara_db_name</td><td>text</td><td>yes</td><td></td><td>set by <code>create_database</code></td></tr><tr><td>db_kind</td><td>text</td><td>yes</td><td></td><td>check <code>in ('postgres','mysql','mariadb','mongodb','redis')</code></td></tr><tr><td>live_url</td><td>text</td><td>yes</td><td></td><td><code>https://rahbar-kharid.liara.run</code></td></tr><tr><td>status</td><td>project_status</td><td>no</td><td><code>'draft'</code></td><td><code>draft</code>, <code>provisioning</code>, <code>live</code>, <code>degraded</code>, <code>down</code>, <code>archived</code></td></tr><tr><td>current_deployment_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>deployment</code> on delete set null; added in P1 after <code>deployment</code> exists</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>updated_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td>trigger <code>touch_updated_at</code></td></tr><tr><td>archived_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr></tbody></table></div>
+<ul><li>Unique partial: <code>(liara_connection_id, liara_app_name) where liara_app_name is not null</code> — one row per Liara app.</li><li>Index <code>(user_id, updated_at desc) where archived_at is null</code> — project switcher.</li><li><code>status</code> is derived by the agent from the last deployment + open incident + last checks; the side panel reads it, it never reads Liara on page load.</li></ul>
+</article>
+<article class="card tcard" id="t-repo-analysis"><h3><span class="tname">repo_analysis</span><span class="tdesc">what the deterministic detectors found in one commit</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>run_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>run</code> on delete set null — the run that called <code>analyze_repo</code></td></tr><tr><td>commit_sha</td><td>text</td><td>no</td><td></td><td>check <code>~ '^[0-9a-f]{40}$'</code></td></tr><tr><td>detector_version</td><td>text</td><td>no</td><td></td><td><code>detect@3</code>; bumps invalidate the cache</td></tr><tr><td>detected</td><td>jsonb</td><td>no</td><td></td><td>shape below</td></tr><tr><td>summary_fa</td><td>text</td><td>yes</td><td></td><td>LLM's 2–3 sentence explanation of <code>detected</code>; never the source of a fact</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>(project_id, commit_sha, detector_version)</code> — re-analysis of the same commit is a cache hit.</li><li>Index <code>(project_id, created_at desc)</code> — "latest analysis" for the plan card.</li></ul>
+<p><code>detected</code> shape (every fact carries the file it came from):</p>
+<div class="scroll"><pre class="code" data-lang="json"><code>{
+  "platform": {"value": "next", "source": "package.json#dependencies.next"},
+  "framework": {"name": "next", "version": "16.0.1"},
+  "runtime": {"name": "node", "version": "22", "source": ".nvmrc"},
+  "package_manager": "pnpm",
+  "build_cmd": "pnpm build",
+  "start_cmd": "pnpm start",
+  "port": {"value": 3000, "source": "package.json#scripts.start"},
+  "dockerfile": false,
+  "database": {"kind": "postgres", "orm": null, "evidence": ["package.json#dependencies.pg", ".env.example:DATABASE_URL"]},
+  "env_vars": [
+    {"key": "DATABASE_URL", "required": true, "secret": true, "source": ".env.example:3", "fill": "from_created_db"},
+    {"key": "NEXT_PUBLIC_AGENT_URL", "required": true, "secret": false, "source": ".env.example:5", "fill": "ask_user"},
+    {"key": "BOXAPI_KEY", "required": false, "secret": true, "source": ".env.example:7", "fill": "ask_user"}
+  ],
+  "ram_estimate_mb": {"value": 512, "basis": "next build + 225k-row catalog page; detector rule ram.next.v2"},
+  "warnings": [{"code": "no_healthcheck", "message_fa": "مسیر سلامت (/health) پیدا نشد؛ از صفحهٔ اصلی استفاده می‌کنم."}]
+}</code></pre></div>
+</article>
+<article class="card tcard" id="t-plan-proposal"><h3><span class="tname">plan_proposal</span><span class="tdesc">the plan card: Liara plan + DB + price, before any money is spent</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>repo_analysis_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>repo_analysis</code> on delete cascade</td></tr><tr><td>run_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>run</code> on delete set null</td></tr><tr><td>app_plan_id</td><td>text</td><td>no</td><td></td><td>Liara plan id from <code>list_plans</code></td></tr><tr><td>app_price_monthly_rial</td><td>bigint</td><td>no</td><td></td><td>check <code>&gt;= 0</code></td></tr><tr><td>db_plan_id</td><td>text</td><td>yes</td><td></td><td>null when no DB is needed</td></tr><tr><td>db_price_monthly_rial</td><td>bigint</td><td>yes</td><td></td><td>check <code>(db_plan_id is null) = (db_price_monthly_rial is null)</code></td></tr><tr><td>total_monthly_rial</td><td>bigint</td><td>no</td><td></td><td>check <code>= app_price_monthly_rial + coalesce(db_price_monthly_rial,0)</code></td></tr><tr><td>balance_rial</td><td>bigint</td><td>no</td><td></td><td><code>get_balance</code> at proposal time; card warns when &lt; 1 month</td></tr><tr><td>prices_fetched_at</td><td>timestamptz</td><td>no</td><td></td><td>when <code>list_plans</code> was read; stale after 1 h → re-fetch before approval</td></tr><tr><td>reasoning_fa</td><td>text</td><td>no</td><td></td><td>why this plan (cites <code>detected.ram_estimate_mb</code>)</td></tr><tr><td>alternatives</td><td>jsonb</td><td>no</td><td><code>'[]'</code></td><td><code>[{"app_plan_id":"medium","total_monthly_rial":4200000,"why_fa":"…"}]</code></td></tr><tr><td>status</td><td>proposal_status</td><td>no</td><td><code>'proposed'</code></td><td><code>proposed</code>, <code>accepted</code>, <code>rejected</code>, <code>superseded</code></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>decided_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr></tbody></table></div>
+<ul><li>Unique partial: <code>(project_id) where status = 'proposed'</code> — one open card per project; a new one supersedes.</li><li>Accepting the card is <strong>not</strong> an approval by itself: it queues the <code>create_app</code> tool call, whose approval preview repeats the price. The plan card and that approval render as one card in the UI.</li></ul>
+</article>
+<article class="card tcard" id="t-deployment"><h3><span class="tname">deployment</span><span class="tdesc">one Liara release</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>run_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>run</code> on delete cascade</td></tr><tr><td>tool_call_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>tool_call</code> on delete set null — the <code>deploy_release</code> / <code>merge_and_deploy</code> / <code>rollback_release</code> call</td></tr><tr><td>code_fix_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>code_fix</code> on delete set null (P3)</td></tr><tr><td>rolled_back_from_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>deployment</code> on delete set null — set on a rollback release</td></tr><tr><td>commit_sha</td><td>text</td><td>no</td><td></td><td>check <code>~ '^[0-9a-f]{40}$'</code></td></tr><tr><td>source</td><td>text</td><td>no</td><td><code>'github_tarball'</code></td><td>check <code>in ('github_tarball','liara_rollback')</code></td></tr><tr><td>liara_release_id</td><td>text</td><td>yes</td><td></td><td>from the deploy response</td></tr><tr><td>status</td><td>deployment_status</td><td>no</td><td><code>'queued'</code></td><td>state machine below</td></tr><tr><td>build_log_tail</td><td>text</td><td>yes</td><td></td><td>last 200 lines, secrets redacted; nulled after 30 days</td></tr><tr><td>health</td><td>jsonb</td><td>yes</td><td></td><td><code>{"url":"https://…/","status":200,"latency_ms":212,"probed_at":"…"}</code></td></tr><tr><td>error_fa</td><td>text</td><td>yes</td><td></td><td>one Persian sentence when <code>failed</code></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>live_at</td><td>timestamptz</td><td>yes</td><td></td><td>check <code>(status in ('live','superseded','rolled_back')) &lt;= (live_at is not null)</code></td></tr><tr><td>finished_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr></tbody></table></div>
+<ul><li>Unique partial: <code>(project_id) where status in ('queued','uploading','building','releasing','health_check')</code> — at most one deploy in flight per project (the Redis project lock is the fast path; this is the guarantee).</li><li>Index <code>(project_id, created_at desc)</code> — release history and "last healthy release" for rollback.</li></ul>
+</article>
+<article class="card tcard" id="t-domain"><h3><span class="tname">domain</span><span class="tdesc">a custom domain added on Liara</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>hostname</td><td>citext</td><td>no</td><td></td><td>check <code>~ '^([a-z0-9-]+\.)+[a-z]{2,}$'</code></td></tr><tr><td>liara_domain_id</td><td>text</td><td>yes</td><td></td><td>from <code>add_domain</code></td></tr><tr><td>status</td><td>domain_status</td><td>no</td><td><code>'pending_dns'</code></td><td><code>pending_dns</code>, <code>active</code>, <code>failed</code>, <code>removed</code></td></tr><tr><td>required_records</td><td>jsonb</td><td>no</td><td></td><td><code>[{"type":"CNAME","name":"www","value":"rahbar-kharid.liara.run"}]</code> — shown in the 3-step registrar guide</td></tr><tr><td>last_check</td><td>jsonb</td><td>yes</td><td></td><td><code>check_dns</code> result: <code>{"found":[{"type":"CNAME","value":"…"}],"matches":false}</code></td></tr><tr><td>last_checked_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr><tr><td>verified_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique partial: <code>(hostname) where status &lt;&gt; 'removed'</code>.</li><li>Index <code>(status, last_checked_at) where status = 'pending_dns'</code> — the worker re-checks pending domains every 10 min for 48 h.</li></ul>
+</article>
+</section>
+<section class="sec" id="conversation-runs-approvals"><h2>Conversation, runs &amp; approvals</h2>
+<div class="card"><div class="scroll diagram"><pre class="mermaid">erDiagram
+  conversation ||--o{ message : has
+  conversation |o--o{ run : spawns
+  message |o--o{ run : triggers
+  run |o--o{ run : "parent of"
+  run ||--o{ run_step : checklist
+  run ||--o{ tool_call : makes
+  tool_call |o--o| run_step : fulfils
+  tool_call ||--o| approval : "released by"
+  conversation {
+    uuid id PK
+    uuid user_id FK
+    uuid project_id FK
+    text agent_session_id
+  }
+  message {
+    uuid id PK
+    uuid conversation_id FK
+    int seq
+    message_role role
+    jsonb content
+  }
+  run {
+    uuid id PK
+    uuid project_id FK
+    uuid conversation_id FK
+    uuid incident_id FK
+    run_kind kind
+    run_status status
+  }
+  run_step {
+    uuid id PK
+    uuid run_id FK
+    smallint seq
+    text key
+    step_status status
+  }
+  tool_call {
+    uuid id PK
+    uuid run_id FK
+    text name
+    risk_class risk_class
+    bytea args_hash
+    tool_call_status status
+  }
+  approval {
+    uuid id PK
+    uuid tool_call_id FK
+    uuid user_id FK
+    approval_status status
+    jsonb preview
+    timestamptz expires_at
+  }</pre></div></div>
+<article class="card tcard" id="t-conversation"><h3><span class="tname">conversation</span><span class="tdesc">one chat thread</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>user_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>"user"</code> on delete cascade</td></tr><tr><td>project_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>project</code> on delete set null; null until the repo link creates a project</td></tr><tr><td>title_fa</td><td>text</td><td>yes</td><td></td><td>first message, trimmed to 60 chars</td></tr><tr><td>agent_session_id</td><td>text</td><td>yes</td><td></td><td>Claude Agent SDK session id, for <code>resume</code></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>last_message_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>archived_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr></tbody></table></div>
+<ul><li>Index <code>(user_id, last_message_at desc) where archived_at is null</code> — sidebar.</li></ul>
+</article>
+<article class="card tcard" id="t-message"><h3><span class="tname">message</span><span class="tdesc">a chat turn</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>conversation_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>conversation</code> on delete cascade</td></tr><tr><td>seq</td><td>int</td><td>no</td><td></td><td>1, 2, 3 … per conversation</td></tr><tr><td>role</td><td>message_role</td><td>no</td><td></td><td><code>user</code>, <code>assistant</code>, <code>system</code>, <code>tool</code></td></tr><tr><td>content</td><td>jsonb</td><td>no</td><td></td><td>blocks, below</td></tr><tr><td>model</td><td>text</td><td>yes</td><td></td><td>assistant only, e.g. <code>claude-opus-5-5</code></td></tr><tr><td>tokens_in</td><td>int</td><td>yes</td><td></td><td></td></tr><tr><td>tokens_out</td><td>int</td><td>yes</td><td></td><td></td></tr><tr><td>latency_ms</td><td>int</td><td>yes</td><td></td><td></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>(conversation_id, seq)</code> — also the index for paging a thread.</li><li><code>content</code> shape — cards are references, not copies, so a card re-renders from the live row:</li></ul>
+<div class="scroll"><pre class="code" data-lang="json"><code>[
+  {"type": "text", "text_fa": "مخزن را خواندم. یک اپ Next.js با Postgres است."},
+  {"type": "card", "card": "plan_proposal", "id": "0192…a1"},
+  {"type": "card", "card": "run_checklist", "id": "0192…r1"},
+  {"type": "card", "card": "approval", "id": "0192…ap1"},
+  {"type": "limitation", "limitation_event_id": "0192…l1"}
+]</code></pre></div>
+</article>
+<article class="card tcard" id="t-run"><h3><span class="tname">run</span><span class="tdesc">one unit of agent work, shown as a live checklist</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>project</code> on delete cascade; null only for a pure chat run before a project exists</td></tr><tr><td>conversation_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>conversation</code> on delete set null; null for scheduled runs</td></tr><tr><td>triggered_by_message_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>message</code> on delete set null</td></tr><tr><td>parent_run_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>run</code> on delete cascade — a <code>code_fix</code> run under an <code>sre</code> run</td></tr><tr><td>incident_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>incident</code> on delete set null (P2)</td></tr><tr><td>kind</td><td>run_kind</td><td>no</td><td></td><td><code>chat</code>, <code>deploy</code>, <code>sre</code>, <code>code_fix</code>, <code>check</code></td></tr><tr><td>trigger</td><td>run_trigger</td><td>no</td><td></td><td><code>user_message</code>, <code>schedule</code>, <code>approval_resume</code>, <code>retry</code>, <code>eval</code></td></tr><tr><td>status</td><td>run_status</td><td>no</td><td><code>'queued'</code></td><td>state machine below</td></tr><tr><td>arq_job_id</td><td>text</td><td>yes</td><td></td><td>for cancel / inspection</td></tr><tr><td>error</td><td>jsonb</td><td>yes</td><td></td><td><code>{"code":"liara_502","message_fa":"…","tool_call_id":"…"}</code></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>started_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr><tr><td>finished_at</td><td>timestamptz</td><td>yes</td><td></td><td>check <code>finished_at is null or finished_at &gt;= started_at</code></td></tr></tbody></table></div>
+<ul><li>Index <code>(project_id, created_at desc)</code> — project history.</li><li>Index <code>(project_id) where status in ('queued','running','awaiting_approval')</code> — "active run" in the side panel.</li><li>Index <code>(incident_id) where incident_id is not null</code>.</li></ul>
+</article>
+<article class="card tcard" id="t-run-step"><h3><span class="tname">run_step</span><span class="tdesc">one row of the live checklist</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>run_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>run</code> on delete cascade</td></tr><tr><td>seq</td><td>smallint</td><td>no</td><td></td><td>display order</td></tr><tr><td>key</td><td>text</td><td>no</td><td></td><td>stable step key: <code>analyze_repo</code>, <code>create_app</code>, <code>deploy_release</code>, <code>verify</code> …</td></tr><tr><td>label_fa</td><td>text</td><td>no</td><td></td><td><bdi dir="rtl">«ساخت اپ روی لیارا»</bdi></td></tr><tr><td>status</td><td>step_status</td><td>no</td><td><code>'pending'</code></td><td><code>pending</code>, <code>running</code>, <code>blocked</code> (waiting for approval), <code>done</code>, <code>failed</code>, <code>skipped</code></td></tr><tr><td>tool_call_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>tool_call</code> on delete set null; filled when the step executes</td></tr><tr><td>detail_fa</td><td>text</td><td>yes</td><td></td><td>one line under the row (<bdi dir="rtl">«بیلد ۴۲ ثانیه طول کشید»</bdi>)</td></tr><tr><td>started_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr><tr><td>finished_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>(run_id, seq)</code> — serves <code>where run_id = ? order by seq</code>; unique <code>(run_id, key)</code>.</li><li>Steps are planned up front (<code>pending</code>) so the user sees the whole path before the first action.</li></ul>
+</article>
+<article class="card tcard sensitive" id="t-tool-call"><h3><span class="tname">tool_call</span><span class="tdesc">every tool the agent calls, read or sensitive</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>run_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>run</code> on delete cascade</td></tr><tr><td>message_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>message</code> on delete set null — the assistant turn that asked for it</td></tr><tr><td>name</td><td>text</td><td>no</td><td></td><td>check against the registry (below)</td></tr><tr><td>risk_class</td><td>risk_class</td><td>no</td><td></td><td><code>read</code>, <code>sensitive</code>, <code>human_only</code>; must match <code>name</code> (check below)</td></tr><tr><td>args</td><td>jsonb</td><td>no</td><td><code>'{}'</code></td><td><strong>redacted</strong> arguments: env var *keys* only, never values</td></tr><tr><td>args_hash</td><td>bytea</td><td>no</td><td></td><td>sha256 of canonical JSON of the full args (incl. secrets); the approval signs this</td></tr><tr><td>secret_args_ciphertext</td><td>bytea</td><td>yes</td><td></td><td>AES-GCM of secret args (env values); set to null right after execution or on approval expiry</td></tr><tr><td>secret_key_version</td><td>smallint</td><td>yes</td><td></td><td>check <code>(secret_args_ciphertext is null) or (secret_key_version is not null)</code></td></tr><tr><td>idempotency_key</td><td>text</td><td>no</td><td></td><td><code>{run_id}:{name}:{hex(args_hash)[:16]}</code>; replays don't double-create on Liara</td></tr><tr><td>status</td><td>tool_call_status</td><td>no</td><td><code>'proposed'</code></td><td><code>proposed</code>, <code>awaiting_approval</code>, <code>running</code>, <code>succeeded</code>, <code>failed</code>, <code>rejected</code>, <code>expired</code>, <code>limitation</code></td></tr><tr><td>result_summary</td><td>jsonb</td><td>yes</td><td></td><td>small: ids, counts, status codes — the LLM sees this, never raw payloads</td></tr><tr><td>liara_request_id</td><td>text</td><td>yes</td><td></td><td>from the response header, for support tickets</td></tr><tr><td>http_status</td><td>smallint</td><td>yes</td><td></td><td></td></tr><tr><td>duration_ms</td><td>int</td><td>yes</td><td></td><td></td></tr><tr><td>error</td><td>jsonb</td><td>yes</td><td></td><td><code>{"code":"plan_not_found","message_fa":"…","retryable":false}</code></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>started_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr><tr><td>finished_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>idempotency_key</code>.</li><li>Index <code>(run_id, created_at)</code> — tool trace of a run.</li><li>Index <code>(name, created_at desc)</code> — per-tool latency/error dashboards in the evals page.</li><li>Checks — the risk table lives in the database too, so a bug in the gate can't misclassify a tool:</li></ul>
+<div class="scroll"><pre class="code" data-lang="sql"><code>alter table tool_call add constraint tool_call_risk_matches_name check (
+  case
+    when name in ('analyze_repo','list_plans','get_balance','get_app_status','get_logs','get_metrics',
+                  'list_releases','get_env_keys','check_dns','http_probe') then risk_class = 'read'
+    when name in ('create_app','create_database','set_env','deploy_release','restart_app','resize_plan',
+                  'rollback_release','add_domain','apply_code_fix','merge_and_deploy') then risk_class = 'sensitive'
+    when name in ('top_up_balance','registrar_dns_records') then risk_class = 'human_only'
+    else false
+  end);
+-- human_only tools are never executed; they only produce a limitation message
+alter table tool_call add constraint tool_call_human_only_never_runs
+  check (risk_class &lt;&gt; 'human_only' or status = 'limitation');
+-- read tools never wait for approval
+alter table tool_call add constraint tool_call_read_no_approval
+  check (risk_class &lt;&gt; 'read' or status not in ('awaiting_approval','rejected','expired'));</code></pre></div>
+<ul><li>Trigger — a sensitive call cannot start without a matching approved approval (defence in depth behind the Python gate):</li></ul>
+<div class="scroll"><pre class="code" data-lang="sql"><code>create function tool_call_gate() returns trigger language plpgsql as $$
+begin
+  if new.risk_class = 'sensitive' and new.status = 'running' and old.status &lt;&gt; 'running' then
+    perform 1 from approval a
+     where a.tool_call_id = new.id and a.status = 'approved' and a.args_hash = new.args_hash;
+    if not found then
+      raise exception 'sensitive tool_call % has no approved approval', new.id using errcode = 'P0001';
+    end if;
+  end if;
+  return new;
+end $$;
+create trigger tool_call_gate before update of status on tool_call
+  for each row execute function tool_call_gate();</code></pre></div>
+</article>
+<article class="card tcard sensitive" id="t-approval"><h3><span class="tname">approval</span><span class="tdesc">a one-time, signed, 10-minute release for one sensitive tool call</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK; minted by the app before insert so it can be signed</td></tr><tr><td>tool_call_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>tool_call</code> on delete cascade; <strong>unique</strong> — one approval per call</td></tr><tr><td>run_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>run</code> on delete cascade (stacking cards of one run)</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>user_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>"user"</code> on delete cascade — who must decide</td></tr><tr><td>status</td><td>approval_status</td><td>no</td><td><code>'pending'</code></td><td>state machine below</td></tr><tr><td>preview</td><td>jsonb</td><td>no</td><td></td><td>what / why / cost / diff, shape below; frozen at creation</td></tr><tr><td>args_hash</td><td>bytea</td><td>no</td><td></td><td>copy of <code>tool_call.args_hash</code> at creation; a changed call needs a new approval</td></tr><tr><td>signature</td><td>bytea</td><td>no</td><td></td><td>HMAC-SHA256(<code>APPROVAL_SECRET</code>, <code>id‖tool_call_id‖args_hash‖user_id‖expires_at</code>)</td></tr><tr><td>expires_at</td><td>timestamptz</td><td>no</td><td><code>now() + interval '10 minutes'</code></td><td>check <code>expires_at &lt;= created_at + interval '10 minutes'</code></td></tr><tr><td>decision</td><td>approval_decision</td><td>yes</td><td></td><td><code>approve</code>, <code>reject</code></td></tr><tr><td>decided_by</td><td>uuid</td><td>yes</td><td></td><td>FK <code>"user"</code> on delete set null; check <code>decided_by = user_id</code> when not null (app-checked, FK can't express it — enforced in the decision <code>update</code>)</td></tr><tr><td>decided_at</td><td>timestamptz</td><td>yes</td><td></td><td>check <code>(decision is null) = (decided_at is null)</code> and <code>decided_at &lt;= expires_at</code></td></tr><tr><td>reject_reason_fa</td><td>text</td><td>yes</td><td></td><td>optional free text from the user</td></tr><tr><td>executed_at</td><td>timestamptz</td><td>yes</td><td></td><td>when the released tool call finished</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>tool_call_id</code>.</li><li>Index <code>(user_id, expires_at) where status = 'pending'</code> — approvals inbox and badge count.</li><li>Index <code>(run_id)</code> — stack all pending cards of a run into one.</li><li>Check: <code>(status in ('approved','executed','failed')) &lt;= (decision = 'approve')</code> and <code>(status = 'rejected') = (decision = 'reject')</code> (with <code>coalesce</code> for nulls in the migration).</li><li>One-time use is the conditional <code>update … where status = 'pending' and expires_at &gt; now()</code> in the key queries; only one request can win it. The signed token on the card is <code>base64url(id).base64url(signature)</code>; the server recomputes the HMAC (constant-time compare) before the update.</li></ul>
+<p><code>preview</code> shape (frozen; the card renders only this):</p>
+<div class="scroll"><pre class="code" data-lang="json"><code>{
+  "tool": "resize_plan",
+  "title_fa": "ارتقای پلن از small به medium",
+  "what_fa": "حافظهٔ اپ از ۵۱۲ به ۱۰۲۴ مگابایت می‌رسد. اپ حدود ۲۰ ثانیه ری‌استارت می‌شود.",
+  "why_fa": "در یک ساعت گذشته ۶ بار به‌خاطر کمبود حافظه (OOMKilled) ری‌استارت شده است.",
+  "target": {"project": "راهبر خرید", "liara_app": "rahbar-kharid"},
+  "cost": {
+    "current_monthly_rial": 1500000, "new_monthly_rial": 3000000, "delta_monthly_rial": 1500000,
+    "balance_rial": 17300000, "source": "liara:list_plans", "fetched_at": "2026-10-25T09:13:40Z"
+  },
+  "diff": {"kind": "plan", "before": {"plan_id": "small", "ram_mb": 512}, "after": {"plan_id": "medium", "ram_mb": 1024}},
+  "downtime_fa": "حدود ۲۰ ثانیه",
+  "reversible": true,
+  "undo_fa": "می‌توانید بعداً با همین دکمه به small برگردید.",
+  "hypothesis_id": "0193…h2",
+  "evidence_ids": ["0193…e1", "0193…e2"]
+}</code></pre></div>
+<p><code>diff</code> variants: <code>{"kind":"env","set":["DATABASE_URL","NEXT_PUBLIC_AGENT_URL"],"masked":{"DATABASE_URL":"…/rahbar?sslmode=require"}}</code> (keys + masked tail, never values); <code>{"kind":"release","from_release":"r-17","to_release":"r-16"}</code>; <code>{"kind":"code","pr_url":"…","files":[{"path":"app/api/products/route.ts","additions":31,"deletions":6}],"patch_ref":"code_fix:0193…cf1"}</code> (the diff body is read from <code>code_fix.diff_patch</code>, not copied).</p>
+</article>
+</section>
+<section class="sec" id="incidents-sre"><h2>Incidents &amp; SRE</h2>
+<div class="card"><div class="scroll diagram"><pre class="mermaid">erDiagram
+  project ||--o{ incident : has
+  incident ||--o{ evidence : collects
+  incident ||--o{ hypothesis : ranks
+  incident ||--o{ incident_action : takes
+  hypothesis |o--o{ incident_action : motivates
+  incident_action ||--|| tool_call : executes
+  incident ||--o{ code_fix : "fixed by"
+  hypothesis |o--o{ code_fix : targets
+  code_fix |o--o| deployment : ships
+  incident |o--o{ verification : proves
+  evidence |o--o{ verification : "before/after"
+  incident {
+    uuid id PK
+    uuid project_id FK
+    incident_status status
+    severity severity
+    uuid root_cause_hypothesis_id FK
+  }
+  evidence {
+    uuid id PK
+    uuid incident_id FK
+    uuid tool_call_id FK
+    evidence_kind kind
+    jsonb payload
+    timestamptz expires_at
+  }
+  hypothesis {
+    uuid id PK
+    uuid incident_id FK
+    smallint rank
+    text cause_key
+    real confidence
+  }
+  incident_action {
+    uuid id PK
+    uuid incident_id FK
+    uuid hypothesis_id FK
+    uuid tool_call_id FK
+    action_kind kind
+  }
+  verification {
+    uuid id PK
+    uuid incident_id FK
+    uuid deployment_id FK
+    numeric before_value
+    numeric after_value
+    boolean passed
+  }
+  code_fix {
+    uuid id PK
+    uuid incident_id FK
+    text branch_name
+    int pr_number
+    code_fix_status status
+  }</pre></div></div>
+<article class="card tcard" id="t-incident"><h3><span class="tname">incident</span><span class="tdesc"><bdi dir="rtl">«سایتم کند شده»</bdi> or a failed check, from report to proof</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>opened_by_message_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>message</code> on delete set null (user report)</td></tr><tr><td>check_result_id</td><td>bigint</td><td>yes</td><td></td><td>FK <code>check_result</code> on delete set null (P3, scheduled detection)</td></tr><tr><td>title_fa</td><td>text</td><td>no</td><td></td><td><bdi dir="rtl">«کندی و ری‌استارت مکرر»</bdi></td></tr><tr><td>symptom_fa</td><td>text</td><td>no</td><td></td><td>user's words, verbatim</td></tr><tr><td>severity</td><td>severity</td><td>no</td><td><code>'major'</code></td><td><code>info</code>, <code>minor</code>, <code>major</code>, <code>critical</code></td></tr><tr><td>status</td><td>incident_status</td><td>no</td><td><code>'open'</code></td><td>state machine below</td></tr><tr><td>root_cause_hypothesis_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>hypothesis</code> on delete set null; added after <code>hypothesis</code> exists; set on <code>resolved</code></td></tr><tr><td>opened_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>mitigated_at</td><td>timestamptz</td><td>yes</td><td></td><td>first successful mitigation</td></tr><tr><td>resolved_at</td><td>timestamptz</td><td>yes</td><td></td><td>check <code>(status = 'resolved') &lt;= (resolved_at is not null)</code></td></tr><tr><td>postmortem_md</td><td>text</td><td>yes</td><td></td><td>generated on demand from the timeline</td></tr></tbody></table></div>
+<ul><li>Check: <code>num_nonnulls(opened_by_message_id, check_result_id) &gt;= 1</code> — every incident says where it came from.</li><li>Index <code>(project_id, opened_at desc)</code> — incident list.</li><li>Index <code>(project_id) where status not in ('resolved','dismissed')</code> — "open incident" in the side panel.</li></ul>
+</article>
+<article class="card tcard" id="t-evidence"><h3><span class="tname">evidence</span><span class="tdesc">one observation, with its source and time window</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>incident_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>incident</code> on delete cascade</td></tr><tr><td>run_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>run</code> on delete cascade</td></tr><tr><td>tool_call_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>tool_call</code> on delete set null — the read tool that produced it</td></tr><tr><td>kind</td><td>evidence_kind</td><td>no</td><td></td><td><code>status</code>, <code>metrics</code>, <code>logs</code>, <code>releases</code>, <code>env_keys</code>, <code>http_probe</code>, <code>dns</code>, <code>note</code></td></tr><tr><td>source</td><td>text</td><td>no</td><td></td><td><code>liara:get_metrics</code>, <code>probe:hamkar-worker</code> — every number carries this</td></tr><tr><td>window_start</td><td>timestamptz</td><td>yes</td><td></td><td>check <code>window_end &gt;= window_start</code></td></tr><tr><td>window_end</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr><tr><td>summary_fa</td><td>text</td><td>no</td><td></td><td>one line the user reads; kept forever</td></tr><tr><td>payload</td><td>jsonb</td><td>yes</td><td></td><td>redacted raw data, ≤ 256 KB (check <code>pg_column_size(payload) &lt;= 262144</code>); nulled at <code>expires_at</code></td></tr><tr><td>payload_bytes</td><td>int</td><td>yes</td><td></td><td>size before truncation, for "truncated" badges</td></tr><tr><td>captured_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>expires_at</td><td>timestamptz</td><td>no</td><td></td><td>logs/http_probe +30 d, metrics/status/releases +90 d</td></tr></tbody></table></div>
+<ul><li>Index <code>(incident_id, captured_at)</code> — timeline.</li><li>Index <code>(expires_at) where payload is not null</code> — retention sweep.</li></ul>
+<p><code>payload</code> shapes by <code>kind</code>:</p>
+<div class="scroll"><pre class="code" data-lang="json"><code>{"kind":"status","state":"running","restarts_1h":6,"last_restart_reason":"OOMKilled","plan_id":"small","ram_limit_mb":512}
+
+{"kind":"metrics","step_s":60,"series":[
+  {"metric":"memory_mb","unit":"MB","limit":512,"points":[["2026-10-25T08:10:00Z",188],["2026-10-25T08:11:00Z",511]]},
+  {"metric":"cpu_pct","unit":"%","points":[["2026-10-25T08:10:00Z",14],["2026-10-25T08:11:00Z",97]]}]}
+
+{"kind":"logs","stream":"runtime","truncated":true,"redactions":2,
+ "lines":[{"ts":"2026-10-25T08:11:02Z","text":"GET /api/products 200 3911ms"},
+          {"ts":"2026-10-25T08:11:09Z","text":"FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory"}],
+ "patterns":[{"signature":"heap out of memory","count":6,"first_ts":"2026-10-25T08:11:09Z","preceded_by":"GET /api/products"}]}
+
+{"kind":"http_probe","url":"https://rahbar-kharid.liara.run/api/products","samples_ms":[3870,4180,4410,3990],
+ "p50_ms":4080,"p95_ms":4180,"status_codes":{"200":18,"502":2},"from":"hamkar-worker (Tehran)"}
+
+{"kind":"releases","releases":[{"id":"r-1","commit_sha":"9c1e…","created_at":"2026-10-24T06:39:40Z","status":"live"}]}</code></pre></div>
+<p><code>redactions</code> counts strings replaced by the redactor (bearer tokens, <code>postgres://user:pass@</code>, values of keys from <code>get_env_keys</code> marked secret).</p>
+</article>
+<article class="card tcard" id="t-hypothesis"><h3><span class="tname">hypothesis</span><span class="tdesc">a ranked possible cause</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>incident_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>incident</code> on delete cascade</td></tr><tr><td>rank</td><td>smallint</td><td>no</td><td></td><td>1 = most likely; check <code>rank between 1 and 5</code></td></tr><tr><td>cause_key</td><td>text</td><td>no</td><td></td><td>from the cause catalogue: <code>unbounded_query_memory</code>, <code>undersized_plan</code>, <code>bad_release</code>, <code>db_connection_exhaustion</code>, <code>slow_query</code>, …</td></tr><tr><td>title_fa</td><td>text</td><td>no</td><td></td><td><bdi dir="rtl">«بارگذاری کل جدول محصولات در حافظه»</bdi></td></tr><tr><td>confidence</td><td>real</td><td>no</td><td></td><td>check <code>confidence between 0 and 1</code>; ranks of one incident sum ≤ 1.0 (app-checked)</td></tr><tr><td>rationale_fa</td><td>text</td><td>no</td><td></td><td>cites evidence by id in the UI</td></tr><tr><td>supporting_evidence_ids</td><td>uuid[]</td><td>no</td><td><code>'{}'</code></td><td>app-validated against <code>evidence.incident_id</code> (no FK on arrays)</td></tr><tr><td>proposed_actions</td><td>jsonb</td><td>no</td><td><code>'[]'</code></td><td><code>[{"tool":"resize_plan","kind":"mitigate","args":{"plan_id":"medium"}},{"tool":"apply_code_fix","kind":"fix"}]</code></td></tr><tr><td>status</td><td>hypothesis_status</td><td>no</td><td><code>'proposed'</code></td><td><code>proposed</code>, <code>testing</code>, <code>confirmed</code>, <code>refuted</code>, <code>dismissed</code></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>updated_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>(incident_id, rank)</code> — also serves "hypotheses of an incident in order".</li></ul>
+</article>
+<article class="card tcard" id="t-incident-action"><h3><span class="tname">incident_action</span><span class="tdesc">an action taken against an incident (links incident ↔ tool call)</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>incident_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>incident</code> on delete cascade</td></tr><tr><td>hypothesis_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>hypothesis</code> on delete set null</td></tr><tr><td>tool_call_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>tool_call</code> on delete cascade; <strong>unique</strong></td></tr><tr><td>code_fix_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>code_fix</code> on delete set null (for <code>apply_code_fix</code> / <code>merge_and_deploy</code>)</td></tr><tr><td>kind</td><td>action_kind</td><td>no</td><td></td><td><code>mitigate</code>, <code>fix</code>, <code>rollback</code>, <code>investigate</code></td></tr><tr><td>outcome</td><td>action_outcome</td><td>no</td><td><code>'pending'</code></td><td><code>pending</code>, <code>succeeded</code>, <code>failed</code>, <code>cancelled</code> (mirrors the tool call once it finishes)</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>tool_call_id</code>. Index <code>(incident_id, created_at)</code> — timeline.</li></ul>
+</article>
+<article class="card tcard" id="t-verification"><h3><span class="tname">verification</span><span class="tdesc">before/after proof that an action worked</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>run_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>run</code> on delete cascade</td></tr><tr><td>incident_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>incident</code> on delete cascade</td></tr><tr><td>incident_action_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>incident_action</code> on delete set null</td></tr><tr><td>deployment_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>deployment</code> on delete cascade (post-deploy verification)</td></tr><tr><td>code_fix_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>code_fix</code> on delete set null (P3)</td></tr><tr><td>metric</td><td>text</td><td>no</td><td></td><td><code>http_p95_ms</code>, <code>restarts_per_hour</code>, <code>memory_peak_mb</code>, <code>error_rate_pct</code></td></tr><tr><td>method</td><td>text</td><td>no</td><td></td><td><bdi dir="rtl">«۲۰ درخواست به</bdi> /api/products <bdi dir="rtl">از ورکر، ۳۰ ثانیه پس از استقرار»</bdi></td></tr><tr><td>unit</td><td>text</td><td>no</td><td></td><td><code>ms</code>, <code>count</code>, <code>MB</code>, <code>%</code></td></tr><tr><td>before_value</td><td>numeric</td><td>no</td><td></td><td></td></tr><tr><td>after_value</td><td>numeric</td><td>no</td><td></td><td></td></tr><tr><td>threshold</td><td>numeric</td><td>no</td><td></td><td>pass line, e.g. 800 ms</td></tr><tr><td>direction</td><td>text</td><td>no</td><td><code>'lower_is_better'</code></td><td>check <code>in ('lower_is_better','higher_is_better')</code></td></tr><tr><td>passed</td><td>boolean</td><td>no</td><td></td><td>check <code>passed = case direction when 'lower_is_better' then after_value &lt;= threshold else after_value &gt;= threshold end</code></td></tr><tr><td>before_evidence_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>evidence</code> on delete set null</td></tr><tr><td>after_evidence_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>evidence</code> on delete set null</td></tr><tr><td>verified_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Check: <code>num_nonnulls(incident_id, deployment_id) &gt;= 1</code>.</li><li>Index <code>(incident_id, verified_at)</code>, <code>(deployment_id)</code>.</li><li>The <code>passed</code> check means the database rejects a "success" the numbers don't support.</li></ul>
+</article>
+<article class="card tcard" id="t-code-fix"><h3><span class="tname">code_fix</span><span class="tdesc">a Claude Code sub-agent fix: branch → PR → merge → deploy → verify</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>incident_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>incident</code> on delete cascade</td></tr><tr><td>hypothesis_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>hypothesis</code> on delete set null</td></tr><tr><td>run_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>run</code> on delete cascade — the <code>code_fix</code> run of the sub-agent</td></tr><tr><td>brief_md</td><td>text</td><td>no</td><td></td><td>what the coding agent was asked (cause, files, acceptance test)</td></tr><tr><td>base_sha</td><td>text</td><td>no</td><td></td><td>check <code>~ '^[0-9a-f]{40}$'</code></td></tr><tr><td>head_sha</td><td>text</td><td>yes</td><td></td><td></td></tr><tr><td>branch_name</td><td>text</td><td>yes</td><td></td><td><code>hamkar/fix-products-pagination</code></td></tr><tr><td>pr_number</td><td>int</td><td>yes</td><td></td><td></td></tr><tr><td>pr_url</td><td>text</td><td>yes</td><td></td><td></td></tr><tr><td>diff_stats</td><td>jsonb</td><td>yes</td><td></td><td><code>{"files":2,"additions":38,"deletions":6}</code></td></tr><tr><td>diff_patch</td><td>text</td><td>yes</td><td></td><td>unified diff, ≤ 200 KB (check <code>length(diff_patch) &lt;= 204800</code>)</td></tr><tr><td>tests</td><td>jsonb</td><td>yes</td><td></td><td><code>{"command":"pnpm test","passed":true,"duration_ms":18400,"output_tail":"…"}</code></td></tr><tr><td>status</td><td>code_fix_status</td><td>no</td><td><code>'queued'</code></td><td>state machine below</td></tr><tr><td>apply_tool_call_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>tool_call</code> on delete set null — <code>apply_code_fix</code> (push branch + open PR)</td></tr><tr><td>merge_tool_call_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>tool_call</code> on delete set null — <code>merge_and_deploy</code></td></tr><tr><td>deployment_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>deployment</code> on delete set null</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>updated_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique partial: <code>(project_id) where status in ('queued','coding','diff_ready','pr_open','merging')</code> — one open fix per project.</li><li>Index <code>(incident_id)</code>.</li></ul>
+</article>
+</section>
+<section class="sec" id="checks"><h2>Checks</h2>
+<div class="card"><div class="scroll diagram"><pre class="mermaid">erDiagram
+  project ||--o{ scheduled_check : schedules
+  scheduled_check ||--o{ check_result : records
+  check_result |o--o| incident : opens
+  user ||--o{ limitation_event : "was told"
+  run |o--o{ limitation_event : during
+  scheduled_check {
+    uuid id PK
+    uuid project_id FK
+    check_kind kind
+    int interval_s
+    timestamptz next_run_at
+  }
+  check_result {
+    bigint id PK
+    uuid scheduled_check_id FK
+    check_outcome outcome
+    numeric value
+  }
+  limitation_event {
+    uuid id PK
+    uuid user_id FK
+    uuid tool_call_id FK
+    text capability
+    limitation_kind kind
+  }</pre></div></div>
+<article class="card tcard" id="t-scheduled-check"><h3><span class="tname">scheduled_check</span><span class="tdesc">a recurring probe the user turned on</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>project_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>created_by</td><td>uuid</td><td>no</td><td></td><td>FK <code>"user"</code> on delete cascade</td></tr><tr><td>kind</td><td>check_kind</td><td>no</td><td></td><td><code>http_health</code>, <code>ram_pressure</code>, <code>backup_freshness</code>, <code>cert_expiry</code>, <code>balance_low</code></td></tr><tr><td>name</td><td>text</td><td>no</td><td></td><td><bdi dir="rtl">«سلامت</bdi> /api/products»</td></tr><tr><td>interval_s</td><td>int</td><td>no</td><td><code>300</code></td><td>check <code>interval_s between 60 and 86400</code></td></tr><tr><td>config</td><td>jsonb</td><td>no</td><td></td><td>by kind: <code>{"url":"…/api/products","expect_status":200,"max_p95_ms":800,"samples":5}</code>, <code>{"ram_pct":90,"window":"7d"}</code>, <code>{"min_balance_rial":5000000}</code></td></tr><tr><td>enabled</td><td>boolean</td><td>no</td><td><code>true</code></td><td></td></tr><tr><td>next_run_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>last_run_at</td><td>timestamptz</td><td>yes</td><td></td><td></td></tr><tr><td>last_outcome</td><td>check_outcome</td><td>yes</td><td></td><td>denormalized for the side panel</td></tr><tr><td>consecutive_failures</td><td>smallint</td><td>no</td><td><code>0</code></td><td>opens an incident at 3</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>(project_id, name)</code>.</li><li>Index <code>(next_run_at) where enabled</code> — the arq cron picks due checks with <code>for update skip locked</code>.</li></ul>
+</article>
+<article class="card tcard" id="t-check-result"><h3><span class="tname">check_result</span><span class="tdesc">one execution of a check (bigint id: append-only, high volume)</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>bigint</td><td>no</td><td>identity</td><td>PK, <code>generated always as identity</code></td></tr><tr><td>scheduled_check_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>scheduled_check</code> on delete cascade</td></tr><tr><td>started_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>duration_ms</td><td>int</td><td>no</td><td></td><td></td></tr><tr><td>outcome</td><td>check_outcome</td><td>no</td><td></td><td><code>ok</code>, <code>warn</code>, <code>fail</code>, <code>error</code> (error = our probe failed, not the app)</td></tr><tr><td>value</td><td>numeric</td><td>yes</td><td></td><td>the measured number (p95 ms, RAM %, balance rial)</td></tr><tr><td>unit</td><td>text</td><td>yes</td><td></td><td></td></tr><tr><td>detail</td><td>jsonb</td><td>no</td><td><code>'{}'</code></td><td><code>{"status_codes":{"200":5},"samples_ms":[310,298,333,320,305]}</code></td></tr></tbody></table></div>
+<ul><li>Index <code>(scheduled_check_id, started_at desc)</code> — sparkline in the check card.</li><li>Deleted after 30 days except rows referenced by <code>incident.check_result_id</code>.</li></ul>
+</article>
+<article class="card tcard" id="t-limitation-event"><h3><span class="tname">limitation_event</span><span class="tdesc">every time we said <bdi dir="rtl">«این کار از</bdi> API <bdi dir="rtl">لیارا برنمی‌آید»</bdi></span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>user_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>"user"</code> on delete cascade</td></tr><tr><td>project_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>project</code> on delete cascade</td></tr><tr><td>run_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>run</code> on delete set null</td></tr><tr><td>tool_call_id</td><td>uuid</td><td>yes</td><td></td><td>FK <code>tool_call</code> on delete set null (the <code>human_only</code> call, status <code>limitation</code>)</td></tr><tr><td>capability</td><td>text</td><td>no</td><td></td><td><code>top_up_balance</code>, <code>registrar_dns_records</code>, <code>db_slow_query_log</code>, <code>log_retention_over_7d</code></td></tr><tr><td>kind</td><td>limitation_kind</td><td>no</td><td></td><td><code>human_only</code> (tool exists, only a human may do it), <code>api_missing</code>, <code>plan_restricted</code></td></tr><tr><td>message_fa</td><td>text</td><td>no</td><td></td><td>the grey box text</td></tr><tr><td>guide_key</td><td>text</td><td>yes</td><td></td><td>which illustrated guide was shown (<code>irnic_ns_3_steps</code>)</td></tr><tr><td>acknowledged_at</td><td>timestamptz</td><td>yes</td><td></td><td>user tapped <bdi dir="rtl">«انجام دادم»</bdi></td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Index <code>(capability, created_at)</code> — the "limits" section of the submission doc counts these.</li></ul>
+</article>
+</section>
+<section class="sec" id="audit-evals"><h2>Audit &amp; evals</h2>
+<div class="card"><div class="scroll diagram"><pre class="mermaid">erDiagram
+  eval_case ||--o{ eval_run : "scored in"
+  audit_log }o..o| project : "logs (no FK)"
+  audit_log {
+    bigint id PK
+    timestamptz occurred_at
+    actor_type actor_type
+    text action
+    uuid target_id
+    bytea row_hash
+  }
+  eval_case {
+    uuid id PK
+    text slug UK
+    eval_kind kind
+    jsonb fixture
+    jsonb expected
+  }
+  eval_run {
+    uuid id PK
+    uuid eval_case_id FK
+    uuid batch_id
+    boolean passed
+    real score
+  }</pre></div></div>
+<article class="card tcard" id="t-audit-log"><h3><span class="tname">audit_log</span><span class="tdesc">append-only, hash-chained record of everything that changed something</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>bigint</td><td>no</td><td>identity</td><td>PK, <code>generated always as identity</code>; total order of the chain</td></tr><tr><td>occurred_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr><tr><td>actor_type</td><td>actor_type</td><td>no</td><td></td><td><code>user</code>, <code>agent</code>, <code>worker</code>, <code>system</code></td></tr><tr><td>actor_user_id</td><td>uuid</td><td>yes</td><td></td><td>no FK (rows survive user deletion; job nulls it)</td></tr><tr><td>project_id</td><td>uuid</td><td>yes</td><td></td><td>no FK</td></tr><tr><td>action</td><td>text</td><td>no</td><td></td><td><code>connection.created</code>, <code>connection.revoked</code>, <code>approval.requested</code>, <code>approval.decided</code>, <code>tool.executed</code>, <code>tool.failed</code>, <code>incident.resolved</code>, <code>auth.login</code> … check <code>~ '^[a-z_]+\.[a-z_]+$'</code></td></tr><tr><td>target_type</td><td>text</td><td>yes</td><td></td><td>table name</td></tr><tr><td>target_id</td><td>uuid</td><td>yes</td><td></td><td></td></tr><tr><td>run_id</td><td>uuid</td><td>yes</td><td></td><td>no FK</td></tr><tr><td>tool_call_id</td><td>uuid</td><td>yes</td><td></td><td>no FK</td></tr><tr><td>approval_id</td><td>uuid</td><td>yes</td><td></td><td>no FK</td></tr><tr><td>ip</td><td>inet</td><td>yes</td><td></td><td>user actions only</td></tr><tr><td>user_agent</td><td>text</td><td>yes</td><td></td><td></td></tr><tr><td>data</td><td>jsonb</td><td>no</td><td><code>'{}'</code></td><td>redacted context: <code>{"tool":"resize_plan","decision":"approve","delta_monthly_rial":1500000}</code></td></tr><tr><td>prev_hash</td><td>bytea</td><td>no</td><td></td><td><code>row_hash</code> of <code>id - 1</code> (genesis = 32 zero bytes)</td></tr><tr><td>row_hash</td><td>bytea</td><td>no</td><td></td><td>sha256(<code>prev_hash ‖ canonical json of the row without hashes</code>)</td></tr></tbody></table></div>
+<ul><li>No FKs on purpose: the log must outlive what it describes.</li><li>Append-only: <code>revoke update, delete, truncate on audit_log from hamkar_app;</code> plus a trigger that raises on <code>update</code>/<code>delete</code> for every role except <code>hamkar_migrator</code>. Inserts go through one SQL function <code>audit_append(...)</code> that takes <code>pg_advisory_xact_lock(hashtext('audit_log'))</code>, reads the last <code>row_hash</code>, and inserts — so the chain has no forks. <code>make audit-verify</code> walks the chain.</li><li>Index <code>(project_id, occurred_at desc)</code>, <code>(target_type, target_id)</code>, <code>(approval_id) where approval_id is not null</code>.</li><li>Written in the <strong>same transaction</strong> as the change it records.</li></ul>
+</article>
+<article class="card tcard" id="t-eval-case"><h3><span class="tname">eval_case</span><span class="tdesc">an injected incident or scenario with the expected answer</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>slug</td><td>text</td><td>no</td><td></td><td>unique, <code>oom-unbounded-products-query</code></td></tr><tr><td>title_fa</td><td>text</td><td>no</td><td></td><td></td></tr><tr><td>kind</td><td>eval_kind</td><td>no</td><td></td><td><code>sre_diagnosis</code>, <code>plan_proposal</code>, <code>limitation</code>, <code>approval_gate</code></td></tr><tr><td>fixture</td><td>jsonb</td><td>no</td><td></td><td>recorded Liara responses keyed by tool + args: <code>{"get_metrics":{…},"get_logs":{…},"user_turns":["<bdi dir="rtl">سایتم کند شده</bdi>"]}</code></td></tr><tr><td>expected</td><td>jsonb</td><td>no</td><td></td><td><code>{"top_cause_key":"unbounded_query_memory","top_k_contains":["undersized_plan"],"must_propose_tools":["resize_plan"],"must_not_call":["restart_app"],"must_request_approval":true,"max_delta_monthly_rial":3000000}</code></td></tr><tr><td>tags</td><td>text[]</td><td>no</td><td><code>'{}'</code></td><td></td></tr><tr><td>active</td><td>boolean</td><td>no</td><td><code>true</code></td><td></td></tr><tr><td>created_by</td><td>uuid</td><td>yes</td><td></td><td>FK <code>"user"</code> on delete set null</td></tr><tr><td>created_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Unique: <code>slug</code>. Index <code>gin(tags)</code>.</li></ul>
+</article>
+<article class="card tcard" id="t-eval-run"><h3><span class="tname">eval_run</span><span class="tdesc">one execution of one case (a batch = all cases at one commit)</span></h3>
+<div class="scroll"><table><thead><tr><th>column</th><th>type</th><th>null</th><th>default</th><th>notes</th></tr></thead><tbody><tr><td>id</td><td>uuid</td><td>no</td><td><code>uuid_generate_v7()</code></td><td>PK</td></tr><tr><td>batch_id</td><td>uuid</td><td>no</td><td></td><td>groups one <code>make eval</code> run</td></tr><tr><td>eval_case_id</td><td>uuid</td><td>no</td><td></td><td>FK <code>eval_case</code> on delete cascade</td></tr><tr><td>git_sha</td><td>text</td><td>no</td><td></td><td></td></tr><tr><td>model</td><td>text</td><td>no</td><td></td><td></td></tr><tr><td>prompt_version</td><td>text</td><td>no</td><td></td><td><code>sre@4</code></td></tr><tr><td>passed</td><td>boolean</td><td>no</td><td></td><td></td></tr><tr><td>score</td><td>real</td><td>no</td><td></td><td>check <code>score between 0 and 1</code></td></tr><tr><td>actual</td><td>jsonb</td><td>no</td><td></td><td><code>{"top_cause_key":"unbounded_query_memory","ranked":[…],"tools_called":["get_app_status","get_metrics","get_logs","http_probe"],"approvals_requested":1}</code></td></tr><tr><td>transcript</td><td>jsonb</td><td>yes</td><td></td><td>full trace; nulled after 90 days except the latest batch</td></tr><tr><td>judge_notes</td><td>text</td><td>yes</td><td></td><td></td></tr><tr><td>duration_ms</td><td>int</td><td>no</td><td></td><td></td></tr><tr><td>tokens_in</td><td>int</td><td>yes</td><td></td><td></td></tr><tr><td>tokens_out</td><td>int</td><td>yes</td><td></td><td></td></tr><tr><td>started_at</td><td>timestamptz</td><td>no</td><td><code>now()</code></td><td></td></tr></tbody></table></div>
+<ul><li>Index <code>(batch_id)</code>, <code>(eval_case_id, started_at desc)</code> — trend per case.</li><li>Eval runs use <code>run.trigger = 'eval'</code> against fixtures; they never call Liara and never create approvals in the real inbox.</li></ul>
+</article>
+</section>
+<section class="sec" id="state-machines"><h2>State machines</h2>
+<article class="card tcard" id="t-approval-status"><h3><span class="tname">approval.status</span></h3>
+<div class="scroll diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; pending: sensitive tool_call proposed
+  pending --&gt; approved: signed click, before expires_at
+  pending --&gt; rejected: user rejects
+  pending --&gt; expired: 10 min passed (sweeper or lazy on read)
+  pending --&gt; cancelled: run cancelled / args changed (new approval issued)
+  approved --&gt; executed: tool_call succeeded
+  approved --&gt; failed: tool_call failed
+  rejected --&gt; [*]
+  expired --&gt; [*]
+  cancelled --&gt; [*]
+  executed --&gt; [*]
+  failed --&gt; [*]</pre></div>
+<p>An approval is never reused: a retry after <code>failed</code> or <code>expired</code> creates a new tool call and a new approval.</p>
+</article>
+<article class="card tcard" id="t-run-status"><h3><span class="tname">run.status</span></h3>
+<div class="scroll diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; queued
+  queued --&gt; running: arq picks job
+  running --&gt; awaiting_approval: sensitive step blocked
+  awaiting_approval --&gt; running: approval decided (approve or reject, agent continues)
+  awaiting_approval --&gt; running: approval expired (agent says so, offers again)
+  running --&gt; succeeded
+  running --&gt; failed
+  queued --&gt; cancelled
+  running --&gt; cancelled: user taps stop
+  awaiting_approval --&gt; cancelled
+  succeeded --&gt; [*]
+  failed --&gt; [*]
+  cancelled --&gt; [*]</pre></div>
+</article>
+<article class="card tcard" id="t-incident-status"><h3><span class="tname">incident.status</span></h3>
+<div class="scroll diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; open: user report or 3 failed checks
+  open --&gt; investigating: SRE run starts collecting evidence
+  investigating --&gt; awaiting_approval: hypotheses ranked, action proposed
+  investigating --&gt; dismissed: no fault found / false alarm
+  awaiting_approval --&gt; mitigating: approved
+  awaiting_approval --&gt; investigating: rejected, try next hypothesis
+  mitigating --&gt; verifying: action finished
+  verifying --&gt; resolved: verification passed
+  verifying --&gt; investigating: verification failed
+  resolved --&gt; investigating: same symptom within 24 h (reopen)
+  resolved --&gt; [*]
+  dismissed --&gt; [*]</pre></div>
+<p>A code fix keeps the incident in <code>mitigating</code> until its deployment is live, then <code>verifying</code>.</p>
+</article>
+<article class="card tcard" id="t-deployment-status"><h3><span class="tname">deployment.status</span></h3>
+<div class="scroll diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; queued: deploy_release approved
+  queued --&gt; uploading
+  queued --&gt; cancelled
+  uploading --&gt; building
+  building --&gt; releasing
+  releasing --&gt; health_check
+  health_check --&gt; live: probe 2xx
+  uploading --&gt; failed
+  building --&gt; failed
+  releasing --&gt; failed
+  health_check --&gt; failed: probe fails 3x
+  live --&gt; superseded: newer release live
+  live --&gt; rolled_back: rollback_release approved
+  failed --&gt; [*]
+  cancelled --&gt; [*]
+  superseded --&gt; [*]
+  rolled_back --&gt; [*]</pre></div>
+</article>
+<article class="card tcard" id="t-code-fix-status"><h3><span class="tname">code_fix.status</span></h3>
+<div class="scroll diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; queued
+  queued --&gt; coding: sub-agent starts in a clone
+  coding --&gt; diff_ready: patch + tests pass
+  coding --&gt; failed: no patch / tests fail twice
+  diff_ready --&gt; pr_open: apply_code_fix approved (push branch, open PR)
+  diff_ready --&gt; rejected: user rejects diff
+  pr_open --&gt; merging: merge_and_deploy approved
+  pr_open --&gt; rejected: user rejects merge (PR closed)
+  merging --&gt; deployed: deployment live
+  merging --&gt; failed: merge conflict / deploy failed
+  deployed --&gt; verified: verification passed
+  deployed --&gt; regressed: verification failed (offer rollback)
+  verified --&gt; [*]
+  regressed --&gt; [*]
+  rejected --&gt; [*]
+  failed --&gt; [*]</pre></div>
+</article>
+</section>
+<section class="sec" id="data-lifecycle-retention"><h2>Data lifecycle &amp; retention</h2>
+<div class="card"><div class="scroll"><table><thead><tr><th>data</th><th>kept</th><th>how</th></tr></thead><tbody><tr><td><code>evidence.payload</code> (logs, http_probe)</td><td>30 days</td><td>nightly <code>retention_sweep</code> sets <code>payload = null</code>; <code>summary_fa</code> stays forever</td></tr><tr><td><code>evidence.payload</code> (metrics, status, releases)</td><td>90 days</td><td>same sweep</td></tr><tr><td><code>deployment.build_log_tail</code></td><td>30 days</td><td>set to null</td></tr><tr><td><code>check_result</code></td><td>30 days</td><td>delete, except rows referenced by an incident</td></tr><tr><td><code>tool_call.secret_args_ciphertext</code></td><td>until executed, max 10 min</td><td>nulled on execution, rejection or approval expiry</td></tr><tr><td><code>tool_call</code>, <code>approval</code>, <code>incident</code>, <code>hypothesis</code>, <code>verification</code></td><td>life of the project</td><td>small rows; the incident timeline needs them</td></tr><tr><td><code>message</code></td><td>180 days after <code>conversation.last_message_at</code></td><td>content replaced by <code>[{"type":"text","text_fa":"(<bdi dir="rtl">پاک شده</bdi>)"}]</code>; cards still resolve</td></tr><tr><td><code>eval_run.transcript</code></td><td>90 days, latest batch forever</td><td>nulled</td></tr><tr><td><code>audit_log</code></td><td>forever (min 1 year), append-only</td><td>never updated or deleted by the app</td></tr><tr><td><code>limitation_event</code></td><td>1 year</td><td>delete</td></tr><tr><td>Redis streams <code>run:*</code></td><td>24 h</td><td><code>EXPIRE</code> on create</td></tr><tr><td>user account</td><td>30 days after <code>deleted_at</code></td><td>hard delete cascades; audit rows keep, <code>actor_user_id</code> nulled</td></tr></tbody></table></div></div>
+<p>The sweep runs as an arq cron at 00:00 UTC (03:30 Tehran) in batches of 5,000 rows with <code>for update skip locked</code>, so it never blocks the live loop.</p>
+<p><strong>Partitioning: not now.</strong> Expected volume per active project per day: ~290 <code>check_result</code>, ~60 <code>tool_call</code>, ~20 <code>evidence</code> (≤ 256 KB each, ~5 MB/day worst case), ~40 <code>audit_log</code>. A hundred projects for a year stays under 15 M rows and ~20 GB, fine for plain btree tables. The two tables that would need it first, <code>audit_log</code> and <code>evidence</code>, are time-ordered (identity / uuid v7), so they can move to native monthly range partitions on <code>occurred_at</code> / <code>captured_at</code> when either passes 50 M rows or 20 GB — no key change required.</p>
+</section>
+<section class="sec" id="secrets-handling"><h2>Secrets handling</h2>
+<p><strong>Liara token</strong> (<code>liara_connection.token_ciphertext</code>):</p>
+<ol><li>User pastes the token into a form that posts straight to <code>POST /connections/liara</code> (never into chat).</li><li>Agent calls Liara <code>/me</code> with it; on 200, encrypts with <strong>AES-256-GCM</strong>: random 12-byte nonce, AAD = <code>"liara_connection:{id}:{user_id}"</code> (a ciphertext copied to another row fails to decrypt), key = <code>HAMKAR_TOKEN_KEYS[HAMKAR_TOKEN_KEY_VERSION]</code>. Stores <code>nonce‖ciphertext‖tag</code>, <code>key_version</code>, <code>token_last4</code>.</li><li><code>HAMKAR_TOKEN_KEYS</code> is an env var, JSON <code>{"1":"&lt;base64 32 bytes&gt;","2":"…"}</code>; it is never in the database, the repo, or a Docker image layer.</li><li>Decryption happens only inside <code>LiaraClient</code> in the tool executor (agent tool-runner and worker), which builds the <code>Authorization</code> header itself. Tools receive a <code>connection_id</code>, never the token; the LLM sees tool *results* only, after the redactor.</li><li><strong>Never logged</strong>: the SQLAlchemy type <code>EncryptedBytes</code> has <code>repr = "&lt;encrypted&gt;"</code>; the structlog redaction processor drops keys matching <code>token|authorization|secret|password|cookie</code> and scrubs any string equal to a decrypted token; httpx request logging is off for the Liara client; Postgres runs with <code>log_parameter_max_length = 0</code> and <code>log_statement = 'ddl'</code>.</li><li><strong>Rotation</strong>: add key <code>"3"</code>, set <code>HAMKAR_TOKEN_KEY_VERSION=3</code>, deploy; the arq job <code>rotate_token_keys</code> re-encrypts rows <code>where key_version &lt; 3</code> in batches; when the count is 0, remove key <code>"2"</code> from env. <code>key_version</code> makes the mixed state safe.</li><li><strong>Revoke</strong>: status <code>revoked</code>, <code>revoked_at = now()</code>, <code>token_ciphertext = '\x'</code>; audit <code>connection.revoked</code>.</li></ol>
+<p><strong>Env var values</strong> (<code>set_env</code>) follow the same path in <code>tool_call.secret_args_ciphertext</code> and are wiped after use. <code>DATABASE_URL</code> from <code>create_database</code> goes worker → ciphertext → <code>set_env</code> without passing through the agent's context. Previews show keys and a masked tail only.</p>
+<p><strong>Approvals</strong>: <code>APPROVAL_SECRET</code> (env, 32 bytes) signs approvals; rotating it simply invalidates pending approvals (max 10 minutes of loss).</p>
+<p><strong>Database roles</strong>: <code>hamkar_migrator</code> owns the schema (Alembic only); <code>hamkar_app</code> has DML on all tables except <code>update/delete</code> on <code>audit_log</code>; <code>hamkar_readonly</code> (students, evals, debugging) has <code>select</code> everywhere except <code>liara_connection.token_ciphertext</code> and <code>tool_call.secret_args_ciphertext</code>.</p>
+</section>
+<section class="sec" id="sample-rows-one-demo-story"><h2>Sample rows — one demo story</h2>
+<p>Ids shortened (<code>…u1</code>); real ids are uuid v7. Times UTC; Jalali shown in the UI. Prices are illustrative until the T-01 capability report confirms Liara's plan list.</p>
+<p><strong>Day 1 — 2026-10-24 (<bdi dir="rtl">۲ آبان ۱۴۰۵): «این را آنلاین کن»</bdi></strong></p>
+<p><code>user</code></p>
+<div class="card"><div class="scroll"><table><thead><tr><th>id</th><th>email</th><th>display_name</th><th>role</th></tr></thead><tbody><tr><td>…u1</td><td>mohammadsameni1@gmail.com</td><td><bdi dir="rtl">محمد</bdi></td><td>admin</td></tr></tbody></table></div></div>
+<p><code>liara_connection</code> / <code>github_connection</code></p>
+<div class="card"><div class="scroll"><table><thead><tr><th>table</th><th>id</th><th>user_id</th><th>key fields</th></tr></thead><tbody><tr><td>liara_connection</td><td>…lc1</td><td>…u1</td><td>key_version 1, token_last4 <code>9f2c</code>, status active, expires_at 2027-04-24</td></tr><tr><td>github_connection</td><td>…gh1</td><td>…u1</td><td>installation_id 58120931, account_login <code>amox</code>, repo_selection selected</td></tr></tbody></table></div></div>
+<p><code>project</code></p>
+<div class="card"><div class="scroll"><table><thead><tr><th>id</th><th>name</th><th>repo_full_name</th><th>liara_app_name</th><th>platform</th><th>plan_id</th><th>db_kind</th><th>status</th><th>current_deployment_id</th></tr></thead><tbody><tr><td>…p1</td><td><bdi dir="rtl">راهبر خرید</bdi></td><td>amox/rahbar-kharid</td><td>rahbar-kharid</td><td>next</td><td>small → medium (day 2)</td><td>postgres</td><td>live</td><td>…d1 → …d2</td></tr></tbody></table></div></div>
+<p><code>conversation</code> …c1 (project …p1). <code>message</code> seq 1 user: <bdi dir="rtl">«این را آنلاین کن</bdi> https://github.com/amox/rahbar-kharid». <code>run</code> …r1: kind <code>deploy</code>, trigger <code>user_message</code>, status <code>succeeded</code>, 06:32:05 → 06:41:30.</p>
+<p><code>run_step</code> of …r1 (the live checklist)</p>
+<div class="card"><div class="scroll"><table><thead><tr><th>seq</th><th>key</th><th>label_fa</th><th>status</th><th>tool_call</th></tr></thead><tbody><tr><td>1</td><td>analyze_repo</td><td><bdi dir="rtl">خواندن مخزن</bdi></td><td>done</td><td>…t1 analyze_repo (read)</td></tr><tr><td>2</td><td>propose_plan</td><td><bdi dir="rtl">پیشنهاد پلن و هزینه</bdi></td><td>done</td><td>…t2 list_plans, …t3 get_balance (read)</td></tr><tr><td>3</td><td>create_app</td><td><bdi dir="rtl">ساخت اپ روی لیارا</bdi></td><td>done</td><td>…t4 create_app (sensitive, approval …a1)</td></tr><tr><td>4</td><td>create_database</td><td><bdi dir="rtl">ساخت دیتابیس</bdi> Postgres</td><td>done</td><td>…t5 create_database (…a2)</td></tr><tr><td>5</td><td>set_env</td><td><bdi dir="rtl">تنظیم متغیرهای محیطی</bdi></td><td>done</td><td>…t6 set_env (…a3)</td></tr><tr><td>6</td><td>deploy_release</td><td><bdi dir="rtl">استقرار</bdi></td><td>done</td><td>…t7 deploy_release (…a4)</td></tr><tr><td>7</td><td>health_check</td><td><bdi dir="rtl">بررسی سلامت</bdi></td><td>done</td><td>…t8 http_probe (read)</td></tr><tr><td>8</td><td>add_domain</td><td><bdi dir="rtl">اتصال دامنه</bdi></td><td>done</td><td>…t9 add_domain (…a5), …t10 registrar_dns_records (human_only → limitation …l1)</td></tr></tbody></table></div></div>
+<p><code>repo_analysis</code> …ra1: commit <code>9c1e…</code>, detector <code>detect@3</code>, <code>detected</code> = the example shape above (next 16, node 22, pnpm, postgres, 3 env vars, 512 MB).</p>
+<p><code>plan_proposal</code> …pp1: app <code>small</code> 1,500,000 rial (150,000 toman)/mo, db <code>postgres-small</code> 1,200,000 rial/mo, total 2,700,000 rial, balance 20,000,000 rial, status <code>accepted</code>.</p>
+<p><code>approval</code> (first deploy)</p>
+<div class="card"><div class="scroll"><table><thead><tr><th>id</th><th>tool_call</th><th>status</th><th>decision</th><th>decided_at</th><th>preview.cost.delta_monthly_rial</th></tr></thead><tbody><tr><td>…a1</td><td>…t4 create_app</td><td>executed</td><td>approve</td><td>06:34:51</td><td>1,500,000</td></tr><tr><td>…a2</td><td>…t5 create_database</td><td>executed</td><td>approve</td><td>06:35:30</td><td>1,200,000</td></tr><tr><td>…a3</td><td>…t6 set_env</td><td>executed</td><td>approve</td><td>06:36:02</td><td>0</td></tr><tr><td>…a4</td><td>…t7 deploy_release</td><td>executed</td><td>approve</td><td>06:36:10</td><td>0</td></tr><tr><td>…a5</td><td>…t9 add_domain</td><td>executed</td><td>approve</td><td>06:42:15</td><td>0</td></tr></tbody></table></div></div>
+<p><code>deployment</code> …d1: commit <code>9c1e…</code>, release <code>r-1</code>, status <code>live</code> 06:39:40, health <code>{"status":200,"latency_ms":212}</code>. <code>domain</code> …dm1: <code>rahbar.amox.ir</code>, status <code>pending_dns</code> → <code>active</code> (day 1, 08:05) after the user set the CNAME. <code>limitation_event</code> …l1: capability <code>registrar_dns_records</code>, kind <code>human_only</code>, guide <code>irnic_ns_3_steps</code>, message <bdi dir="rtl">«ثبت رکورد در پنل ثبت‌کنندهٔ دامنه از</bdi> API <bdi dir="rtl">لیارا ممکن نیست؛ این سه قدم را خودتان انجام دهید.»</bdi></p>
+<p><strong>Day 2 — 2026-10-25 (<bdi dir="rtl">۳ آبان ۱۴۰۵): «سایتم خیلی کند شده»</bdi></strong></p>
+<p><code>incident</code> …i1: project …p1, title <bdi dir="rtl">«کندی و ری‌استارت مکرر»</bdi>, severity <code>major</code>, opened 09:10:02, status <code>open → investigating → awaiting_approval → mitigating → verifying → mitigating → verifying → resolved</code> (resolved 10:02:40), root cause …h1. <code>run</code> …r2: kind <code>sre</code>, incident …i1. <code>run</code> …r3: kind <code>code_fix</code>, parent …r2.</p>
+<p><code>evidence</code></p>
+<div class="card"><div class="scroll"><table><thead><tr><th>id</th><th>kind</th><th>source</th><th>summary_fa</th><th>payload highlight</th></tr></thead><tbody><tr><td>…e1</td><td>status</td><td>liara:get_app_status</td><td><bdi dir="rtl">۶ ری‌استارت در یک ساعت؛ آخرین علت</bdi> OOMKilled</td><td><code>restarts_1h:6, ram_limit_mb:512</code></td></tr><tr><td>…e2</td><td>metrics</td><td>liara:get_metrics</td><td><bdi dir="rtl">حافظه هر بار به سقف ۵۱۲ مگابایت می‌رسد</bdi></td><td>memory_mb peaks 511/512</td></tr><tr><td>…e3</td><td>logs</td><td>liara:get_logs</td><td><bdi dir="rtl">پیش از هر کرش</bdi>: GET /api/products <bdi dir="rtl">و</bdi> heap out of memory</td><td>pattern count 6</td></tr><tr><td>…e4</td><td>http_probe</td><td>probe:hamkar-worker</td><td>p95 <bdi dir="rtl">پاسخ</bdi> /api/products: <bdi dir="rtl">۴۱۸۰ میلی‌ثانیه</bdi></td><td><code>p95_ms:4180</code>, 2× 502</td></tr><tr><td>…e5</td><td>releases</td><td>liara:list_releases</td><td><bdi dir="rtl">فقط یک انتشار؛ مشکل از روز اول بوده</bdi></td><td>1 release</td></tr></tbody></table></div></div>
+<p><code>limitation_event</code> …l2: capability <code>db_slow_query_log</code>, kind <code>api_missing</code>, <bdi dir="rtl">«لاگ کوئری‌های کند دیتابیس از</bdi> API <bdi dir="rtl">لیارا در دسترس نیست؛ از لاگ اپ استفاده کردم.»</bdi></p>
+<p><code>hypothesis</code></p>
+<div class="card"><div class="scroll"><table><thead><tr><th>rank</th><th>cause_key</th><th>title_fa</th><th>confidence</th><th>evidence</th><th>status</th></tr></thead><tbody><tr><td>1</td><td>unbounded_query_memory</td><td>/api/products <bdi dir="rtl">همهٔ ۲۲۵٬۹۰۳ محصول را یکجا در حافظه می‌خواند</bdi></td><td>0.64</td><td>e2, e3, e4</td><td>confirmed</td></tr><tr><td>2</td><td>undersized_plan</td><td><bdi dir="rtl">پلن</bdi> small (<bdi dir="rtl">۵۱۲ مگ) برای این اپ کم است</bdi></td><td>0.26</td><td>e1, e2</td><td>dismissed (kept as mitigation)</td></tr><tr><td>3</td><td>bad_release</td><td><bdi dir="rtl">انتشار تازه خراب است</bdi></td><td>0.10</td><td>e5</td><td>refuted (only one release)</td></tr></tbody></table></div></div>
+<p><code>approval</code> …a6 for <code>tool_call</code> …t20 <code>resize_plan</code> <code>{"plan_id":"medium"}</code>: preview = the example above (delta +1,500,000 rial/mo = 150,000 toman), created 09:14:05, expires 09:24:05, decision <code>approve</code> by …u1 at 09:15:40, status <code>executed</code>. <code>incident_action</code> …ia1: kind <code>mitigate</code>, hypothesis …h2, tool_call …t20, outcome <code>succeeded</code>.</p>
+<p><code>verification</code> …v1 (after resize): metric <code>restarts_per_hour</code>, before 6, after 0, threshold 0, <code>passed = true</code>. p95 still 1,900 ms in …e6 → the agent says the root cause is in code (h1) and starts <code>code_fix</code> …cf1.</p>
+<p><code>code_fix</code> …cf1: branch <code>hamkar/fix-products-pagination</code>, PR #42, <code>diff_stats {"files":2,"additions":38,"deletions":6}</code> (<code>app/api/products/route.ts</code> paginates with <code>limit 24</code> + cursor; <code>app/products/page.tsx</code> loads pages), tests <code>pnpm test</code> passed. Approvals: …a7 <code>apply_code_fix</code> (…t21) approved 09:41:12 → <code>pr_open</code>; …a8 <code>merge_and_deploy</code> (…t22) approved 09:52:30 → <code>merging</code> → <code>deployed</code> (<code>deployment</code> …d2, release <code>r-2</code>, commit <code>4be0…</code>, <code>code_fix_id</code> …cf1, live 09:58:10) → <code>verified</code>. <code>incident_action</code> …ia2 (fix, …t21) and …ia3 (fix, …t22).</p>
+<p><code>verification</code> …v2</p>
+<div class="card"><div class="scroll"><table><thead><tr><th>metric</th><th>method</th><th>unit</th><th>before</th><th>after</th><th>threshold</th><th>passed</th><th>before_evidence</th><th>after_evidence</th></tr></thead><tbody><tr><td>http_p95_ms</td><td><bdi dir="rtl">۲۰ درخواست به</bdi> /api/products <bdi dir="rtl">از ورکر، ۳۰ ثانیه پس از استقرار</bdi></td><td>ms</td><td>4180</td><td>320</td><td>800</td><td>true</td><td>…e4</td><td>…e7</td></tr></tbody></table></div></div>
+<p>Afterwards the user accepts <bdi dir="rtl">«هر ۵ دقیقه چک کنم؟»</bdi>: <code>scheduled_check</code> …sc1 <code>http_health</code> <code>{"url":"https://rahbar.amox.ir/api/products","max_p95_ms":800,"samples":5}</code>; first <code>check_result</code> id 1, outcome <code>ok</code>, value 318 ms.</p>
+<p><code>audit_log</code> (excerpt)</p>
+<div class="card"><div class="scroll"><table><thead><tr><th>id</th><th>occurred_at</th><th>actor</th><th>action</th><th>target</th><th>data</th></tr></thead><tbody><tr><td>1</td><td>10-24 06:30:44</td><td>user …u1</td><td>connection.created</td><td>liara_connection …lc1</td><td><code>{"last4":"9f2c"}</code></td></tr><tr><td>9</td><td>10-24 06:34:51</td><td>user …u1</td><td>approval.decided</td><td>approval …a1</td><td><code>{"tool":"create_app","decision":"approve","delta_monthly_rial":1500000}</code></td></tr><tr><td>10</td><td>10-24 06:35:02</td><td>worker</td><td>tool.executed</td><td>tool_call …t4</td><td><code>{"liara_app":"rahbar-kharid","http_status":201}</code></td></tr><tr><td>41</td><td>10-25 09:15:40</td><td>user …u1</td><td>approval.decided</td><td>approval …a6</td><td><code>{"tool":"resize_plan","decision":"approve","delta_monthly_rial":1500000}</code></td></tr><tr><td>58</td><td>10-25 10:02:40</td><td>agent</td><td>incident.resolved</td><td>incident …i1</td><td><code>{"root_cause":"unbounded_query_memory","p95_before_ms":4180,"p95_after_ms":320}</code></td></tr></tbody></table></div></div>
+<p><code>eval_case</code> <code>oom-unbounded-products-query</code>: fixture = e1–e5 recorded; expected top cause <code>unbounded_query_memory</code>, must request approval for <code>resize_plan</code>, must not call <code>restart_app</code> first.</p>
+</section>
+<section class="sec" id="migration-plan-alembic"><h2>Migration plan (Alembic)</h2>
+<p>Rules: one revision per PR, additive first (add column/table → backfill → enforce → drop later), <code>ALTER TYPE … ADD VALUE</code> in a revision of its own, every revision has a working <code>downgrade</code>, CI runs <code>alembic upgrade head &amp;&amp; alembic downgrade base &amp;&amp; alembic upgrade head</code> on an empty PG16.</p>
+<div class="card"><div class="scroll"><table><thead><tr><th>phase</th><th>revision</th><th>tables / changes</th></tr></thead><tbody><tr><td><strong>P0 Foundation</strong></td><td><code>0001_base</code></td><td>extensions, <code>uuid_generate_v7()</code>, <code>touch_updated_at()</code>, all P0 enum types, roles + grants</td></tr><tr><td></td><td><code>0002_identity</code></td><td><code>user</code>, <code>liara_connection</code>, <code>github_connection</code></td></tr><tr><td></td><td><code>0003_agent_core</code></td><td><code>project</code> (without <code>current_deployment_id</code>), <code>conversation</code>, <code>message</code>, <code>run</code>, <code>run_step</code>, <code>tool_call</code> (+ risk checks, gate trigger), <code>approval</code></td></tr><tr><td></td><td><code>0004_audit_limits</code></td><td><code>audit_log</code> (+ append-only trigger, <code>audit_append()</code>), <code>limitation_event</code></td></tr><tr><td><strong>P1 First deploy</strong></td><td><code>0101_deploy</code></td><td><code>repo_analysis</code>, <code>plan_proposal</code>, <code>deployment</code>, <code>domain</code>; <code>project.current_deployment_id</code> FK</td></tr><tr><td><strong>P2 SRE loop</strong></td><td><code>0201_incidents</code></td><td><code>incident</code> (without <code>check_result_id</code>, <code>root_cause_hypothesis_id</code>), <code>evidence</code>, <code>hypothesis</code>, <code>incident_action</code>, <code>verification</code> (without <code>code_fix_id</code>); <code>incident.root_cause_hypothesis_id</code> FK; <code>run.incident_id</code> FK</td></tr><tr><td></td><td><code>0202_evals</code></td><td><code>eval_case</code>, <code>eval_run</code> — the SRE eval set is built while tuning diagnosis</td></tr><tr><td><strong>P3 Coding fix + checks</strong></td><td><code>0301_code_fix</code></td><td><code>code_fix</code>; <code>deployment.code_fix_id</code>, <code>verification.code_fix_id</code>, <code>incident_action.code_fix_id</code> FKs; enum values for <code>apply_code_fix</code>/<code>merge_and_deploy</code> already in the tool check since P0</td></tr><tr><td></td><td><code>0302_checks</code></td><td><code>scheduled_check</code>, <code>check_result</code>; <code>incident.check_result_id</code> FK</td></tr><tr><td><strong>P4 Ship</strong></td><td><code>0401_retention</code></td><td>retention indexes, <code>retention_sweep</code> support; no new tables</td></tr><tr><td></td><td><code>0402_demo_seed</code> (data, dev/demo only)</td><td>eval cases; no user data — demo data comes from really running the story</td></tr></tbody></table></div></div>
+<p>The gate (<code>tool_call</code> checks + trigger, <code>approval</code>) lands in P0 so it is test-driven before any sensitive tool exists.</p>
+</section>
+<section class="sec" id="key-queries"><h2>Key queries</h2>
+<p><strong>Status side panel</strong> (one round trip; Liara balance comes from Redis cache, not this query):</p>
+<div class="card"><div class="scroll"><pre class="code" data-lang="sql"><code>select p.id, p.name, p.status, p.live_url, p.liara_app_name, p.plan_id,
+       d.status            as deploy_status,  d.commit_sha, d.live_at,
+       ar.id               as active_run_id,  ar.kind as active_run_kind, ar.status as active_run_status,
+       inc.id              as incident_id,    inc.title_fa as incident_title, inc.status as incident_status,
+       coalesce(ap.n, 0)   as pending_approvals,
+       chk.checks
+from project p
+left join deployment d on d.id = p.current_deployment_id
+left join lateral (
+  select r.id, r.kind, r.status from run r
+  where r.project_id = p.id and r.status in ('queued','running','awaiting_approval')
+  order by r.created_at desc limit 1) ar on true
+left join lateral (
+  select i.id, i.title_fa, i.status from incident i
+  where i.project_id = p.id and i.status not in ('resolved','dismissed')
+  order by i.opened_at desc limit 1) inc on true
+left join lateral (
+  select count(*) as n from approval a
+  where a.project_id = p.id and a.status = 'pending' and a.expires_at &gt; now()) ap on true
+left join lateral (
+  select jsonb_agg(jsonb_build_object('name', sc.name, 'kind', sc.kind,
+                   'outcome', sc.last_outcome, 'at', sc.last_run_at) order by sc.name) as checks
+  from scheduled_check sc where sc.project_id = p.id and sc.enabled) chk on true
+where p.id = :project_id and p.user_id = :user_id;
+
+-- the live checklist of the active run (then SSE keeps it fresh)
+select seq, key, label_fa, status, detail_fa, started_at, finished_at
+from run_step where run_id = :active_run_id order by seq;</code></pre></div></div>
+<p><strong>Incident timeline</strong> (one ordered list for the timeline card and the post-mortem):</p>
+<div class="card"><div class="scroll"><pre class="code" data-lang="sql"><code>select * from (
+  select i.opened_at as at, 'incident.opened' as kind, i.id as ref_id, i.symptom_fa as text, null::jsonb as data
+    from incident i where i.id = :incident_id
+  union all
+  select e.captured_at, 'evidence.' || e.kind, e.id, e.summary_fa,
+         jsonb_build_object('source', e.source, 'window', jsonb_build_array(e.window_start, e.window_end))
+    from evidence e where e.incident_id = :incident_id
+  union all
+  select h.created_at, 'hypothesis', h.id, h.title_fa,
+         jsonb_build_object('rank', h.rank, 'confidence', h.confidence, 'status', h.status)
+    from hypothesis h where h.incident_id = :incident_id
+  union all
+  select a.created_at, 'approval.requested', a.id, a.preview-&gt;&gt;'title_fa',
+         jsonb_build_object('tool', a.preview-&gt;&gt;'tool', 'delta_monthly_rial', a.preview#&gt;'{cost,delta_monthly_rial}')
+    from incident_action ia join approval a on a.tool_call_id = ia.tool_call_id
+   where ia.incident_id = :incident_id
+  union all
+  select a.decided_at, 'approval.' || a.decision, a.id, a.preview-&gt;&gt;'title_fa', null
+    from incident_action ia join approval a on a.tool_call_id = ia.tool_call_id
+   where ia.incident_id = :incident_id and a.decided_at is not null
+  union all
+  select tc.finished_at, 'action.' || tc.name, ia.id, null,
+         jsonb_build_object('kind', ia.kind, 'status', tc.status, 'duration_ms', tc.duration_ms)
+    from incident_action ia join tool_call tc on tc.id = ia.tool_call_id
+   where ia.incident_id = :incident_id and tc.finished_at is not null
+  union all
+  select cf.created_at, 'code_fix.' || cf.status, cf.id, cf.branch_name,
+         jsonb_build_object('pr_url', cf.pr_url, 'diff_stats', cf.diff_stats)
+    from code_fix cf where cf.incident_id = :incident_id
+  union all
+  select v.verified_at, 'verification', v.id, v.method,
+         jsonb_build_object('metric', v.metric, 'unit', v.unit, 'before', v.before_value,
+                            'after', v.after_value, 'threshold', v.threshold, 'passed', v.passed)
+    from verification v where v.incident_id = :incident_id
+  union all
+  select i.resolved_at, 'incident.resolved', i.id, h.title_fa, null
+    from incident i left join hypothesis h on h.id = i.root_cause_hypothesis_id
+   where i.id = :incident_id and i.resolved_at is not null
+) t
+order by at, kind;</code></pre></div></div>
+<p><strong>Approvals inbox</strong> and the <strong>one-time decision</strong>:</p>
+<div class="card"><div class="scroll"><pre class="code" data-lang="sql"><code>select a.id, a.expires_at, a.preview, tc.name as tool, p.name as project,
+       r.kind as run_kind, i.title_fa as incident
+from approval a
+join tool_call tc on tc.id = a.tool_call_id
+join project p    on p.id  = a.project_id
+join run r        on r.id  = a.run_id
+left join incident i on i.id = r.incident_id
+where a.user_id = :user_id and a.status = 'pending' and a.expires_at &gt; now()
+order by a.expires_at;            -- served by approval(user_id, expires_at) where status='pending'
+
+-- after the app verifies the HMAC (constant time); exactly one caller can win this
+update approval
+   set status = case when :decision = 'approve' then 'approved' else 'rejected' end::approval_status,
+       decision = :decision, decided_by = :user_id, decided_at = now(),
+       reject_reason_fa = :reason
+ where id = :approval_id and user_id = :user_id
+   and status = 'pending' and expires_at &gt; now()
+returning tool_call_id;           -- 0 rows → already used or expired → 409</code></pre></div></div>
+</section>
+<section class="sec" id="redis-keys"><h2>Redis keys</h2>
+<div class="card"><div class="scroll"><table><thead><tr><th>key</th><th>type</th><th>TTL</th><th>purpose</th></tr></thead><tbody><tr><td><code>approval:{approval_id}:decision</code></td><td>list</td><td>15 min</td><td>API <code>LPUSH</code>es <code>approve</code>/<code>reject</code> after the Postgres update; the waiting worker <code>BLPOP</code>s (a list, not pub/sub, so a decision is not lost if the worker reconnects)</td></tr><tr><td><code>stream:run:{run_id}</code></td><td>stream</td><td>24 h</td><td>run_step / tool_call / card events; SSE handler <code>XREAD BLOCK</code>s and replays from <code>Last-Event-ID</code>; <code>MAXLEN ~ 1000</code></td></tr><tr><td><code>stream:user:{user_id}</code></td><td>stream</td><td>24 h</td><td>inbox badge, incident opened, check failed — one SSE connection per tab</td></tr><tr><td><code>lock:project:{project_id}</code></td><td>string</td><td>15 min</td><td><code>SET NX PX</code> held by the worker for any sensitive action on the project (one mutation at a time); value = run id, released with a compare-and-delete script</td></tr><tr><td><code>lock:check:{scheduled_check_id}</code></td><td>string</td><td>interval_s</td><td>prevents overlapping check executions</td></tr><tr><td><code>rl:msg:{user_id}</code></td><td>counter</td><td>60 s</td><td>20 chat messages/min</td></tr><tr><td><code>rl:liara:{liara_connection_id}</code></td><td>counter</td><td>1 s</td><td>token bucket in front of the Liara API (5 req/s per token)</td></tr><tr><td><code>rl:login:{sha256(email)}</code></td><td>counter</td><td>15 min</td><td>5 magic-link requests per 15 min</td></tr><tr><td><code>auth:magic:{sha256(token)}</code></td><td>string</td><td>15 min</td><td>magic-link token → user id, deleted on use</td></tr><tr><td><code>auth:sess:{sha256(session)}</code></td><td>hash</td><td>30 d sliding</td><td>session → user id, created_at, ip</td></tr><tr><td><code>cache:liara:plans</code></td><td>string</td><td>1 h</td><td><code>list_plans</code> JSON (prices re-fetched before any approval older than 1 h)</td></tr><tr><td><code>cache:liara:balance:{liara_connection_id}</code></td><td>string</td><td>60 s</td><td>balance for the side panel</td></tr><tr><td><code>arq:*</code></td><td>—</td><td>arq-managed</td><td>job queue: deploy watcher, SRE run, code fix, verification, checks cron, retention sweep</td></tr></tbody></table></div></div>
+<p>No secret is ever written to Redis: no tokens, no env values (those stay as ciphertext in Postgres).</p>
+</section>
+</main>

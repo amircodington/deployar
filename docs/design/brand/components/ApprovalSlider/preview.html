@@ -1,0 +1,32 @@
+<!-- @dsCard group="Actions" height=260 subtitle="Swipe right-to-left to approve; Enter when focused" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400&display=swap">
+<style>html,body{margin:0;background:var(--shell);color:var(--ink);font-family:var(--font-sans)} .wrap{padding:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start} .mono{font-family:var(--font-mono);direction:ltr;unicode-bidi:isolate;font-size:12px}
+.box{display:grid;gap:12px;width:420px;max-width:100%;background:var(--amber-soft);border-radius:var(--radius-lg);padding:20px}
+.what{font-size:15px;font-weight:500}.cost{font-size:13px;color:var(--amber-ink)}
+.track{position:relative;height:64px;border-radius:var(--radius-pill);background:var(--card);border:1px solid var(--ink-faint);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink);user-select:none;touch-action:none;overflow:hidden}
+.track:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.knob{position:absolute;right:6px;top:6px;width:84px;height:50px;border-radius:var(--radius-pill);background:linear-gradient(120deg,var(--mint),var(--amber));display:grid;place-items:center;cursor:grab;transition:transform 260ms cubic-bezier(.23,1,.32,1)}
+.knob svg{width:22px;height:22px;stroke:var(--on-amber);fill:none;stroke-width:1.8;stroke-linecap:round}
+.hint{opacity:.85;transition:opacity 200ms ease}
+.done .hint{opacity:0}.ok{position:absolute;opacity:0;transition:opacity 200ms ease;color:var(--mint);font-weight:700}.done .ok{opacity:1}
+.exp{font-size:12px;color:var(--ink-muted)}
+@media (prefers-reduced-motion:reduce){.knob{transition:none}}
+</style>
+<div class="wrap" dir="rtl"><div class="box">
+ <span class="what">ری‌استارت و ارتقای RAM به ۱ گیگابایت</span>
+ <span class="cost">هزینه‌ی ماهانه حدود ۱۲۰٬۰۰۰ تومان بیشتر می‌شود</span>
+ <div class="track" id="tr" tabindex="0" role="button" aria-label="برای تأیید بکش یا Enter بزن">
+  <span class="hint">بکش تا تأیید شود ‹‹</span><span class="ok">تأیید شد</span>
+  <span class="knob" id="kn"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>
+ </div>
+ <span class="exp">این تأیید تا ۱۰ دقیقه معتبر است و فقط یک بار اجرا می‌شود.</span>
+</div></div>
+<script>
+const tr=document.getElementById('tr'),kn=document.getElementById('kn');let x0=null,t0=0,dx=0;
+const max=()=>tr.clientWidth-kn.offsetWidth-12;
+const done=()=>{kn.style.transform='translateX('+(-max())+'px)';tr.classList.add('done');setTimeout(()=>{tr.classList.remove('done');kn.style.transform='';},1800)};
+kn.addEventListener('pointerdown',e=>{x0=e.clientX;t0=performance.now();kn.setPointerCapture(e.pointerId);kn.style.transition='none'});
+kn.addEventListener('pointermove',e=>{if(x0===null)return;dx=Math.min(0,Math.max(-max(),e.clientX-x0));kn.style.transform='translateX('+dx+'px)'});
+kn.addEventListener('pointerup',()=>{if(x0===null)return;kn.style.transition='';const v=Math.abs(dx)/(performance.now()-t0);x0=null;(Math.abs(dx)>max()*.8||v>.6)?done():(kn.style.transform='');dx=0});
+tr.addEventListener('keydown',e=>{if(e.key==='Enter')done()});
+</script>

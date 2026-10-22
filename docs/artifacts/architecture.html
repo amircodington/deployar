@@ -1,0 +1,308 @@
+<title>همکار فنی · Software Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#111014;--card:#1A181D;--raised:#232027;--line:#2E2A33;--fg:#F3F0EB;--muted:#A09AA8;
+--amber:#FFB547;--peach:#F7D9B5;--mint:#7EE0C3;--violet:#8E8AF2;--red:#F26B6B;color-scheme:dark;
+--f-ui:"Vazirmatn",system-ui,sans-serif;--f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#F4F2EE;--card:#FFFFFF;--raised:#EEEBE6;--line:#DEDAD3;
+--fg:#17151A;--muted:#625C68;--amber:#B86E00;--peach:#8A5A1E;--mint:#127A5C;--violet:#5550C8;--red:#C23B3B;color-scheme:light}}
+:root[data-theme="light"]{--bg:#F4F2EE;--card:#FFFFFF;--raised:#EEEBE6;--line:#DEDAD3;
+--fg:#17151A;--muted:#625C68;--amber:#B86E00;--peach:#8A5A1E;--mint:#127A5C;--violet:#5550C8;--red:#C23B3B;color-scheme:light}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.7;
+padding:32px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px));overflow-x:hidden}
+.page{max-width:1240px;margin:0 auto;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+header.hero{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(20px,4vw,40px);display:grid;gap:12px}
+.eyebrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+.eyebrow b{color:var(--peach);font-weight:700}
+.pill{border:1px solid var(--line);background:var(--raised);border-radius:999px;padding:2px 10px;font-size:12px}
+h1{margin:0;font-size:clamp(30px,5vw,52px);font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.lede{color:var(--muted);max-width:75ch;margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px 20px}
+nav.toc h2{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
+nav.toc ol{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+nav.toc a{display:block;color:var(--fg);text-decoration:none;font-size:13px;padding:4px 10px;border-radius:10px;background:var(--raised)}
+nav.toc a:hover{color:var(--peach)}
+main{display:grid;gap:20px;min-width:0}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(18px,3vw,32px);min-width:0;scroll-margin-top:16px}
+section.card>h2{margin:0 0 12px;font-size:clamp(20px,2.4vw,26px);font-weight:800;letter-spacing:-.01em;display:flex;gap:10px;align-items:baseline}
+section.card>h2 .n{color:var(--peach);font-family:var(--f-mono);font-size:.7em;font-weight:500}
+h3{font-size:17px;margin:22px 0 8px;font-weight:700}
+p{margin:0 0 12px;overflow-wrap:anywhere}
+ul,ol.md{margin:0 0 12px;padding-inline-start:22px}
+li{margin:4px 0;overflow-wrap:anywhere}
+li::marker{color:var(--muted)}
+strong{font-weight:700;color:var(--fg)}
+code{font-family:var(--f-mono);font-size:.84em;background:var(--raised);border:1px solid var(--line);border-radius:6px;padding:1px 5px;overflow-wrap:anywhere}
+.tbl{overflow-x:auto;margin:6px 0 16px;border:1px solid var(--line);border-radius:16px;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{background:var(--raised);font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td code{overflow-wrap:normal;white-space:nowrap}
+.diagram{overflow-x:auto;background:var(--raised);border:1px solid var(--line);border-radius:20px;padding:16px;margin:6px 0 16px}
+.diagram pre.mermaid{margin:0;min-width:min-content;background:transparent}
+pre.code{overflow-x:auto;background:var(--raised);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:6px 0 16px;
+font-family:var(--f-mono);font-size:12.5px;line-height:1.6;direction:ltr}
+pre.code code{background:none;border:0;padding:0;font-size:inherit;overflow-wrap:normal}
+.r-read{color:var(--mint);font-weight:700}
+.r-sensitive{color:var(--amber);font-weight:700}
+.r-human{color:var(--violet);font-weight:700}
+footer{color:var(--muted);font-size:12px;text-align:center;padding-top:8px}
+@media (min-width:1000px){
+ .page{grid-template-columns:250px minmax(0,1fr)}
+ header.hero{grid-column:1/-1}
+ nav.toc{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto}
+ nav.toc ol{display:block}
+ nav.toc li{margin:2px 0}
+ nav.toc a{background:none;padding:5px 8px}
+ nav.toc a:hover{background:var(--raised)}
+ footer{grid-column:1/-1}
+}
+</style>
+<div class="page" lang="en" dir="ltr">
+<header class="hero">
+  <div class="eyebrow"><b lang="fa" dir="rtl">همکار فنی</b><span>Hamkar</span><span class="pill">Starcoach hackathon · Liara challenge</span><span class="pill">how</span></div>
+  <h1>Software Architecture</h1>
+  <p class="lede">C4 style: context → containers → components → deployment, then sequences, state machines, API contract, tool registry, repo layout, conventions, testing and ADRs. Read with <code>SYSTEM-DESIGN.md</code> (what and why) and <code>DATA-MODEL.md</code> (tables). Diagrams are mermaid; the published page renders them.</p>
+  <div class="legend"><span><i style="background:var(--mint)"></i>read / healthy / automatic</span><span><i style="background:var(--amber)"></i>sensitive / needs approval</span><span><i style="background:var(--violet)"></i>human_only / info</span><span><i style="background:var(--red)"></i>error</span></div>
+</header>
+<nav class="toc" aria-label="Contents"><h2>Contents</h2><ol><li><a href="#s1">1. Context</a></li><li><a href="#s2">2. Containers</a></li><li><a href="#s3">3. Components — agent</a></li><li><a href="#s4">4. Components — web</a></li><li><a href="#s5">5. Deployment</a></li><li><a href="#s6">6. Key sequences</a></li><li><a href="#s7">7. State machines</a></li><li><a href="#s8">8. API contract (web ↔ agent)</a></li><li><a href="#s9">9. Tool registry</a></li><li><a href="#s10">10. Repo layout</a></li><li><a href="#s11">11. Code conventions</a></li><li><a href="#s12">12. Testing strategy</a></li><li><a href="#s13">13. ADRs</a></li><li><a href="#s14">14. Data model summary</a></li></ol></nav>
+<main><section class="card" id="s1"><h2><span class=n>1</span>Context</h2><div class="diagram"><pre class="mermaid">flowchart LR
+  dev((&quot;Developer&lt;br/&gt;browser, Persian RTL&quot;)) --&gt;|HTTPS + SSE| sys[&quot;همکار فنی&lt;br/&gt;Hamkar&quot;]
+  team((&quot;Students&lt;br/&gt;R&amp;D, evals&quot;)) --&gt;|make eval, docs| sys
+  sys --&gt;|&quot;REST, Bearer token&quot;| liara[(&quot;Liara API&lt;br/&gt;api.iran.liara.ir&quot;)]
+  sys --&gt;|&quot;REST, App or fine-grained token&quot;| gh[(&quot;GitHub API&quot;)]
+  sys --&gt;|&quot;Claude Agent SDK&quot;| claude[(&quot;Claude&lt;br/&gt;via local Claude Code login&quot;)]
+  sys --&gt;|&quot;A / CNAME / NS lookups&quot;| dns[(&quot;DNS resolver&quot;)]
+  sys --&gt;|&quot;HTTP probes&quot;| app[&quot;Target app on Liara&lt;br/&gt;راهبر خرید&quot;]
+  liara --&gt;|runs| app</pre></div><p>Hamkar is a single-user tool in the MVP: it runs on Mohammad&#x27;s Mac and drives his Liara account. The target app runs on Liara. Nothing outside this diagram is called at runtime.</p></section><section class="card" id="s2"><h2><span class=n>2</span>Containers</h2><div class="diagram"><pre class="mermaid">flowchart TB
+  subgraph mac[&quot;Mohammad&#x27;s Mac&quot;]
+    subgraph compose[&quot;Docker Compose&quot;]
+      web[&quot;web&lt;br/&gt;Next.js 16, App Router, TS, Tailwind v4&quot;]
+      worker[&quot;worker&lt;br/&gt;arq: deploy watcher, verify-after-action, scheduled checks&quot;]
+      pg[(&quot;postgres 16&quot;)]
+      rd[(&quot;redis 7&lt;br/&gt;queue, event streams, approval pub/sub&quot;)]
+    end
+    subgraph host[&quot;host process (needs Claude Code login)&quot;]
+      agent[&quot;agent&lt;br/&gt;Python 3.13, FastAPI, Claude Agent SDK&lt;br/&gt;in-process MCP server: hamkar&quot;]
+      coder[&quot;coder&lt;br/&gt;Claude Code subagent&lt;br/&gt;git worktree ~/.hamkar/work/project&quot;]
+    end
+  end
+  web --&gt;|&quot;REST + SSE, localhost:8000&quot;| agent
+  agent --&gt; pg
+  agent --&gt; rd
+  worker --&gt; pg
+  worker --&gt; rd
+  agent --&gt;|spawns| coder
+  agent --&gt; liara[(&quot;Liara API&quot;)]
+  agent --&gt; gh[(&quot;GitHub API&quot;)]
+  worker --&gt; liara
+  worker --&gt;|probes| app[&quot;target app on Liara&quot;]
+  agent --&gt;|SDK| cc[(&quot;Claude Code CLI&quot;)]
+  coder --&gt;|SDK| cc</pre></div><div class="tbl"><table><thead><tr><th>Container</th><th>Owns</th><th>Does not</th></tr></thead><tbody><tr><td><strong>web</strong></td><td>Chat, cards, live checklist, status side panel, approval UI, SSE client, Jalali/Persian digits</td><td>No business logic, no DB, never sees tokens</td></tr><tr><td><strong>agent</strong></td><td>Runs, orchestration, the <code>hamkar</code> MCP tool server, approval gate (<code>can_use_tool</code>), Liara/GitHub clients, repo analysis, SRE ranking, SSE endpoint, migrations (Alembic)</td><td>No long polling loops (delegated to worker)</td></tr><tr><td><strong>worker</strong></td><td>Deployment watcher, <code>verify_after_action</code>, scheduled checks, DNS re-checks</td><td><strong>No LLM calls</strong>: deterministic, so it can run in a container without the Claude login</td></tr><tr><td><strong>coder</strong></td><td>Editing code in a worktree and running the repo&#x27;s tests</td><td>No git push, no network credentials, no access outside the worktree</td></tr><tr><td><strong>postgres</strong></td><td>Source of truth: runs, steps, approvals, incidents, audit</td><td></td></tr><tr><td><strong>redis</strong></td><td>arq queue; per-run event stream (<code>run:{id}:events</code>, XADD/XREAD) for SSE replay; approval channel <code>approval:{id}</code></td><td>Not a source of truth; losing it never loses an approval</td></tr></tbody></table></div></section><section class="card" id="s3"><h2><span class=n>3</span>Components — agent</h2><div class="diagram"><pre class="mermaid">flowchart LR
+  api[&quot;FastAPI routes&lt;br/&gt;runs, approvals, connections, events&quot;] --&gt; orch[&quot;Orchestrator&lt;br/&gt;mode: deploy, incident, chat&quot;]
+  orch --&gt; llm[&quot;LLMClient seam&quot;]
+  llm --&gt; cab[&quot;ClaudeAgentBackend&lt;br/&gt;ClaudeSDKClient&quot;]
+  llm -.later.-&gt; bab[&quot;BoxAPIBackend&lt;br/&gt;OpenAI-compatible&quot;]
+  cab --&gt; perm[&quot;Permission gate&lt;br/&gt;can_use_tool&quot;]
+  perm --&gt; appr[&quot;Approval service&lt;br/&gt;create, sign, wait, revalidate&quot;]
+  cab --&gt; mcp[&quot;SDK MCP server: hamkar&quot;]
+  mcp --&gt; reg[&quot;Tool registry&lt;br/&gt;name, risk, schema&quot;]
+  reg --&gt; tl[&quot;liara.* tools&quot;]
+  reg --&gt; tg[&quot;github.* tools&quot;]
+  reg --&gt; tp[&quot;probe.* tools&quot;]
+  tl --&gt; lc[&quot;LiaraClient&lt;br/&gt;httpx, retries, error map&quot;]
+  tg --&gt; gc[&quot;GitHubClient&quot;]
+  reg --&gt; red[&quot;Redactor&quot;]
+  orch --&gt; an[&quot;Repo analyzer&lt;br/&gt;deterministic detectors&quot;]
+  orch --&gt; sre[&quot;SRE engine&lt;br/&gt;signals, ranking, criteria&quot;]
+  orch --&gt; cf[&quot;Coder runner&lt;br/&gt;worktree, brief, push, PR&quot;]
+  orch --&gt; bus[&quot;Event bus&lt;br/&gt;Redis stream to SSE&quot;]
+  lc --&gt; vault[&quot;Secret vault&lt;br/&gt;AES-GCM decrypt per call&quot;]
+  gc --&gt; vault</pre></div><ul><li><strong>Orchestrator</strong>: creates the <code>run</code>, fixes the step template for the mode, opens a <code>ClaudeSDKClient</code> with the mode prompt, streams model text as <code>message.delta</code>, maps tool calls to <code>run_step</code> rows and checklist events. Model output for cards is structured (pydantic-validated JSON blocks); the UI draws cards, the model never writes layout.</li><li><strong>SDK options (main agent)</strong>: <code>mcp_servers={&quot;hamkar&quot;: sdk_server}</code>, <code>allowed_tools=[&quot;mcp__hamkar__*&quot;]</code>, built-ins disallowed (Bash, Read, Write, Edit, WebFetch, WebSearch), <code>setting_sources=[]</code> (no user CLAUDE.md), <code>can_use_tool=gate</code>, <code>max_turns</code> per mode (deploy 40, incident 30).</li><li><strong>Tool registry</strong>: every tool is a typed async function with <code>@hamkar_tool(name, group, risk)</code>. The decorator registers it with the SDK MCP server, records <code>tool_call</code> rows, runs the redactor on output, converts known API gaps into <code>Limitation</code> results, and for <code>sensitive</code> tools re-checks the approval.</li><li><strong>Vault</strong>: decrypts the token for one call, passes it to the client, drops it. Tokens are never arguments of any tool and never part of a tool result.</li><li><strong>SRE engine</strong>: turns evidence into signals (<code>sre/signals.py</code>), scores hypotheses (<code>sre/ranking.py</code>), and attaches success criteria to each proposed action (<code>sre/criteria.py</code>). The model explains and may re-order with a stated reason; scores and criteria stay deterministic.</li></ul></section><section class="card" id="s4"><h2><span class=n>4</span>Components — web</h2><pre class="code"><code>src/app/
+  page.tsx                         project list + &quot;new project&quot; (GitHub link)
+  p/[projectId]/page.tsx           conversation + live checklist + status side panel
+  p/[projectId]/incidents/[id]/    incident timeline / post-mortem
+  settings/connections/            Liara token, GitHub
+src/components/
+  chat/        Composer, MessageList, Stream
+  checklist/   RunChecklist, StepRow (state icon, duration, source)
+  cards/       RepoAnalysisCard, PlanCard, ApprovalCard, EvidenceCard, HypothesesCard,
+               DiffCard, VerificationCard, LiveUrlCard, DomainGuide, HumanOnlyCard, LimitationBox
+  status/      StatusPanel (app state, plan, RAM/CPU sparkline, last release, balance; each with source + time)
+src/lib/       api.ts (typed from agent OpenAPI), sse.ts (reconnect + Last-Event-ID), persian.ts (digits, Jalali), money.ts (toman)</code></pre><p>Colour semantics follow the brand: amber only for approval/sensitive, mint for healthy/automatic, violet for metrics/info, red for errors, grey for limitations.</p></section><section class="card" id="s5"><h2><span class=n>5</span>Deployment</h2><div class="diagram"><pre class="mermaid">flowchart LR
+  subgraph mac[&quot;Mac (MVP runtime)&quot;]
+    a[&quot;agent: uv run hamkar-agent&lt;br/&gt;:8000, host, ~/.claude login&quot;]
+    subgraph dc[&quot;docker compose&quot;]
+      w[&quot;web :3000&quot;]
+      k[&quot;worker&quot;]
+      p[(&quot;postgres :5432&lt;br/&gt;volume pgdata&quot;)]
+      r[(&quot;redis :6379&quot;)]
+    end
+    wt[(&quot;~/.hamkar/work/project&lt;br/&gt;git worktrees&quot;)]
+  end
+  w --&gt;|host.docker.internal:8000| a
+  a --&gt; p
+  a --&gt; r
+  k --&gt; p
+  k --&gt; r
+  a --&gt; wt
+  subgraph liara[&quot;Liara (iran)&quot;]
+    t[&quot;rahbar app&lt;br/&gt;Next.js&quot;]
+    tdb[(&quot;rahbar Postgres&quot;)]
+  end
+  a --&gt;|API| liara
+  k --&gt;|API + probes| liara
+  t --&gt; tdb</pre></div><p><code>make dev</code> starts Compose and the agent on the host. <code>make check</code> runs lint, types and tests. The agent can also run in Compose (<code>AGENT_IN_DOCKER=1</code>) once the BoxAPI backend exists; until then it must see the host&#x27;s Claude Code login. Backups: <code>pg_dump</code> on <code>make backup</code> (local tool, no prod data besides the audit trail).</p></section><section class="card" id="s6"><h2><span class=n>6</span>Key sequences</h2><h3>6.1 Approval gate</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  autonumber
+  participant M as Claude (SDK)
+  participant G as can_use_tool
+  participant S as Approval service
+  participant DB as postgres
+  participant R as redis
+  participant W as web
+  actor U as Developer
+  participant T as hamkar tool
+  M-&gt;&gt;G: tool_use resize_plan(project, plan=1GB)
+  G-&gt;&gt;G: registry lookup, risk = sensitive
+  G-&gt;&gt;S: create(tool, args, run_step)
+  S-&gt;&gt;S: cost delta from list_plans, summary, args_hash, sign HMAC
+  S-&gt;&gt;DB: insert approval (pending, expires_at = now + 10 min)
+  S-&gt;&gt;R: XADD approval.requested (card + signature)
+  R--&gt;&gt;W: SSE approval.requested
+  G-&gt;&gt;R: SUBSCRIBE approval:{id} (timeout 10 min)
+  U-&gt;&gt;W: tap approve
+  W-&gt;&gt;S: POST /api/approvals/{id}/decision (approve, signature)
+  S-&gt;&gt;DB: verify signature, pending, not expired, then mark approved (consumed)
+  S-&gt;&gt;R: PUBLISH approval:{id} approved
+  R--&gt;&gt;G: approved
+  G-&gt;&gt;S: revalidate (args hash, balance, current plan)
+  alt still valid
+    G--&gt;&gt;M: PermissionResultAllow
+    M-&gt;&gt;T: call resize_plan
+    T-&gt;&gt;DB: check consumed approval for this tool_call
+    T-&gt;&gt;T: execute via LiaraClient
+    T--&gt;&gt;M: result (redacted)
+    S-&gt;&gt;DB: approval executed, audit_log
+  else expired, rejected or state changed
+    G--&gt;&gt;M: PermissionResultDeny (reason in Persian and English)
+    S-&gt;&gt;R: XADD approval.resolved (invalidated or expired)
+  end</pre></div><p>If Redis drops the publish, the gate&#x27;s timeout path re-reads the row from Postgres before denying.</p><h3>6.2 Code fix via Claude Code</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  autonumber
+  participant A as agent
+  participant X as coder runner
+  participant C as coder subagent
+  participant GH as GitHub API
+  participant L as Liara API
+  participant K as worker
+  actor U as Developer
+  A-&gt;&gt;A: apply_code_fix approved (incident, hypothesis, brief)
+  X-&gt;&gt;X: git fetch, worktree add -b hamkar/fix-inc42-products
+  X-&gt;&gt;C: brief + evidence excerpt + success criteria
+  C-&gt;&gt;C: Read, Edit in worktree only
+  C-&gt;&gt;C: Bash allow-list: pnpm test, pnpm build
+  C--&gt;&gt;X: summary + tests passed
+  X-&gt;&gt;X: git diff, secret scan, size limit
+  X-&gt;&gt;X: commit, push with token via GIT_ASKPASS
+  X-&gt;&gt;GH: POST /repos/o/r/pulls
+  GH--&gt;&gt;X: PR number, head sha
+  X--&gt;&gt;A: code_fix (pr_url, diff, head_sha)
+  A--&gt;&gt;U: DiffCard + approval merge_and_deploy (bound to head sha)
+  U-&gt;&gt;A: approve
+  A-&gt;&gt;GH: PUT /repos/o/r/pulls/n/merge (sha = head_sha)
+  A-&gt;&gt;GH: tarball at merge commit
+  A-&gt;&gt;L: upload source, create release
+  A-&gt;&gt;K: enqueue watch_deployment, then verify_after_action
+  K--&gt;&gt;A: verification (verdict, before/after)</pre></div><p>The subagent has no credentials and never pushes. Its <code>can_use_tool</code> rejects any path outside the worktree and any Bash command not on the allow-list.</p></section><section class="card" id="s7"><h2><span class=n>7</span>State machines</h2><h3>Run</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; queued
+  queued --&gt; running
+  running --&gt; awaiting_approval: sensitive tool
+  awaiting_approval --&gt; running: approved or denied
+  running --&gt; awaiting_user: human_only step
+  awaiting_user --&gt; running: check now passes
+  running --&gt; succeeded: all steps done
+  running --&gt; failed: unrecoverable step
+  running --&gt; cancelled: user cancel
+  awaiting_approval --&gt; cancelled
+  awaiting_user --&gt; cancelled
+  succeeded --&gt; [*]
+  failed --&gt; [*]
+  cancelled --&gt; [*]</pre></div><h3>Approval</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; pending
+  pending --&gt; approved: signed decision
+  pending --&gt; rejected: signed decision
+  pending --&gt; expired: 10 min
+  approved --&gt; invalidated: revalidation fails
+  approved --&gt; executing: allowed
+  executing --&gt; executed
+  executing --&gt; failed
+  rejected --&gt; [*]
+  expired --&gt; [*]
+  invalidated --&gt; [*]
+  executed --&gt; [*]
+  failed --&gt; [*]</pre></div><h3>Incident</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; open
+  open --&gt; investigating: gather evidence
+  investigating --&gt; diagnosed: hypotheses ranked
+  diagnosed --&gt; acting: action approved
+  diagnosed --&gt; closed: user declines all
+  acting --&gt; verifying: action executed
+  verifying --&gt; resolved: criteria met
+  verifying --&gt; investigating: not_resolved, next hypothesis
+  verifying --&gt; acting: regressed, rollback approved
+  verifying --&gt; monitoring: improved or inconclusive
+  monitoring --&gt; resolved: later check passes
+  monitoring --&gt; investigating: user asks again
+  resolved --&gt; closed
+  closed --&gt; [*]</pre></div><h3>Deployment</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; pending
+  pending --&gt; uploading: approved
+  uploading --&gt; building: source accepted
+  building --&gt; releasing: build ok
+  building --&gt; failed: build error
+  releasing --&gt; health_checking
+  health_checking --&gt; live: probe 2xx
+  health_checking --&gt; unhealthy: 3 probes fail
+  unhealthy --&gt; rolled_back: rollback approved
+  unhealthy --&gt; failed: user declines
+  live --&gt; [*]
+  failed --&gt; [*]
+  rolled_back --&gt; [*]</pre></div></section><section class="card" id="s8"><h2><span class=n>8</span>API contract (web ↔ agent)</h2><p>JSON over HTTPS on <code>localhost:8000</code>, prefix <code>/api</code>. Errors: <code>{&quot;error&quot;:{&quot;code&quot;:&quot;liara_unauthorized&quot;,&quot;message_fa&quot;:&quot;…&quot;,&quot;detail&quot;:&quot;…&quot;}}</code>. Ids are UUIDv7 strings; times RFC 3339 UTC; money integer toman.</p><div class="tbl"><table><thead><tr><th>Method</th><th>Path</th><th>Body → Response</th></tr></thead><tbody><tr><td>POST</td><td><code>/api/session</code></td><td><code>{passphrase}</code> → sets httpOnly cookie</td></tr><tr><td>POST</td><td><code>/api/connections/liara</code></td><td><code>{token}</code> → <code>{id, token_last4, account, verified_at}</code> (token validated with <code>get_balance</code>)</td></tr><tr><td>POST</td><td><code>/api/connections/github</code></td><td><code>{installation_id}</code> or <code>{token}</code> → <code>{id, login, scopes}</code></td></tr><tr><td>GET / POST</td><td><code>/api/projects</code></td><td><code>{name, repo_url}</code> → <code>project</code></td></tr><tr><td>GET</td><td><code>/api/projects/{id}/status</code></td><td>side-panel snapshot; each value <code>{value, source, observed_at}</code></td></tr><tr><td>POST</td><td><code>/api/runs</code></td><td><code>{project_id, conversation_id?, text, mode?}</code> → <code>{run_id, conversation_id}</code></td></tr><tr><td>GET</td><td><code>/api/runs/{id}</code></td><td>run + steps (polling fallback)</td></tr><tr><td>POST</td><td><code>/api/runs/{id}/cancel</code></td><td>→ <code>{status}</code></td></tr><tr><td>GET</td><td><code>/api/runs/{id}/events</code></td><td><strong>SSE</strong>; resumes with <code>Last-Event-ID</code></td></tr><tr><td>POST</td><td><code>/api/approvals/{id}/decision</code></td><td><code>{decision:&quot;approve&quot;|&quot;reject&quot;, signature, note?}</code> → <code>{status}</code></td></tr><tr><td>POST</td><td><code>/api/probes/{kind}</code></td><td>kind <code>dns</code>, <code>balance</code>, <code>health</code> → <code>{ok, observed, expected, observed_at}</code></td></tr><tr><td>GET</td><td><code>/api/incidents/{id}</code></td><td>incident + evidence + hypotheses + actions + verifications</td></tr><tr><td>GET / PATCH</td><td><code>/api/projects/{id}/checks</code></td><td>scheduled checks list / enable, interval</td></tr></tbody></table></div><h3>SSE events</h3><p>Envelope (every event): <code>id</code> = stream sequence, <code>event</code> = type, <code>data</code>:</p><pre class="code"><code>{ &quot;run_id&quot;: &quot;0192…&quot;, &quot;seq&quot;: 17, &quot;ts&quot;: &quot;2026-10-22T09:14:02Z&quot;, &quot;type&quot;: &quot;step.done&quot;, &quot;data&quot;: { } }</code></pre><div class="tbl"><table><thead><tr><th>Type</th><th><code>data</code></th></tr></thead><tbody><tr><td><code>run.started</code></td><td><code>{&quot;mode&quot;:&quot;incident&quot;,&quot;steps&quot;:[{&quot;key&quot;:&quot;evidence&quot;,&quot;title_fa&quot;:&quot;جمع‌آوری شواهد&quot;}]}</code></td></tr><tr><td><code>run.status</code></td><td><code>{&quot;status&quot;:&quot;awaiting_approval&quot;}</code></td></tr><tr><td><code>step.started</code> / <code>step.done</code> / <code>step.failed</code></td><td><code>{&quot;step_id&quot;:&quot;…&quot;,&quot;key&quot;:&quot;deploy&quot;,&quot;title_fa&quot;:&quot;…&quot;,&quot;duration_ms&quot;:4200,&quot;error&quot;:{&quot;code&quot;:&quot;…&quot;,&quot;message_fa&quot;:&quot;…&quot;}}</code></td></tr><tr><td><code>step.progress</code></td><td><code>{&quot;step_id&quot;:&quot;…&quot;,&quot;text&quot;:&quot;npm run build · 42s&quot;,&quot;log_tail&quot;:[&quot;…&quot;]}</code> (redacted)</td></tr><tr><td><code>message.delta</code> / <code>message.done</code></td><td><code>{&quot;message_id&quot;:&quot;…&quot;,&quot;text&quot;:&quot;…&quot;}</code></td></tr><tr><td><code>tool.called</code> / <code>tool.result</code></td><td><code>{&quot;tool_call_id&quot;:&quot;…&quot;,&quot;name&quot;:&quot;get_metrics&quot;,&quot;risk&quot;:&quot;read&quot;,&quot;status&quot;:&quot;ok|limitation|error&quot;}</code></td></tr><tr><td><code>card</code></td><td><code>{&quot;card_type&quot;:&quot;plan_proposal&quot;,&quot;payload&quot;:{…}}</code> (shapes below)</td></tr><tr><td><code>approval.requested</code></td><td><code>{&quot;approval_id&quot;:&quot;…&quot;,&quot;tool&quot;:&quot;resize_plan&quot;,&quot;summary_fa&quot;:&quot;…&quot;,&quot;why_fa&quot;:&quot;…&quot;,&quot;cost_delta_toman&quot;:120000,&quot;cost_source&quot;:{&quot;source&quot;:&quot;liara.plans&quot;,&quot;observed_at&quot;:&quot;…&quot;},&quot;changes&quot;:{&quot;plan&quot;:{&quot;from&quot;:&quot;small&quot;,&quot;to&quot;:&quot;1gb&quot;}},&quot;diff_url&quot;:null,&quot;expires_at&quot;:&quot;…&quot;,&quot;signature&quot;:&quot;…&quot;}</code></td></tr><tr><td><code>approval.resolved</code></td><td><code>{&quot;approval_id&quot;:&quot;…&quot;,&quot;status&quot;:&quot;approved|rejected|expired|invalidated&quot;,&quot;reason_fa&quot;:&quot;…&quot;}</code></td></tr><tr><td><code>status.snapshot</code></td><td>same shape as <code>GET /status</code></td></tr><tr><td><code>run.done</code></td><td><code>{&quot;status&quot;:&quot;succeeded&quot;,&quot;summary_fa&quot;:&quot;…&quot;}</code></td></tr></tbody></table></div><p>Card payloads (selection):</p><pre class="code"><code>{&quot;card_type&quot;:&quot;hypotheses&quot;,&quot;payload&quot;:{&quot;items&quot;:[
+  {&quot;id&quot;:&quot;h1&quot;,&quot;title_fa&quot;:&quot;کمبود RAM&quot;,&quot;confidence&quot;:&quot;high&quot;,&quot;score&quot;:0.82,&quot;evidence_ids&quot;:[&quot;e1&quot;,&quot;e2&quot;],&quot;actions&quot;:[&quot;a1&quot;]},
+  {&quot;id&quot;:&quot;h2&quot;,&quot;title_fa&quot;:&quot;کوئری کند در /products&quot;,&quot;confidence&quot;:&quot;medium&quot;,&quot;score&quot;:0.55,&quot;evidence_ids&quot;:[&quot;e3&quot;,&quot;e4&quot;],&quot;actions&quot;:[&quot;a2&quot;]}]}}
+{&quot;card_type&quot;:&quot;verification&quot;,&quot;payload&quot;:{&quot;verdict&quot;:&quot;resolved&quot;,&quot;metrics&quot;:[
+  {&quot;key&quot;:&quot;p95_products_ms&quot;,&quot;before&quot;:4200,&quot;after&quot;:320,&quot;source&quot;:&quot;probe&quot;,&quot;before_at&quot;:&quot;…&quot;,&quot;after_at&quot;:&quot;…&quot;},
+  {&quot;key&quot;:&quot;restarts_1h&quot;,&quot;before&quot;:3,&quot;after&quot;:0,&quot;source&quot;:&quot;liara.status&quot;,&quot;before_at&quot;:&quot;…&quot;,&quot;after_at&quot;:&quot;…&quot;}]}}
+{&quot;card_type&quot;:&quot;limitation&quot;,&quot;payload&quot;:{&quot;code&quot;:&quot;db_query_log_unavailable&quot;,&quot;message_fa&quot;:&quot;…&quot;,&quot;workaround_fa&quot;:&quot;…&quot;}}
+{&quot;card_type&quot;:&quot;human_only&quot;,&quot;payload&quot;:{&quot;task&quot;:&quot;registrar_dns_records&quot;,&quot;steps_fa&quot;:[&quot;…&quot;,&quot;…&quot;,&quot;…&quot;],&quot;probe&quot;:&quot;dns&quot;}}</code></pre></section><section class="card" id="s9"><h2><span class=n>9</span>Tool registry</h2><p>Endpoints are <strong>to verify in T-01</strong>. &quot;Limitation case&quot; is what the tool returns when the API can&#x27;t help.</p><div class="tbl"><table><thead><tr><th>Tool</th><th>Risk</th><th>Endpoint</th><th>Inputs</th><th>Output</th><th>Limitation case</th></tr></thead><tbody><tr><td><code>github.analyze_repo</code></td><td><span class="r-read">read</span></td><td><code>GET /repos/{o}/{r}/git/trees/{ref}</code>, contents</td><td><code>project_id, ref?</code></td><td>platform, runtime, build/start, port, db, env_keys, ram_mb_estimate, evidence files</td><td>private repo without access → reconnect card</td></tr><tr><td><code>liara.list_plans</code></td><td><span class="r-read">read</span></td><td><code>GET /v1/plans</code></td><td><code>kind: app|db</code></td><td>plans <code>{id, ram_mb, cpu, price_toman_month}</code> + source/time</td><td>static dated table, labelled</td></tr><tr><td><code>liara.get_balance</code></td><td><span class="r-read">read</span></td><td><code>GET /v1/me</code></td><td>—</td><td><code>balance_toman</code> + source/time</td><td>&quot;balance not readable&quot;</td></tr><tr><td><code>liara.get_app_status</code></td><td><span class="r-read">read</span></td><td><code>GET /v1/projects/{name}</code></td><td><code>project_id</code></td><td>state, plan, restarts_1h, last_release</td><td>—</td></tr><tr><td><code>liara.get_logs</code></td><td><span class="r-read">read</span></td><td><code>GET /v2/projects/{name}/logs</code></td><td><code>project_id, since, grep?</code></td><td>redacted lines (max 500) with ts</td><td>DB logs → <code>db_query_log_unavailable</code></td></tr><tr><td><code>liara.get_metrics</code></td><td><span class="r-read">read</span></td><td><code>GET /v1/projects/{name}/metrics/*</code></td><td><code>project_id, window</code></td><td>RAM/CPU/net series + plan limits</td><td>metrics endpoint absent → limitation</td></tr><tr><td><code>liara.list_releases</code></td><td><span class="r-read">read</span></td><td><code>GET /v2/projects/{name}/releases</code></td><td><code>project_id, limit</code></td><td>releases with status, created_at, source</td><td>—</td></tr><tr><td><code>liara.get_env_keys</code></td><td><span class="r-read">read</span></td><td><code>GET /v1/projects/{name}</code></td><td><code>project_id</code></td><td>key names only</td><td>—</td></tr><tr><td><code>probe.check_dns</code></td><td><span class="r-read">read</span></td><td>DNS resolver (+ Liara domain check)</td><td><code>domain</code></td><td>expected vs observed records</td><td>—</td></tr><tr><td><code>probe.http_probe</code></td><td><span class="r-read">read</span></td><td>target app</td><td><code>project_id, path, n</code></td><td>status counts, p50/p95 ms</td><td>—</td></tr><tr><td><code>liara.create_app</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v1/projects</code></td><td><code>name, platform, plan_id</code></td><td>app name, url</td><td>—</td></tr><tr><td><code>liara.create_database</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v1/databases</code></td><td><code>type, version, plan_id</code></td><td>db id; connection stored encrypted, never returned</td><td>connection not returned → human_only copy step</td></tr><tr><td><code>liara.set_env</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v1/projects/update-envs</code></td><td><code>project_id, keys[], value_refs[]</code></td><td>keys set (values hidden); restarts app</td><td>—</td></tr><tr><td><code>liara.deploy_release</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v2/projects/{name}/sources</code>, <code>/releases</code></td><td><code>project_id, git_ref</code></td><td>release id → deployment watcher</td><td>—</td></tr><tr><td><code>liara.restart_app</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v1/projects/{name}/actions/restart</code></td><td><code>project_id</code></td><td>ok + time</td><td>scale 0→1 fallback</td></tr><tr><td><code>liara.resize_plan</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v1/projects/{name}/resize</code></td><td><code>project_id, plan_id</code></td><td>old/new plan, cost delta</td><td>—</td></tr><tr><td><code>liara.rollback_release</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v2/projects/{name}/releases/{id}/rollback</code></td><td><code>project_id, release_id</code></td><td>release id</td><td>redeploy old source</td></tr><tr><td><code>liara.add_domain</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>POST /v1/domains</code></td><td><code>project_id, domain</code></td><td>required DNS records</td><td>—</td></tr><tr><td><code>github.apply_code_fix</code></td><td><span class="r-sensitive">sensitive</span></td><td>coder + <code>POST /repos/{o}/{r}/pulls</code></td><td><code>incident_id, hypothesis_id, brief</code></td><td>PR url, head sha, diff stats</td><td>tests fail → no PR, report</td></tr><tr><td><code>github.merge_and_deploy</code></td><td><span class="r-sensitive">sensitive</span></td><td><code>PUT /repos/{o}/{r}/pulls/{n}/merge</code> + deploy</td><td><code>code_fix_id, head_sha</code></td><td>merge sha, release id</td><td>head moved → invalidated</td></tr><tr><td><code>liara.top_up_balance</code></td><td><span class="r-human">human_only</span></td><td>—</td><td><code>amount_toman</code></td><td>steps + console link + balance probe</td><td>always: API cannot pay</td></tr><tr><td><code>probe.registrar_dns_records</code></td><td><span class="r-human">human_only</span></td><td>—</td><td><code>domain</code></td><td>3 registrar steps + DNS probe</td><td>always: IRNIC has no API</td></tr></tbody></table></div><p><code>value_refs</code> for <code>set_env</code> point to server-side values (generated secrets, the DB connection string, user-entered values posted directly to <code>/api/projects/{id}/env-values</code>), so secret values never travel through the model.</p></section><section class="card" id="s10"><h2><span class=n>10</span>Repo layout</h2><pre class="code"><code>agent/
+  pyproject.toml  uv.lock  alembic.ini
+  src/hamkar/
+    main.py                 FastAPI app factory
+    api/                    runs.py approvals.py connections.py projects.py events.py probes.py
+    core/                   config.py db.py crypto.py redact.py logging.py persian.py ids.py
+    models/                 SQLAlchemy tables (see DATA-MODEL.md)
+    llm/                    client.py (LLMClient protocol) claude_backend.py boxapi_backend.py
+    runtime/                orchestrator.py gate.py approvals.py events.py modes/ prompts/
+    tools/                  registry.py results.py liara/ github/ probe/
+    clients/                liara.py github.py
+    analysis/               detectors/ (node, nextjs, python, prisma, docker, env_example)
+    sre/                    signals.py ranking.py criteria.py verify.py
+    coder/                  worktree.py brief.py runner.py guard.py
+    worker/                 settings.py jobs/ (watch_deployment, verify_after_action, scheduled_checks, dns_recheck)
+  migrations/
+  tests/                    unit/ contract/ cassettes/ live/ evals/
+web/
+  src/app/ src/components/ src/lib/ e2e/  package.json
+evals/incidents/            *.yaml injected-incident cases
+skills/                     liara-api/ agent-tools/ brand/
+docs/                       SYSTEM-DESIGN.md ARCHITECTURE.md DATA-MODEL.md TASKS.md decisions.md artifacts/
+docker-compose.yml  Makefile  .env.example  .githooks/</code></pre></section><section class="card" id="s11"><h2><span class=n>11</span>Code conventions</h2><ul><li><strong>Python</strong>: 3.13, uv, ruff (lint + format), mypy strict on <code>tools/</code>, <code>runtime/</code>, <code>core/</code>; async everywhere (<code>httpx.AsyncClient</code>, SQLAlchemy 2 async, asyncpg); pydantic v2 models for every tool input/output and SSE payload.</li><li><strong>Tools</strong>: one function per tool, <code>@hamkar_tool(name, group, risk)</code>; returns <code>Ok[T] | Limitation | ToolError</code>; never raises for an API gap; never takes or returns a secret.</li><li><strong>Errors</strong>: stable <code>code</code> (snake_case) + <code>message_fa</code> for the UI + English <code>detail</code> for logs.</li><li><strong>Persian strings</strong>: in <code>messages_fa.py</code> / <code>web/src/lib/fa.ts</code>, not inline; digits stored ASCII, rendered Persian; dates stored <code>timestamptz</code> UTC, rendered Jalali.</li><li><strong>Money</strong>: integer toman (<code>bigint</code>), formatted only in the UI.</li><li><strong>Data on screen</strong>: every metric value is <code>{value, source, observed_at}</code>; the UI refuses to render a bare number.</li><li><strong>TypeScript</strong>: strict; server components by default, client components only for chat/SSE; API types generated from the agent&#x27;s OpenAPI.</li><li><strong>Ids</strong>: UUIDv7. Migrations additive only.</li><li><strong>Shortcuts</strong> carry <code># shortcut: &lt;limit&gt;, &lt;when to upgrade&gt;</code>.</li><li><strong>Commits</strong>: small, imperative; <code>make check</code> in the pre-push hook.</li></ul></section><section class="card" id="s12"><h2><span class=n>12</span>Testing strategy</h2><div class="tbl"><table><thead><tr><th>Layer</th><th>Tool</th><th>What</th></tr></thead><tbody><tr><td>Unit</td><td>pytest</td><td>detectors, ranking, criteria, verify verdicts, redactor, crypto, approval signing and expiry, Jalali/digits</td></tr><tr><td>Gate</td><td>pytest (TDD first)</td><td>sensitive tool never executes without consumed approval; expired/replayed/tampered signature denied; args change after approval → invalidated; tool-level re-check fires when callback is bypassed</td></tr><tr><td>Liara client</td><td>pytest + recorded responses (<code>respx</code> cassettes from the T-01 account, tokens scrubbed)</td><td>request shapes, error mapping (401, 404→limitation, 429 retry), pagination</td></tr><tr><td>Contract</td><td>pytest</td><td>SSE envelope and card payloads validate against pydantic models; OpenAPI snapshot</td></tr><tr><td>Secrets</td><td>pytest</td><td>a canary token never appears in logs, SSE frames, <code>tool_call</code> rows or model input transcripts</td></tr><tr><td>Live smoke</td><td>pytest <code>-m live</code> on a test Liara account</td><td>create tiny app → env → deploy hello-world → logs → restart → delete; run before each demo, not in CI</td></tr><tr><td>Web</td><td>vitest + Playwright</td><td>cards render from fixtures; approval flow end to end against a fake agent; RTL at 360 px; reconnect with Last-Event-ID</td></tr><tr><td>SRE evals</td><td><code>make eval</code></td><td><code>evals/incidents/*.yaml</code>: recorded evidence for injected incidents (OOM leak, slow query, bad release 500, missing env, CPU bound, DNS wrong) with expected top hypothesis, expected action class and expected limitation; gate: top-1 ≥ 80%, top-2 = 100%, zero sensitive actions without approval</td></tr><tr><td>Demo rehearsal</td><td>script</td><td>the section 14 scenario of SYSTEM-DESIGN on the real account, timed</td></tr></tbody></table></div></section><section class="card" id="s13"><h2><span class=n>13</span>ADRs</h2><div class="tbl"><table><thead><tr><th>#</th><th>Decision</th><th>Why</th><th>Revisit when</th></tr></thead><tbody><tr><td>1</td><td>Python FastAPI agent + Next.js web, no Django</td><td>no data-entry workload; one Python service; reuse Torob patterns</td><td>admin needs appear</td></tr><tr><td>2</td><td>Claude Agent SDK driving local Claude Code (Mohammad&#x27;s subscription) behind an <code>LLMClient</code> seam</td><td>no paid API; best tool use; BoxAPI backend later by env var</td><td>hosted multi-user version, or subscription limits hurt the demo</td></tr><tr><td>3</td><td>Tools as an in-process SDK MCP server <code>hamkar</code></td><td>no extra process; the same registry can later be served over stdio MCP to the user&#x27;s own Claude Code</td><td>external MCP clients are needed</td></tr><tr><td>4</td><td>Approval gate in <code>can_use_tool</code> + re-check inside the tool, wait via Redis pub/sub with Postgres as truth</td><td>enforced in code, two layers; survives a lost publish</td><td>never</td></tr><tr><td>5</td><td>Signed one-time decisions, 10 min expiry, re-validation before execution</td><td>stale or replayed clicks can&#x27;t spend money</td><td>never</td></tr><tr><td>6</td><td>Coder = Claude Code subagent in a git worktree; our code pushes and opens the PR</td><td>real multi-file fixes; the subagent holds no credentials</td><td>fixes need services (DB) the worktree can&#x27;t run</td></tr><tr><td>7</td><td>Worker is LLM-free and deterministic</td><td>runs in a container; verification can&#x27;t be talked into &quot;resolved&quot;</td><td>never</td></tr><tr><td>8</td><td>Deterministic detectors and signal scores, LLM explains</td><td>repeatable diagnoses, testable evals</td><td>eval top-1 plateaus below 80%</td></tr><tr><td>9</td><td><code>Limitation</code> is a result type, not an exception</td><td>the agent must relay it; the UI shows it; counted for the md doc</td><td>never</td></tr><tr><td>10</td><td>SSE with a Redis stream per run and <code>Last-Event-ID</code> replay</td><td>simple, one direction, resumable</td><td>two-way live editing</td></tr><tr><td>11</td><td>Agent on host, rest in Compose; target app on Liara</td><td>the Claude login lives on the host</td><td>BoxAPI backend ships</td></tr><tr><td>12</td><td>Tokens AES-GCM with key id, resolved server-side per call</td><td>never in the LLM, rotatable</td><td>multi-tenant → KMS</td></tr><tr><td>13</td><td>Own HTTP probe for latency</td><td>Liara likely exposes no response-time metric; source labelled <code>probe</code></td><td>Liara adds latency metrics</td></tr><tr><td>14</td><td>No 24/7 monitoring stack; scheduled checks only</td><td>brief says not needed; less to run</td><td>paying users</td></tr></tbody></table></div></section><section class="card" id="s14"><h2><span class=n>14</span>Data model summary</h2><p>Full ERD, columns and indexes: **<code>DATA-MODEL.md</code>**. Entities, grouped:</p><div class="tbl"><table><thead><tr><th>Group</th><th>Entities</th></tr></thead><tbody><tr><td>Identity and connections</td><td><code>user</code>, <code>liara_connection</code>, <code>github_connection</code></td></tr><tr><td>Project</td><td><code>project</code>, <code>repo_analysis</code>, <code>plan_proposal</code>, <code>deployment</code>, <code>domain</code></td></tr><tr><td>Conversation and runs</td><td><code>conversation</code>, <code>message</code>, <code>run</code>, <code>run_step</code>, <code>tool_call</code>, <code>approval</code></td></tr><tr><td>SRE</td><td><code>incident</code>, <code>evidence</code>, <code>hypothesis</code>, <code>incident_action</code>, <code>verification</code>, <code>code_fix</code></td></tr><tr><td>Routine</td><td><code>scheduled_check</code>, <code>check_result</code></td></tr><tr><td>Trust</td><td><code>limitation_event</code>, <code>audit_log</code></td></tr><tr><td>Quality</td><td><code>eval_case</code>, <code>eval_run</code></td></tr></tbody></table></div><p>Key relations: a <code>user</code> has one <code>liara_connection</code> and one <code>github_connection</code>; a <code>project</code> has many <code>deployment</code>, <code>domain</code>, <code>incident</code> and <code>conversation</code>; a <code>conversation</code> has many <code>message</code> and <code>run</code>; a <code>run</code> has many <code>run_step</code>, each with many <code>tool_call</code>; a sensitive <code>tool_call</code> has one <code>approval</code>; an <code>incident</code> has many <code>evidence</code> and <code>hypothesis</code>, a <code>hypothesis</code> has many <code>incident_action</code>, each with zero or more <code>verification</code>; an <code>incident_action</code> of kind code has one <code>code_fix</code>; <code>limitation_event</code> and <code>audit_log</code> reference the <code>tool_call</code> that caused them.</p></section></main>
+<footer>Source: docs/ARCHITECTURE.md · English docs, Persian product strings · endpoints marked "to verify" are confirmed in task T-01</footer>
+</div>

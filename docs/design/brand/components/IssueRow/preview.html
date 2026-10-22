@@ -1,0 +1,17 @@
+<!-- @dsCard group="Lists" height=300 subtitle="Default and failing" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400&display=swap">
+<style>html,body{margin:0;background:var(--shell);color:var(--ink);font-family:var(--font-sans)} .wrap{padding:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start} .mono{font-family:var(--font-mono);direction:ltr;unicode-bidi:isolate;font-size:12px}
+.list{display:grid;gap:12px;width:360px;max-width:100%}
+.row{display:flex;align-items:center;gap:14px;background:var(--raised);border:1px solid transparent;border-radius:var(--radius-md);padding:14px 16px;cursor:pointer;transition:transform 140ms cubic-bezier(.23,1,.32,1)}
+.row:active{transform:scale(.98)}
+.ic{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.ic svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.t{flex:1;min-width:0}.t b{display:block;font-size:15px;font-weight:500}.t span{font-size:13px;color:var(--ink-muted)}
+.chev{width:16px;height:16px;stroke:var(--ink-muted);fill:none;stroke-width:1.5}
+.bad{border-color:var(--red);background:var(--red-soft)} .bad .t span{color:var(--red)} .bad .ic svg{stroke:var(--red)} .bad .ic{border-color:var(--red)}
+</style>
+<div class="wrap" dir="rtl"><div class="list">
+ <div class="row bad" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v5M12 16v.5"/></svg></span><span class="t"><b>کمبود حافظه</b><span>۳ بار ری‌استارت در یک ساعت اخیر</span></span><svg class="chev" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+ <div class="row" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h6"/></svg></span><span class="t"><b>کوئری کند</b><span class="mono">/products · 2900ms</span></span><svg class="chev" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+ <div class="row" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 12h6"/></svg></span><span class="t"><b>گزارش هفتگی</b><span>۱۲ بررسی، همه سالم</span></span><svg class="chev" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></div>
+</div></div>

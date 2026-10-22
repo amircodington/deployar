@@ -1,0 +1,21 @@
+<!-- @dsCard group="Status" height=280 subtitle="Live steps of a run" -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400&display=swap">
+<style>html,body{margin:0;background:var(--shell);color:var(--ink);font-family:var(--font-sans)} .wrap{padding:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start} .mono{font-family:var(--font-mono);direction:ltr;unicode-bidi:isolate;font-size:12px}
+.card{background:var(--card);border-radius:var(--radius-lg);padding:20px;width:420px;max-width:100%;display:grid;gap:12px}
+h3{margin:0;font-size:18px;font-weight:500}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+li{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--ink-muted);padding:8px 12px;border-radius:var(--radius-md)}
+li.run{background:var(--raised);color:var(--ink)} li.done{color:var(--ink)}
+.d{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink-faint);flex:none;display:grid;place-items:center}
+.done .d{background:var(--mint);border-color:var(--mint)} .done .d::after{content:"";width:7px;height:4px;border:2px solid var(--card);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-1px)}
+.run .d{border-color:var(--amber);border-top-color:transparent;animation:s .8s linear infinite}
+.tm{margin-inline-start:auto;font-family:var(--font-mono);font-size:12px;color:var(--ink-muted)}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.run .d{animation:none}}
+</style>
+<div class="wrap" dir="rtl"><div class="card"><h3>در حال آنلاین کردن</h3><ol>
+<li class="done"><span class="d"></span>ساخت اپ<span class="tm">3s</span></li>
+<li class="done"><span class="d"></span>ساخت دیتابیس و تنظیم <span class="mono">DATABASE_URL</span><span class="tm">6s</span></li>
+<li class="run"><span class="d"></span>build و دیپلوی<span class="tm">npm run build</span></li>
+<li><span class="d"></span>بررسی سلامت</li>
+</ol></div></div>
