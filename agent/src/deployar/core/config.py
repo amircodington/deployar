@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     liara_api_base: str = "https://api.iran.liara.ir"
     deployar_workdir: Path = Path("~/.deployar/work").expanduser()
-    agent_url: str = "http://localhost:8000"
+    agent_url: str = "http://localhost:8800"
 
     @field_validator("deployar_workdir")
     @classmethod

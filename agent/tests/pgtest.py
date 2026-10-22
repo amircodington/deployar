@@ -11,7 +11,7 @@ from sqlalchemy.engine import make_url
 
 from deployar.core.config import get_settings
 
-AGENT_DIR = Path(__file__).resolve().parents[2]
+AGENT_DIR = Path(__file__).resolve().parents[1]
 DEV_URL = make_url(get_settings().database_url)
 TEST_URL = DEV_URL.set(database="deployar_test")
 TEST_URL_STR = TEST_URL.render_as_string(hide_password=False)

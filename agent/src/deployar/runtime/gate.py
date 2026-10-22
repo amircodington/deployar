@@ -26,7 +26,7 @@ CanUseTool = Callable[[str, dict[str, Any], ToolPermissionContext], Awaitable[Pe
 @dataclass(frozen=True)
 class GateContext:
     run_id: uuid.UUID
-    project_id: uuid.UUID
+    project_id: uuid.UUID | None
     user_id: uuid.UUID
 
 
@@ -69,7 +69,7 @@ def make_gate(
         if risk == "human_only":
             await _record_limitation(service, ctx, name, args)
             return PermissionResultDeny(message=fa.GUIDES[name])
-        if risk != "sensitive":
+        if risk != "sensitive" or ctx.project_id is None:  # an approval always belongs to a project
             return PermissionResultDeny(message=fa.TOOL_NOT_ALLOWED)
 
         preview = preview_for(name, args) if preview_for else {"tool": name}

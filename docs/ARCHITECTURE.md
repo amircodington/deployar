@@ -37,7 +37,7 @@ flowchart TB
       coder["coder<br/>Claude Code subagent<br/>git worktree ~/.deployar/work/project"]
     end
   end
-  web -->|"REST + SSE, localhost:8000"| agent
+  web -->|"REST + SSE, localhost:8800"| agent
   agent --> pg
   agent --> rd
   worker --> pg
@@ -128,16 +128,16 @@ violet for metrics/info, red for errors, grey for limitations.
 ```mermaid
 flowchart LR
   subgraph mac["Mac (MVP runtime)"]
-    a["agent: uv run deployar-agent<br/>:8000, host, ~/.claude login"]
+    a["agent: uv run deployar-agent<br/>:8800, host, ~/.claude login"]
     subgraph dc["docker compose"]
-      w["web :3000"]
+      w["web :3800"]
       k["worker"]
       p[("postgres :5432<br/>volume pgdata")]
       r[("redis :6379")]
     end
     wt[("~/.deployar/work/project<br/>git worktrees")]
   end
-  w -->|host.docker.internal:8000| a
+  w -->|host.docker.internal:8800| a
   a --> p
   a --> r
   k --> p
@@ -318,7 +318,7 @@ stateDiagram-v2
 
 ## 8. API contract (web ↔ agent)
 
-JSON over HTTPS on `localhost:8000`, prefix `/api`. Errors: `{"error":{"code":"liara_unauthorized","message_fa":"…","detail":"…"}}`.
+JSON over HTTPS on `localhost:8800`, prefix `/api`. Errors: `{"error":{"code":"liara_unauthorized","message_fa":"…","detail":"…"}}`.
 Ids are UUIDv7 strings; times RFC 3339 UTC; money integer toman.
 
 | Method | Path | Body → Response |

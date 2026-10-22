@@ -10,9 +10,9 @@ setup:  ## once per clone
 	$(AGENT) uv sync
 	$(WEB) pnpm install
 
-dev:  ## web :3000, worker, postgres, redis in Docker; agent :8000 on the host (Ctrl+C stops the agent)
+dev:  ## web :3800, worker, postgres, redis in Docker; agent :8800 on the host (Ctrl+C stops the agent)
 	docker compose up -d --build
-	@echo "web http://localhost:3000 · agent http://localhost:8000/api/health · logs: docker compose logs -f"
+	@echo "web http://localhost:3800 · agent http://localhost:8800/api/health · logs: docker compose logs -f"
 	$(AGENT) uv run deployar-agent
 
 down:

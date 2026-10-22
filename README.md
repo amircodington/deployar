@@ -11,7 +11,7 @@ Needs Docker, uv, pnpm and a logged-in Claude Code (the agent runs on the host a
 
 ```bash
 make setup   # once: .env, git hooks, deps
-make dev     # web :3000, worker, postgres, redis in Docker; agent :8000 on the host
+make dev     # web :3800, worker, postgres, redis in Docker; agent :8800 on the host
 make check   # ruff, mypy, pytest, eslint, tsc, vitest (also the pre-push hook)
 ```
 

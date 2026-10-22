@@ -44,7 +44,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-03 | Schema v1: migrations 0001–0004 + models | P0 | B-02 | — | | ✓ |
 | B-04 | Approval gate (TDD) | P0 | B-03 | T-19 tests it later | | ✓ |
 | B-05 | Tool registry, result types, `tool_call` recording | P0 | B-03, B-00 | — | | ✓ |
-| B-06 | LLM seam, Claude backend, orchestrator, event bus, runs API + SSE | P0 | B-04, B-05 | — | | ○ |
+| B-06 | LLM seam, Claude backend, orchestrator, event bus, runs API + SSE | P0 | B-04, B-05 | — | | ✓ |
 | B-07 | Web shell: RTL layout, tokens, chat, checklist, approval card, SSE | P0 | B-06 (fake events ok) | T-16, T-21 | | ○ |
 | B-08 | LiaraClient + connections + read tools | P0 | B-05 | T-01, T-04 | | ○ |
 | B-09 | GitHub client + repo analyzer + `analyze_repo` | P1 | B-05 | T-06, T-13 | | ○ |
@@ -106,7 +106,7 @@ with an in-process MCP server and a `can_use_tool` callback that can block on an
     `pnpm lint`, `pnpm tsc --noEmit`, vitest), `migrate`, `eval`, `push-test`.
   - `.githooks/pre-push` → `make check`; `make setup` sets `git config core.hooksPath .githooks`.
   - `.env.example` (exists; keep in sync).
-- **Done when**: `make setup && make dev` serves `localhost:3000` and `localhost:8000/api/health`;
+- **Done when**: `make setup && make dev` serves `localhost:3800` and `localhost:8800/api/health`;
   `make check` is green; the folders of `ARCHITECTURE.md §10` exist where code will land (no empty
   placeholder modules).
 
@@ -164,6 +164,8 @@ The 50 security points live here. Write the tests first.
 - **Files**: `agent/src/deployar/llm/{client,claude_backend}.py`, `agent/src/deployar/runtime/{orchestrator,events}.py`,
   `agent/src/deployar/runtime/modes/chat.py`, `agent/src/deployar/runtime/prompts/base_fa.md`,
   `agent/src/deployar/api/{session,runs,events}.py`, `agent/tests/contract/test_sse.py`.
+  Also: `api/deps.py` (runtime + session dependency); agent moved to **:8800** and web to **:3800**
+  because ترب‌گرد's own dev stack uses 8000/3000 on the same Mac.
 - **Done when**: `POST /api/runs` with text creates `run` + steps; `GET /api/runs/{id}/events` streams
   `run.started`, `message.delta`, `tool.called`, `approval.requested`, `run.done`; reconnect with
   `Last-Event-ID` replays missed events; every SSE payload validates against its pydantic model;

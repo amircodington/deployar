@@ -37,3 +37,12 @@ APPROVAL_MISSING = "این کار تأیید معتبر ندارد و اجرا �
 TOOL_CRASHED = (
     "ابزار با خطای داخلی متوقف شد؛ وضعیت را دوباره بررسی کن. / The tool crashed; re-check the state before retrying."
 )
+
+UNKNOWN_MODE = "این حالت کاری وجود ندارد."
+NOT_FOUND = "پیدا نشد."
+UNAUTHORIZED = "اول وارد شوید."
+BAD_PASSPHRASE = "رمز ورود درست نیست."
+LLM_FAILED = "دستیار نتوانست پاسخ را کامل کند. دوباره امتحان کنید."
+RUN_CRASHED = "اجرای کار با خطای داخلی متوقف شد."
+RUN_CANCELLED = "کار به درخواست شما متوقف شد."
+EMPTY_MESSAGE = "پیام خالی است."

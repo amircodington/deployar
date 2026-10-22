@@ -190,7 +190,8 @@ async def test_retry_after_reject_gets_a_new_call(service: ApprovalService) -> N
 def test_decision_endpoint_maps_errors() -> None:
     from fastapi.testclient import TestClient
 
-    from deployar.api.approvals import current_user_id, get_approval_service
+    from deployar.api.approvals import get_approval_service
+    from deployar.api.deps import require_user
     from deployar.main import app
 
     class FakeService:
@@ -203,7 +204,7 @@ def test_decision_endpoint_maps_errors() -> None:
                 raise DeployarError("approval_bad_signature", "x")
             return "approved"
 
-    app.dependency_overrides[current_user_id] = lambda: uuid.uuid4()
+    app.dependency_overrides[require_user] = lambda: uuid.uuid4()
     app.dependency_overrides[get_approval_service] = FakeService
     try:
         client = TestClient(app)

@@ -32,7 +32,7 @@ PREFIX = f"mcp__{SERVER}__"
 @dataclass(frozen=True)
 class ToolContext:
     run_id: uuid.UUID
-    project_id: uuid.UUID
+    project_id: uuid.UUID | None  # a chat run may start before any project exists
     user_id: uuid.UUID
     sessions: async_sessionmaker[AsyncSession]
 

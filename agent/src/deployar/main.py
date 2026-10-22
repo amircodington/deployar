@@ -4,16 +4,20 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from deployar.api import approvals
+from deployar.api import approvals, events, runs, session
 from deployar.core.errors import DeployarError
 
 # HTTP status per error code; anything unlisted is a 400.
-_STATUS = {"approval_bad_signature": 403, "approval_not_pending": 409, "no_user": 401}
+_STATUS = {
+    "approval_bad_signature": 403, "approval_not_pending": 409, "no_user": 401, "unauthorized": 401,
+    "bad_passphrase": 401, "not_found": 404,
+}  # fmt: skip
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Deployar agent")
-    app.include_router(approvals.router)
+    for module in (session, runs, events, approvals):
+        app.include_router(module.router)
 
     @app.exception_handler(DeployarError)
     async def deployar_error(_request: Request, e: DeployarError) -> JSONResponse:
@@ -32,4 +36,4 @@ app = create_app()
 
 def run() -> None:
     # Host process for the ~/.claude login; loopback only, Docker Desktop's host.docker.internal reaches it.
-    uvicorn.run("deployar.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("deployar.main:app", host="127.0.0.1", port=8800, reload=True)
