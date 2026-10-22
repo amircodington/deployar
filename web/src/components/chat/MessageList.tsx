@@ -4,6 +4,7 @@ import { Icon } from "@/components/Icon";
 import { RiskChip } from "@/components/RiskChip";
 import { ApprovalCard } from "@/components/cards/ApprovalCard";
 import { DeployProgressCard, EnvRequestCard, LiveUrlCard } from "@/components/cards/DeployCards";
+import { DiagnosisCard, VerifyCard } from "@/components/cards/SreCards";
 import { HumanOnlyCard } from "@/components/cards/HumanOnlyCard";
 import { LimitationBox } from "@/components/cards/LimitationBox";
 import { PlanCard } from "@/components/cards/PlanCard";
@@ -32,10 +33,12 @@ export function MessageList({
   items,
   onDecide,
   onEnvDone,
+  onSend,
 }: {
   items: ChatItem[];
   onDecide: (approvalId: string, decision: "approve" | "reject") => void;
   onEnvDone: (itemId: string, refs: { key: string; value_ref: string }[]) => void;
+  onSend: (text: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -69,7 +72,19 @@ export function MessageList({
           case "limitation":
             return <LimitationBox key={item.id} message_fa={item.message_fa} workaround_fa={item.workaround_fa} />;
           case "human_only":
-            return <HumanOnlyCard key={item.id} task={item.task} steps_fa={item.steps_fa} />;
+            return (
+              <HumanOnlyCard
+                key={item.id}
+                task={item.task}
+                steps_fa={item.steps_fa}
+                records={item.records}
+                onCheck={item.check_fa ? () => onSend(item.check_fa!) : undefined}
+              />
+            );
+          case "diagnosis":
+            return <DiagnosisCard key={item.id} data={item.data} />;
+          case "verify":
+            return <VerifyCard key={item.id} data={item.data} />;
           case "plan_proposal":
             return <PlanCard key={item.id} data={item.data} />;
           case "deploy_progress":

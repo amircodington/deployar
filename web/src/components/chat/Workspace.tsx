@@ -130,6 +130,7 @@ export function Workspace({ projectId }: { projectId?: string }) {
               <MessageList
                 items={view.items}
                 onDecide={decide}
+                onSend={send}
                 onEnvDone={(id, refs) => {
                   setView((v) => markEnvSent(v, id));
                   send(fa.envMessage(refs.map((r) => `${r.key}=${r.value_ref}`).join("، ")));

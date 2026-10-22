@@ -1,7 +1,9 @@
 /** Pure reducer from SSE events to what the workspace shows; tested without a browser. */
 import type { ApprovalState } from "@/components/cards/ApprovalCard";
 import type { DeployProgress, EnvRequest, LiveUrl } from "@/components/cards/DeployCards";
+import type { DnsRecord } from "@/components/cards/HumanOnlyCard";
 import type { PlanProposal } from "@/components/cards/PlanCard";
+import type { Diagnosis, Verify } from "@/components/cards/SreCards";
 import type { RepoAnalysis } from "@/components/cards/RepoAnalysisCard";
 import type { Step } from "@/components/checklist/RunChecklist";
 import type { Risk } from "./api";
@@ -13,7 +15,9 @@ export type ChatItem =
   | { kind: "tool"; id: string; name: string; risk?: Risk; status: "called" | "ok" | "limitation" | "error" }
   | { kind: "approval"; id: string; card: ApprovalRequested; state: ApprovalState; error?: string }
   | { kind: "limitation"; id: string; message_fa: string; workaround_fa?: string }
-  | { kind: "human_only"; id: string; task: string; steps_fa: string[] }
+  | { kind: "human_only"; id: string; task: string; steps_fa: string[]; records?: DnsRecord[] | null; check_fa?: string }
+  | { kind: "diagnosis"; id: string; data: Diagnosis }
+  | { kind: "verify"; id: string; data: Verify }
   | { kind: "repo_analysis"; id: string; data: RepoAnalysis }
   | { kind: "github_reconnect"; id: string; message_fa: string }
   | { kind: "plan_proposal"; id: string; data: PlanProposal }
@@ -122,7 +126,14 @@ export function applyEvent(v: View, e: RunEvent): View {
         return { ...v, items: [...v.items, { kind: "limitation", id: localId("l"), message_fa: String(p.message_fa ?? ""), workaround_fa: p.workaround_fa as string | undefined }] };
       }
       if (e.data.card_type === "human_only") {
-        return { ...v, items: [...v.items, { kind: "human_only", id: localId("h"), task: String(p.task ?? ""), steps_fa: (p.steps_fa as string[]) ?? [] }] };
+        return { ...v, items: [...v.items, { kind: "human_only", id: localId("h"), task: String(p.task ?? ""), steps_fa: (p.steps_fa as string[]) ?? [],
+          records: p.records as DnsRecord[] | null, check_fa: p.check_fa as string | undefined }] };
+      }
+      if (e.data.card_type === "diagnosis") {
+        return { ...v, items: [...v.items, { kind: "diagnosis", id: localId("dx"), data: p as unknown as Diagnosis }] };
+      }
+      if (e.data.card_type === "verify") {
+        return { ...v, items: [...v.items, { kind: "verify", id: localId("vf"), data: p as unknown as Verify }] };
       }
       if (e.data.card_type === "repo_analysis") {
         return { ...v, items: [...v.items, { kind: "repo_analysis", id: localId("r"), data: p as unknown as RepoAnalysis }] };

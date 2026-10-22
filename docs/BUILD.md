@@ -52,12 +52,12 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-11 | Sensitive deploy tools: create_app, create_database, set_env, deploy_release | P1 | B-04, B-08 | T-01 | code + contract tests done; live smoke (`DEPLOYAR_SMOKE=1`) waits for Mohammad | ◐ |
 | B-12 | Deploy mode: prompt, step template, deployment watcher, live URL | P1 | B-10, B-11, B-07 | T-14, T-11 | flow verified end to end in fake mode; the P1 gate on a real repo waits for the first paid deploy (decision 12) | ◐ |
 | B-13 | Status panel (`/status` + StatusPanel) | P1 | B-08, B-07 | — | | ○ |
-| B-14 | Domain: add_domain, check_dns, registrar guide, DNS recheck | P1 | B-12 | T-03, T-15 | | ○ |
-| B-15 | Fault-lab app `lab/` deployed on Liara | P2 | B-12 | T-07, T-12 | | ○ |
-| B-16 | Incident evidence: http_probe, evidence rows, migration 0201 | P2 | B-08 | T-12 | | ○ |
-| B-17 | SRE engine: signals, ranking, criteria (TDD) + `make eval` | P2 | B-16 | T-17, T-18 | | ○ |
-| B-18 | Actions + verify: restart, resize, rollback, verify_after_action | P2 | B-17, B-04 | T-19 | | ○ |
-| B-19 | Incident mode end to end + limitation cards | P2 | B-18 | T-11, T-16 | | ○ |
+| B-14 | Domain: add_domain, check_dns, registrar guide, DNS recheck | P1 | B-12 | T-03, T-15 | add_domain, check_dns, human-only registrar/top-up cards with re-check; contract-tested | ✓ |
+| B-15 | Fault-lab app `lab/` deployed on Liara | P2 | B-12 | T-07, T-12 | `lab/` built (FAULT=memory/error/slow); deploy on Liara waits for the repo on GitHub | ◐ |
+| B-16 | Incident evidence: http_probe, evidence rows, migration 0201 | P2 | B-08 | T-12 | lean: http_probe keeps the run's before snapshot in memory (shortcut noted), migration 0104 | ◐ |
+| B-17 | SRE engine: signals, ranking, criteria (TDD) + `make eval` | P2 | B-16 | T-17, T-18 | ranking by the model from prompt signals + report_diagnosis card; no deterministic engine yet | ◐ |
+| B-18 | Actions + verify: restart, resize, rollback, verify_after_action | P2 | B-17, B-04 | T-19 | restart, resize, verify_after_action; rollback = redeploy an old ref | ◐ |
+| B-19 | Incident mode end to end + limitation cards | P2 | B-18 | T-11, T-16 | sre mode end to end in fake mode | ✓ |
 | B-20 | Incident timeline page | P2 | B-19 | — | cuttable | ○ |
 | B-21 | Torob app (ترب‌گرد) live on Liara via Deployar | P1→P2 | B-12 | T-14, T-26 | | ○ |
 | B-22 | Coder: apply_code_fix, merge_and_deploy, DiffCard | P3 | B-19 | T-22 | | ○ |

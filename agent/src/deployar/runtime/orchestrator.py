@@ -24,12 +24,13 @@ from deployar.models import Approval, Conversation, Message, Project, Run, RunSt
 from deployar.runtime.approvals import ApprovalService, Created
 from deployar.runtime.events import EventBus
 from deployar.runtime.gate import PREFIX, GateContext, make_gate
-from deployar.runtime.modes import chat, deploy
+from deployar.runtime.modes import chat, deploy, incident
 from deployar.tools.registry import Registry, ToolContext
 
-MODES: dict[str, ModuleType] = {"chat": chat, "deploy": deploy}
-# a repo link or a "put it online" ask starts a deploy run; anything else is a chat
-DEPLOY_HINT = re.compile(r"github\.com/|بالا بیار|آنلاین کن|دیپلوی|deploy|منتشر کن|بساز|ادامه بده", re.I)
+MODES: dict[str, ModuleType] = {"chat": chat, "deploy": deploy, "sre": incident}
+# a repo link or a "put it online" ask starts a deploy run, a symptom starts an incident; anything else is a chat
+INCIDENT_HINT = re.compile(r"کند|خطا|ارور|۵۰۰|\b500\b|قطع|نمی‌آید|نمیاد|down|crash|error|slow|timeout|مشکل", re.I)
+DEPLOY_HINT = re.compile(r"github\.com/|بالا بیاو?ر|آنلاین کن|دیپلوی|deploy|منتشر کن|بساز|ادامه بده", re.I)
 
 
 @dataclass
@@ -54,7 +55,11 @@ async def start_run(
     project_id: uuid.UUID | None = None,
     conversation_id: uuid.UUID | None = None,
 ) -> tuple[uuid.UUID, uuid.UUID]:
-    mode = mode or ("deploy" if DEPLOY_HINT.search(text) else "chat")
+    mode = mode or (
+        "deploy" if "github.com/" in text or (DEPLOY_HINT.search(text) and not INCIDENT_HINT.search(text))
+        else "sre" if INCIDENT_HINT.search(text)
+        else "chat"
+    )  # fmt: skip
     if mode not in MODES:
         raise DeployarError("unknown_mode", fa.UNKNOWN_MODE, mode)
     spec = MODES[mode]
@@ -171,6 +176,11 @@ async def _execute(
         async def can_use_tool(name: str, args: dict[str, Any], ctx: ToolPermissionContext) -> PermissionResult:
             last.clear()
             result = await gate(name, args, ctx)
+            short = name.removeprefix(PREFIX)
+            if rt.registry.risk_of(short) == "human_only":  # denied by the gate; the user gets the steps as a card
+                await rt.bus.publish(run_id, "card", {"card_type": "human_only", "payload": {
+                    "task": short, "steps_fa": fa.HUMAN_STEPS.get(short, []), "records": args.get("records"),
+                    "check_fa": fa.CHECK_AGAIN.get(short, "").format(domain=args.get("domain", ""))}})  # fmt: skip
             if created := last.get("created"):
                 async with rt.sessions() as s:
                     status = await s.scalar(select(Approval.status).where(Approval.id == created.approval_id))

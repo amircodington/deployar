@@ -26,6 +26,13 @@ DEPLOY_SCRIPT: list[tuple[str, dict[str, Any]]] = [
     ("request_env_values", {"keys": [{"key": "BOXAPI_KEY", "hint_fa": "کلید سرویس جستجو"}]}),
     ("deploy_release", {"reason_fa": "انتشار آخرین commit"}),
     ("watch_deployment", {}),
+    (
+        "registrar_dns_records",
+        {
+            "domain": "shop.torobgard.ir",
+            "records": [{"type": "CNAME", "name": "shop.torobgard.ir", "value": "torob-gard-api.liara.run"}],
+        },
+    ),
 ]
 
 
@@ -44,9 +51,11 @@ class FakeBackend:
         max_turns: int,
         resume: str | None = None,
     ) -> AsyncIterator[LLMEvent]:
-        deploying = "deploy" in system_prompt.lower() or "بالا" in prompt
-        script = DEPLOY_SCRIPT if deploying else SCRIPT
-        yield TextDelta("مخزن را می‌خوانم و اپ را روی لیارا می‌سازم." if deploying else
+        incident = "SRE" in system_prompt
+        deploying = not incident and ("deploy" in system_prompt.lower() or "بالا" in prompt)
+        script = INCIDENT_SCRIPT if incident else DEPLOY_SCRIPT if deploying else SCRIPT
+        yield TextDelta("اول اندازه می‌گیرم و لاگ و متریک را می‌خوانم." if incident else
+                        "مخزن را می‌خوانم و اپ را روی لیارا می‌سازم." if deploying else
                         "لاگ‌ها را نگاه می‌کنم و اگر لازم بود ری‌استارت را پیشنهاد می‌دهم.")  # fmt: skip
         for i, (name, args) in enumerate(script):
             await asyncio.sleep(self.delay_s)
@@ -60,6 +69,17 @@ class FakeBackend:
         await asyncio.sleep(self.delay_s)
         yield TextDelta("کار تمام شد. لاگ‌ها سالم بود و ری‌استارت طبق تصمیم تو انجام شد یا انجام نشد.")
         yield Done(session_id=None, model="fake")
+
+
+INCIDENT_SCRIPT: list[tuple[str, dict[str, Any]]] = [
+    ("http_probe", {"path": "/api/products"}),
+    ("get_logs", {"since": "30m"}),
+    ("report_diagnosis", {}),
+    ("resize_plan", {"plan_id": "ir-medium", "reason_fa": "۳ بار OOM در ۳۰ دقیقه؛ RAM از ۵۱۲ به ۱۰۲۴"}),
+    ("verify_after_action", {}),
+]
+BEFORE = {"url": "https://torob-gard-api.liara.run/api/products", "codes": {"200": 3, "502": 2}, "error_rate": 0.4,
+          "p50_ms": 4180, "p95_ms": 6900, "memory_mb": 498, "observed_at": "2026-10-22T09:14:02+00:00"}  # fmt: skip
 
 
 def demo_registry() -> Registry:
@@ -123,5 +143,48 @@ def demo_registry() -> Registry:
                                         "commit": "8c17bc2", "status": 200, "ms": 184,
                                         "observed_at": datetime.now(UTC).isoformat()})  # fmt: skip
         return Ok({"state": "READY"}, source="fake:watch")
+
+    @reg.tool("registrar_dns_records", group="liara", risk="human_only", description="fake registrar", input_schema={})
+    async def registrar_dns_records(ctx: ToolContext, args: dict[str, Any]) -> ToolOutcome:
+        raise AssertionError("human_only never runs")
+
+    @reg.tool("http_probe", group="probe", risk="read", description="fake probe", input_schema={})
+    async def http_probe(ctx: ToolContext, args: dict[str, Any]) -> ToolOutcome:
+        await ensure_project(ctx, "amircodington/torob-gard", "main")
+        return Ok(BEFORE, source=f"probe:{BEFORE['url']}")
+
+    @reg.tool("report_diagnosis", group="sre", risk="read", description="fake diagnosis", input_schema={})
+    async def report_diagnosis(ctx: ToolContext, args: dict[str, Any]) -> ToolOutcome:
+        hyps = [
+            {"cause_fa": "کمبود RAM؛ اپ ۳ بار از حافظه بیرون زده", "likelihood": 0.72, "action_fa": "پلن ۱ گیگ",
+             "evidence": ["09:12:44 Worker (pid:42) was sent SIGKILL! Perhaps out of memory?", "memory 498/512 MB"]},
+            {"cause_fa": "کوئری کند در /api/products", "likelihood": 0.41, "action_fa": "صفحه‌بندی کوئری",
+             "evidence": ["GET /api/products 200 4180ms"]},
+            {"cause_fa": "محدودیت CPU", "likelihood": 0.1, "evidence": ["cpu 0.21 of 0.5"]},
+        ]  # fmt: skip
+        if ctx.emit:
+            await ctx.emit("diagnosis", {"symptom_fa": "سایت کند است", "hypotheses": hyps, "baseline": BEFORE})
+        return Ok({"ranked": [h["cause_fa"] for h in hyps]}, source="fake:diagnosis")
+
+    @reg.tool(
+        "resize_plan",
+        group="liara",
+        risk="sensitive",
+        description="fake resize",
+        input_schema={},
+        preview=lambda a: {**app_card(a), "title_fa": "تغییر پلن اپ به ir-medium", "cost_delta_toman": 700_000},
+    )
+    async def resize_plan(ctx: ToolContext, args: dict[str, Any]) -> ToolOutcome:
+        return Ok({"from": "ir-small", "to": "ir-medium"}, source="fake:resize")
+
+    @reg.tool("verify_after_action", group="sre", risk="read", description="fake verify", input_schema={})
+    async def verify_after_action(ctx: ToolContext, args: dict[str, Any]) -> ToolOutcome:
+        await asyncio.sleep(1.5)
+        after = {**BEFORE, "codes": {"200": 5}, "error_rate": 0.0, "p50_ms": 320, "p95_ms": 540, "memory_mb": 610,
+                 "observed_at": datetime.now(UTC).isoformat()}  # fmt: skip
+        if ctx.emit:
+            verdict = "بهتر شد: نرخ خطا از ۴۰٪ به صفر و p50 از ۴٫۲ ثانیه به ۳۲۰ میلی‌ثانیه رسید."
+            await ctx.emit("verify", {"before": BEFORE, "after": after, "fixed": True, "verdict_fa": verdict})
+        return Ok({"fixed": True}, source="fake:verify")
 
     return reg

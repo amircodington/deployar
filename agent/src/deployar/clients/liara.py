@@ -195,3 +195,11 @@ class LiaraClient:
 
     async def delete_database(self, db_id: str) -> None:
         await self.request("DELETE", f"/v1/databases/{db_id}")
+
+    async def add_domain(self, domain: str, app: str) -> str:
+        data = await self.request("POST", "/v1/domains", json={"name": domain, "project": app, "type": "PROJECT"}) or {}
+        return str((data.get("domain") or {}).get("_id") or "")
+
+    async def check_domain(self, domain_id: str) -> dict[str, Any]:
+        d = (await self.request("GET", f"/v1/domains/{domain_id}/check") or {}).get("domain") or {}
+        return {k: d.get(k) for k in ("name", "status", "certificatesStatus", "CNameRecord")}
