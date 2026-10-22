@@ -102,7 +102,6 @@ body {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-feature-settings: "ss01";
 }
 
 input,
