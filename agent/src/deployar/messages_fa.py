@@ -32,3 +32,8 @@ GUIDES = {
         "/ Human-only: top up the balance in the Liara console, then press «check now»."
     ),
 }
+
+APPROVAL_MISSING = "این کار تأیید معتبر ندارد و اجرا نشد. / No valid approval for this call; it did not run."
+TOOL_CRASHED = (
+    "ابزار با خطای داخلی متوقف شد؛ وضعیت را دوباره بررسی کن. / The tool crashed; re-check the state before retrying."
+)
