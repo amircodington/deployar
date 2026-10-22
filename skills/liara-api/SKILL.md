@@ -41,8 +41,10 @@ toman amounts (console shows hourly/monthly; `/v1/me` `plans` shape to confirm w
 
 ## Confirmed on the live account (2026-10-22)
 
-- `GET /v1/billing` → `{"user": {"balance", "accountType", "minCreditAmount", "isManualMinCredit"}}`;
-  `balance` is toman. Without `teamID` it is the **personal** balance (0 here; the team holds the credit).
+- `GET /v1/billing` → `{"user": {balance, accountType, minCreditAmount, isManualMinCredit}}`, and with
+  `teamID` also `"team": {…same…}`. `balance` is toman. A team token spends **team** credit: read `team`.
+- Console also calls `GET /v2/teams`, `GET /v1/networks?teamID=` (private networks for create_app),
+  `GET /v1/me/two-fa`, `GET /v1/service-count`.
 - `GET /v1/me` → `plans.projects` / `plans.databases`: `{plan_id: {available, price, RAM.amount (GB),
   CPU.amount, volume (GB)}}`. **`price` is toman per hour**; monthly in the console = price × 720,
   rounded to 1,000. Available first-gen ids: `ir-small` (0.5 GB, 1,319/h = زمین), `ir-medium` (1 GB,

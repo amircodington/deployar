@@ -25,8 +25,14 @@ async def _ctx(emitted: list[tuple[str, dict[str, Any]]]) -> Any:
         user = await conn.fetchval("""insert into "user" (email) values (gen_random_uuid() || '@t.ir') returning id""")
         cid = uuid.uuid4()
         blob, v = get_vault().encrypt("liara-token-xxxxxxxxxxxxxxxx", aad_for("liara_connection", cid, user))
-        await conn.execute("insert into liara_connection (id, user_id, token_ciphertext, key_version, token_last4) "
-                           "values ($1, $2, $3, $4, 'xxxx')", cid, user, blob, v)  # fmt: skip
+        await conn.execute(
+            "insert into liara_connection (id, user_id, token_ciphertext, key_version, token_last4, team_id) "
+            "values ($1, $2, $3, $4, 'xxxx', 'team-7')",
+            cid,
+            user,
+            blob,
+            v,
+        )
         project = await conn.fetchval(
             "insert into project (user_id, liara_connection_id, name, repo_full_name) "
             "values ($1, $2, 'ترب‌گرد', 'amox/torob-gard') returning id",

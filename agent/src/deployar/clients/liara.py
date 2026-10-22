@@ -76,10 +76,13 @@ class LiaraClient:
     # --- reads -------------------------------------------------------------------------------
 
     async def billing(self) -> dict[str, Any]:
-        """{balance (toman), accountType, minCreditAmount, isManualMinCredit}; the API nests it under `user`."""
-        data = await self.request("GET", "/v1/billing")
-        user: dict[str, Any] = (data or {}).get("user") or data or {}
-        return user
+        """{balance (toman), accountType, minCreditAmount, isManualMinCredit}.
+
+        The API returns `user` (personal) and, with teamID, also `team`; a team token spends team credit.
+        """
+        data = await self.request("GET", "/v1/billing") or {}
+        chosen: dict[str, Any] = (data.get("team") if self._team else None) or data.get("user") or data
+        return chosen
 
     async def me_summary(self) -> dict[str, Any]:
         """Only what we use: /v1/me also carries national code and Object Storage keys."""

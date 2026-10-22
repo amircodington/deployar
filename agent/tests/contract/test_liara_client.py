@@ -40,7 +40,7 @@ async def test_client_trims_secrets_and_maps_errors() -> None:
         assert "hunter2" not in json.dumps(project) and "envs" not in project
         me = await c.me_summary()
         assert "FAKE-SECRET" not in json.dumps(me) and "0011223344" not in json.dumps(me)
-        assert (await c.billing())["balance"] == 2000000  # retried after 429
+        assert (await c.billing())["balance"] == 2000000  # retried after 429; team credit, not personal
         with pytest.raises(LiaraNotFound):
             await c.project("missing")
     assert billing.calls[-1].request.url.params["teamID"] == "team-7"
@@ -67,8 +67,8 @@ async def _ctx_with_connection() -> Any:
         cid = uuid.uuid4()
         blob, version = get_vault().encrypt(TOKEN, aad_for("liara_connection", cid, user))
         await conn.execute(
-            "insert into liara_connection (id, user_id, token_ciphertext, key_version, token_last4) "
-            "values ($1, $2, $3, $4, 'cdef')",
+            "insert into liara_connection (id, user_id, token_ciphertext, key_version, token_last4, team_id) "
+            "values ($1, $2, $3, $4, 'cdef', 'team-7')",
             cid, user, blob, version,
         )  # fmt: skip
         project = await conn.fetchval(
