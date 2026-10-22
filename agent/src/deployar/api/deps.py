@@ -19,6 +19,7 @@ from deployar.runtime.approvals import ApprovalService
 from deployar.runtime.events import EventBus
 from deployar.runtime.orchestrator import Runtime
 from deployar.tools.github import analyze as _github_analyze  # noqa: F401  registers analyze_repo
+from deployar.tools.liara import deploy as _liara_deploy  # noqa: F401  registers the sensitive Liara tools
 from deployar.tools.liara import plan as _liara_plan  # noqa: F401  registers propose_plan
 from deployar.tools.liara import read as _liara_read  # noqa: F401  registers the Liara read tools
 from deployar.tools.registry import REGISTRY

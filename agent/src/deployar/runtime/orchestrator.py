@@ -65,13 +65,13 @@ async def start_run(
             conversation_id = new_id()
             s.add(Conversation(id=conversation_id, user_id=user_id, project_id=project_id, title_fa=text[:60]))
             await s.flush()
-        elif (
-            await s.scalar(
-                select(Conversation.id).where(Conversation.id == conversation_id, Conversation.user_id == user_id)
+        else:
+            conv = await s.scalar(
+                select(Conversation).where(Conversation.id == conversation_id, Conversation.user_id == user_id)
             )
-            is None
-        ):
-            raise DeployarError("not_found", fa.NOT_FOUND, f"conversation {conversation_id}")
+            if conv is None:
+                raise DeployarError("not_found", fa.NOT_FOUND, f"conversation {conversation_id}")
+            project_id = project_id or conv.project_id  # a chat that analyzed a repo keeps working on it
         message_id = await _add_message(s, conversation_id, "user", text)
         s.add(Run(id=run_id, project_id=project_id, conversation_id=conversation_id,
                   triggered_by_message_id=message_id, kind=spec.MODE, trigger="user_message"))  # fmt: skip
@@ -138,11 +138,13 @@ async def _execute(
             await rt.bus.publish(run_id, "approval.requested", {
                 "approval_id": str(created.approval_id), "tool": preview.get("tool", ""),
                 "summary_fa": preview.get("title_fa") or preview.get("tool", ""), "why_fa": preview.get("why_fa"),
+                "cost_delta_toman": preview.get("cost_delta_toman"), "cost_source": preview.get("cost_source"),
+                "changes": preview.get("changes"),
                 "expires_at": created.expires_at.isoformat(), "signature": created.token,
             })  # fmt: skip
 
         gate = make_gate(rt.approvals, GateContext(run_id, project_id, user_id), rt.registry.risk_of,
-                         on_requested=on_requested)  # fmt: skip
+                         on_requested=on_requested, preview_for=rt.registry.preview_of)  # fmt: skip
 
         async def can_use_tool(name: str, args: dict[str, Any], ctx: ToolPermissionContext) -> PermissionResult:
             last.clear()

@@ -51,3 +51,17 @@ toman amounts (console shows hourly/monthly; `/v1/me` `plans` shape to confirm w
   2,292/h = مریخ), `standard-base` (2 GB), `standard-plus` (4 GB; DB: `standard-pro`), `pro`, `pro-plus`,
   `pro-max`. `-g2` ids are half price but need a `projectBundlePlans` bundle; not used yet.
 - `databaseVersions.postgres[]` = `{value, postgisValue, pgvectorValue}` (16.14 → PostGIS 3.6, pgvector 0.8.1).
+
+## Write shapes (from the open-source Liara CLI, 2026-10-22; confirm in the live smoke)
+
+- Network: `GET /v1/networks` → `{networks[{_id, name, createdAt}]}`; create `POST /v1/networks {networkName}`.
+- App: `POST /v1/projects {name, planID, platform, network: <network _id>, readOnlyRootFilesystem}`; first-gen
+  plans (`ir-small`, `ir-medium`, …) have no `bundlePlanID`. 402 = no credit, 409 = name taken.
+- DB: `POST /v1/databases {hostname, type, version, planID, network, publicNetwork}`; DB plan ids mirror
+  app ids (`ir-small` 1,319/h). `GET /v1/databases/{id}` → `database{status, hostname, port, username,
+  root_password}` (password stays server-side).
+- Release: `POST /v2/projects/{name}/sources` multipart `file` (tar.gz, app folder at the root, max 256 MiB)
+  → `{sourceID}`; `POST /v2/projects/{name}/releases {sourceID, port, type, gitInfo, message, envs?}` →
+  `{releaseID}`; poll `GET /v1/releases/{id}` → `release{state, queue}` (states BUILDING, PUSHING, DEPLOYING,
+  READY, FAILED, CANCELED, TIMEDOUT, UNHEALTHY); build log `GET /v2/releases/{id}/build-logs?since=`
+  → `{release, buildOutput[{stream, line, createdAt}]}`.

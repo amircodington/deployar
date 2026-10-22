@@ -11,6 +11,7 @@ from deployar.clients.github import GitHubClient, GitHubNoAccess, parse_repo
 from deployar.core.crypto import aad_for, get_vault
 from deployar.core.errors import DeployarError
 from deployar.models import GithubConnection, Project, RepoAnalysis
+from deployar.tools.project import ensure_project, project_of
 from deployar.tools.registry import ToolContext, deployar_tool
 from deployar.tools.results import Ok, ToolError, ToolResult
 
@@ -32,9 +33,9 @@ REPO_SCHEMA = {"type": "object", "properties": {"repo": {"type": "string"}, "ref
 @deployar_tool("analyze_repo", group="github", risk="read", description=fa.ANALYZE_REPO_DESC, input_schema=REPO_SCHEMA)
 async def analyze_repo(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
     repo_text = args.get("repo")
-    if not repo_text and ctx.project_id:
+    if not repo_text and (pid := await project_of(ctx)):
         async with ctx.sessions() as s:
-            repo_text = await s.scalar(select(Project.repo_full_name).where(Project.id == ctx.project_id))
+            repo_text = await s.scalar(select(Project.repo_full_name).where(Project.id == pid))
     if not repo_text:
         return ToolError("no_repo", fa.NO_REPO)
     try:
@@ -52,11 +53,12 @@ async def analyze_repo(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
         return ToolError(e.code, e.message_fa, retryable=e.code in ("github_unreachable", "github_rate_limited"))
 
     detected = analyze(Repo(set(paths), files))
-    if ctx.project_id:  # cached per (project, commit, detector version) for the plan card
+    project_id = await ensure_project(ctx, f"{owner}/{name}", meta["default_branch"])
+    if project_id:  # cached per (project, commit, detector version) for the plan card
         async with ctx.sessions.begin() as s:
             await s.execute(
                 insert(RepoAnalysis)
-                .values(project_id=ctx.project_id, run_id=ctx.run_id, commit_sha=sha, detector_version=DETECTOR_VERSION,
+                .values(project_id=project_id, run_id=ctx.run_id, commit_sha=sha, detector_version=DETECTOR_VERSION,
                         detected=detected)
                 .on_conflict_do_update(index_elements=["project_id", "commit_sha", "detector_version"],
                                        set_={"detected": detected, "run_id": ctx.run_id})

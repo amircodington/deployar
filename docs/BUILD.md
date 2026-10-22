@@ -49,7 +49,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-08 | LiaraClient + connections + read tools | P0 | B-05 | T-01, T-04 | | ✓ |
 | B-09 | GitHub client + repo analyzer + `analyze_repo` | P1 | B-05 | T-06, T-13 | | ✓ |
 | B-10 | Plan proposal (`list_plans`, price, plan card) + migration 0101 | P1 | B-08, B-09 | T-04 | | ✓ |
-| B-11 | Sensitive deploy tools: create_app, create_database, set_env, deploy_release | P1 | B-04, B-08 | T-01 | | ○ |
+| B-11 | Sensitive deploy tools: create_app, create_database, set_env, deploy_release | P1 | B-04, B-08 | T-01 | code + contract tests done; live smoke (`DEPLOYAR_SMOKE=1`) waits for Mohammad | ◐ |
 | B-12 | Deploy mode: prompt, step template, deployment watcher, live URL | P1 | B-10, B-11, B-07 | T-14, T-11 | | ○ |
 | B-13 | Status panel (`/status` + StatusPanel) | P1 | B-08, B-07 | — | | ○ |
 | B-14 | Domain: add_domain, check_dns, registrar guide, DNS recheck | P1 | B-12 | T-03, T-15 | | ○ |

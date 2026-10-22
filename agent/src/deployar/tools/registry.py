@@ -49,6 +49,7 @@ class ToolSpec:
     description: str
     input_schema: dict[str, Any]
     fn: ToolFn
+    preview: Callable[[dict[str, Any]], dict[str, Any]] | None = None  # the approval card's what/why/cost
 
 
 class Registry:
@@ -56,7 +57,14 @@ class Registry:
         self.specs: dict[str, ToolSpec] = {}
 
     def tool(
-        self, name: str, *, group: str, risk: Risk, description: str, input_schema: dict[str, Any]
+        self,
+        name: str,
+        *,
+        group: str,
+        risk: Risk,
+        description: str,
+        input_schema: dict[str, Any],
+        preview: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     ) -> Callable[[ToolFn], ToolFn]:
         if risk not in ("read", "sensitive", "human_only"):
             raise ValueError(f"{name}: unknown risk {risk!r}")  # a tool with no class fails to register
@@ -64,10 +72,15 @@ class Registry:
         def register(fn: ToolFn) -> ToolFn:
             if name in self.specs:
                 raise ValueError(f"tool {name} is already registered")
-            self.specs[name] = ToolSpec(name, group, risk, description, input_schema, fn)
+            self.specs[name] = ToolSpec(name, group, risk, description, input_schema, fn, preview)
             return fn
 
         return register
+
+    def preview_of(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
+        spec = self.specs.get(name)
+        base = {"tool": name}
+        return {**base, **redact(spec.preview(args))} if spec and spec.preview else base
 
     def risk_of(self, name: str) -> str | None:
         spec = self.specs.get(name)

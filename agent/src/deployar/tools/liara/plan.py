@@ -9,6 +9,7 @@ from deployar import messages_fa as fa
 from deployar.models import PlanProposal, RepoAnalysis
 from deployar.runtime.plan import catalogue, choose, totals
 from deployar.tools.liara.read import STATIC_PLANS, _guard, liara_client
+from deployar.tools.project import project_of
 from deployar.tools.registry import ToolContext, deployar_tool
 from deployar.tools.results import Ok, ToolError, ToolResult
 
@@ -16,11 +17,12 @@ from deployar.tools.results import Ok, ToolError, ToolResult
 @deployar_tool("propose_plan", group="liara", risk="read", description=fa.PROPOSE_PLAN_DESC,
                input_schema={"type": "object", "properties": {}})  # fmt: skip
 async def propose_plan(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
-    if ctx.project_id is None:
+    project_id = await project_of(ctx)
+    if project_id is None:
         return ToolError("no_project", fa.NO_PROJECT)
     async with ctx.sessions() as s:
         analysis = await s.scalar(
-            select(RepoAnalysis).where(RepoAnalysis.project_id == ctx.project_id)
+            select(RepoAnalysis).where(RepoAnalysis.project_id == project_id)
             .order_by(RepoAnalysis.created_at.desc()).limit(1)
         )  # fmt: skip
     if analysis is None:
@@ -45,11 +47,11 @@ async def propose_plan(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
         async with ctx.sessions.begin() as s:
             await s.execute(
                 update(PlanProposal)
-                .where(PlanProposal.project_id == ctx.project_id, PlanProposal.status == "proposed")
+                .where(PlanProposal.project_id == project_id, PlanProposal.status == "proposed")
                 .values(status="superseded", decided_at=fetched_at)
             )
             proposal = PlanProposal(
-                project_id=ctx.project_id, repo_analysis_id=analysis.id, run_id=ctx.run_id, items=items,
+                project_id=project_id, repo_analysis_id=analysis.id, run_id=ctx.run_id, items=items,
                 app_plan_id=app0["plan_id"] or app0["plan_name"], app_price_monthly_rial=app0["toman_month"] * 10,
                 db_plan_id=(db["plan_id"] or db["plan_name"]) if db else None,
                 db_price_monthly_rial=db["toman_month"] * 10 if db else None,

@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from deployar.api import approvals, connections, dashboard, events, runs, session
+from deployar.api import approvals, connections, dashboard, events, projects, runs, session
 from deployar.core.errors import DeployarError
 
 # HTTP status per error code; anything unlisted is a 400.
@@ -17,7 +17,7 @@ _STATUS = {
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Deployar agent")
-    for module in (session, runs, events, approvals, connections, dashboard):
+    for module in (session, runs, events, approvals, connections, dashboard, projects):
         app.include_router(module.router)
 
     @app.exception_handler(DeployarError)

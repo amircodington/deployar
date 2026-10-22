@@ -82,3 +82,36 @@ class Domain(Base):
     last_checked_at: Mapped[datetime | None]
     verified_at: Mapped[datetime | None]
     created_at: Mapped[datetime] = now_default()
+
+
+class SecretValue(Base):
+    """A value set_env may use by reference; the model only sees `id`."""
+
+    __tablename__ = "secret_value"
+
+    id: Mapped[uuid.UUID] = id_pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
+    project_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("project.id", ondelete="CASCADE"))
+    key: Mapped[str]
+    ciphertext: Mapped[bytes]
+    key_version: Mapped[int]
+    origin: Mapped[str]
+    created_at: Mapped[datetime] = now_default()
+    used_at: Mapped[datetime | None]
+
+    def __repr__(self) -> str:
+        return f"<SecretValue {self.key} <encrypted>>"
+
+
+class LiaraResource(Base):
+    __tablename__ = "liara_resource"
+
+    id: Mapped[uuid.UUID] = id_pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"))
+    project_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("project.id", ondelete="SET NULL"))
+    kind: Mapped[str]
+    name: Mapped[str]
+    liara_id: Mapped[str | None]
+    plan_id: Mapped[str | None]
+    run_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("run.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = now_default()
