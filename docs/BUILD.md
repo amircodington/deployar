@@ -38,7 +38,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 
 | id | title | phase | depends | students feed it | cut? | state |
 |---|---|---|---|---|---|---|
-| B-00 | Agent SDK spike (local login, in-process MCP, can_use_tool) | P0 | — | — | | ○ |
+| B-00 | Agent SDK spike (local login, in-process MCP, can_use_tool) | P0 | — | — | | ✓ |
 | B-01 | Repo scaffold: agent, web, worker, Compose, Makefile, hooks | P0 | — | — | | ○ |
 | B-02 | Core: config, ids, crypto vault, redactor, errors, Persian | P0 | B-01 | — | | ○ |
 | B-03 | Schema v1: migrations 0001–0004 + models | P0 | B-02 | — | | ○ |
@@ -84,7 +84,7 @@ with an in-process MCP server and a `can_use_tool` callback that can block on an
 - **Read**: `decisions.md` #2, `ARCHITECTURE.md §3` (SDK options), Agent SDK docs (`claude-api` skill).
 - **Files**: `spikes/b00_sdk.py` (throwaway, kept for reference), `docs/evidence/B-00/notes.md`.
 - **Do**: one `ClaudeSDKClient` with `mcp_servers={"hamkar": create_sdk_mcp_server(...)}`, two tools
-  (`echo` read, `danger` sensitive), `allowed_tools=["mcp__hamkar__*"]`, built-ins disallowed,
+  (`echo` read, `danger` sensitive), `allowed_tools=["mcp__hamkar__echo"]` (read tools only; see notes), built-ins disallowed,
   `setting_sources=[]`, `can_use_tool` that awaits an `asyncio.Event` set from stdin.
 - **Done when**: (1) runs with no `ANTHROPIC_API_KEY` set, on the logged-in Claude Code;
   (2) `danger` does not run until you type `y`, and gets a deny on `n`; (3) built-in Bash is refused;

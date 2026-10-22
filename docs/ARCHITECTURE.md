@@ -90,9 +90,10 @@ flowchart LR
   with the mode prompt, streams model text as `message.delta`, maps tool calls to `run_step` rows and
   checklist events. Model output for cards is structured (pydantic-validated JSON blocks); the UI draws
   cards, the model never writes layout.
-- **SDK options (main agent)**: `mcp_servers={"hamkar": sdk_server}`, `allowed_tools=["mcp__hamkar__*"]`,
-  built-ins disallowed (Bash, Read, Write, Edit, WebFetch, WebSearch), `setting_sources=[]` (no user
-  CLAUDE.md), `can_use_tool=gate`, `max_turns` per mode (deploy 40, incident 30).
+- **SDK options (main agent)**: `mcp_servers={"hamkar": sdk_server}`, `allowed_tools` = **read tools by name only**
+  (a wildcard or any sensitive tool there skips `can_use_tool`; B-00 finding), `tools=[]` plus built-ins
+  disallowed (Bash, Read, Write, Edit, WebFetch, WebSearch), `strict_mcp_config=True`, `setting_sources=[]`
+  (no user CLAUDE.md), `can_use_tool=gate`, `max_turns` per mode (deploy 40, incident 30).
 - **Tool registry**: every tool is a typed async function with `@hamkar_tool(name, group, risk)`. The
   decorator registers it with the SDK MCP server, records `tool_call` rows, runs the redactor on output,
   converts known API gaps into `Limitation` results, and for `sensitive` tools re-checks the approval.

@@ -1,0 +1,32 @@
+spawn env -u ANTHROPIC_API_KEY uv run spikes/b00_sdk.py
+[   0.00s] claude-agent-sdk 0.2.172
+/Users/amox/.cache/uv/environments-v2/b00-sdk-0628c823a6b2488f/lib/python3.13/site-packages/claude_agent_sdk/types.py:2303: CanUseToolShadowedWarning: can_use_tool will not be invoked for: mcp__hamkar__echo. An allowed_tools entry that allows a whole tool auto-approves it before the callback is consulted. To gate every tool call, use a PreToolUse hook; or narrow the entry so calls fall through to can_use_tool. Allow rules from settings files can also shadow the callback but are not visible here.
+  _warn_if_can_use_tool_shadowed(options)
+[   3.70s] TURN 1 >>> Call the echo tool with text 'salam hamkar'. Reply with one short line.
+[   3.73s] INIT apiKeySource=none model=claude-opus-5-5 cli=2.1.308 tools=['mcp__hamkar__danger', 'mcp__hamkar__echo']
+[   7.38s] MODEL tool_use mcp__hamkar__echo {'text': 'salam hamkar'}
+[   7.39s] TOOL echo ran: 'salam hamkar'
+[   9.42s] MODEL text: The echo tool sent back: salam hamkar
+[   9.43s] RESULT turn 1: success error=False first_msg=0.03s total=5.73s api=5544ms cost=$0.0117296
+[   9.43s] TURN 2 >>> Call the danger tool with target 'demo-app'. Reply with one short line saying what happened.
+[   9.44s] INIT apiKeySource=none model=claude-opus-5-5 cli=2.1.308 tools=['mcp__hamkar__danger', 'mcp__hamkar__echo']
+[  13.19s] MODEL tool_use mcp__hamkar__danger {'target': 'demo-app'}
+[  13.19s] GATE mcp__hamkar__danger risk=sensitive args={'target': 'demo-app'}
+>>> approve mcp__hamkar__danger {'target': 'demo-app'}? [y/n] y
+[  18.19s] GATE answer='y'
+[  18.20s] TOOL danger ran on 'demo-app'
+[  23.29s] MODEL text: The danger tool reported that demo-app was restarted, but it's a fake restart, so nothing real changed.
+[  23.30s] RESULT turn 2: success error=False first_msg=0.01s total=13.87s api=14386ms cost=$0.0164936
+[  23.30s] TURN 3 >>> Call the danger tool again with target 'demo-app-2'. Reply with one short line saying what happened.
+[  23.31s] INIT apiKeySource=none model=claude-opus-5-5 cli=2.1.308 tools=['mcp__hamkar__danger', 'mcp__hamkar__echo']
+[  26.86s] MODEL tool_use mcp__hamkar__danger {'target': 'demo-app-2'}
+[  26.86s] GATE mcp__hamkar__danger risk=sensitive args={'target': 'demo-app-2'}
+>>> approve mcp__hamkar__danger {'target': 'demo-app-2'}? [y/n] n
+[  31.87s] GATE answer='n'
+[  34.37s] MODEL text: Mohammad denied the restart of demo-app-2, so it didn't run.
+[  34.39s] RESULT turn 3: success error=False first_msg=0.01s total=11.09s api=20453ms cost=$0.0207768
+[  34.39s] TURN 4 >>> Run the shell command `ls /` using the Bash tool. If you cannot, say so in one line.
+[  34.40s] INIT apiKeySource=none model=claude-opus-5-5 cli=2.1.308 tools=['mcp__hamkar__danger', 'mcp__hamkar__echo']
+[  38.87s] MODEL text: I can't run `ls /` because I don't have a Bash tool, only echo and danger.
+[  38.89s] RESULT turn 4: success error=False first_msg=0.01s total=4.50s api=24934ms cost=$0.022523
+[  39.31s] MESSAGE TYPES {'SystemMessage': 4, 'AssistantMessage': 9, 'ToolUseBlock': 3, 'RateLimitEvent': 1, 'UserMessage': 3, 'TextBlock': 4, 'ResultMessage': 4, 'ThinkingBlock': 2}
