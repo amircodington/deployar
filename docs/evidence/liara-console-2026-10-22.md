@@ -41,3 +41,16 @@ before VAT. This is the dated static table B-10 may fall back to if the API has 
 - Liara sells an AI API (news: Claude Sonnet 4.5, GPT-5, Qwen, JEV, embeddings), billed from the same
   credit. Possible later replacement for BoxAPI behind the `LLMClient` seam (decision #2); not decided.
 - Liara Postgres has pgvector (news item). PostGIS support not checked.
+
+## Follow-up: hosting options for ترب‌گرد (same day)
+
+- **Managed PostgreSQL** versions 13.23–18.4; the create wizard has toggles for **PostGIS** and
+  **Pgvector** (docs: `docs.liara.ir/dbaas/postgresql/extensions/`, 52 more extensions). DB plans
+  have the same names and prices as app plans (زمین 1,318/h … ).
+- **Docker platform** is fully supported (Dockerfile or docker-compose, `liara.json`). ترب‌گرد's API
+  needs GDAL system libraries, so Docker is the right platform for it; the web is a plain Next.js app.
+- **VPS (IaaS)** exists with its own API (`iaas-api.liara.ir`); smallest documented plan is مشتری
+  (1 core, 2 GB, 20 GB). No prices in the docs, and capacity was announced as limited. Not used:
+  the challenge scores Liara PaaS integration (apps, releases, logs, metrics), which a VPS bypasses.
+- Rough demo cost for ترب‌گرد: API مریخ 2,290 + web زمین 1,318 + Postgres مریخ 2,290 ≈ 5,900
+  toman/h before VAT ≈ 140,000/day; the 2,000,000 credit covers about two weeks if left on 24/7.
