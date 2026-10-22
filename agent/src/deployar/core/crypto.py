@@ -6,6 +6,7 @@ copied to another row fails to decrypt. Keys are versioned for rotation.
 
 import base64
 import os
+from functools import lru_cache
 
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -43,7 +44,7 @@ class TokenVault:
             raise DeployarError("token_key_missing", "کلید رمزگشایی توکن پیدا نشد.", f"version {key_version}")
         try:
             plaintext = key.decrypt(blob[:_NONCE], blob[_NONCE:], aad.encode()).decode()
-        except InvalidTag as e:
+        except (InvalidTag, ValueError) as e:  # ValueError: blob too short to hold a nonce
             raise DeployarError("token_decrypt_failed", "توکن ذخیره‌شده قابل خواندن نیست.", aad) from e
         register_secret(plaintext)
         return plaintext
@@ -51,3 +52,11 @@ class TokenVault:
     def rotate(self, blob: bytes, key_version: int, aad: str) -> tuple[bytes, int]:
         """Re-encrypt under the current key (used by the rotate_token_keys job)."""
         return self.encrypt(self.decrypt(blob, key_version, aad), aad)
+
+
+@lru_cache
+def get_vault() -> TokenVault:
+    from deployar.core.config import get_settings
+
+    s = get_settings()
+    return TokenVault(s.token_keys(), s.deployar_token_key_version)

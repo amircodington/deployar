@@ -1,0 +1,4 @@
+{"user": {"_id": "64e7aaaaaaaaaaaaaaaaaaaa", "email": "owner@example.com", "nationalCode": "0011223344",
+  "storage": {"accessKey": "FAKEACCESSKEY123", "secretKey": "FAKE-SECRET-KEY-should-never-leave"}},
+ "plans": {"projects": {"zamin": {"RAM": {"amount": 0.5}, "CPU": {"amount": 0.5}, "price": 950000}}},
+ "databaseVersions": {"postgres": ["16.14", "17.10"]}}

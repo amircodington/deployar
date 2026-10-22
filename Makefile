@@ -1,5 +1,5 @@
 # Deployar tasks. `make check` runs before every push (.githooks/pre-push).
-.PHONY: setup dev down check agent-check web-check migrate seed eval
+.PHONY: setup dev down check agent-check web-check migrate seed eval push-test
 
 AGENT = cd agent &&
 WEB = cd web &&
@@ -40,3 +40,6 @@ seed:  ## make seed EMAIL=you@example.com — the single user (idempotent)
 
 eval:  ## SRE eval set, lands in B-17
 	$(AGENT) uv run python -m deployar.evals.run
+
+push-test:  ## live, read-only checks against the real Liara account (needs a token in Settings)
+	$(AGENT) uv run pytest -m live -s -q tests/live

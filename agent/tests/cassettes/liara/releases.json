@@ -1,0 +1,4 @@
+{"total": 2, "currentRelease": "r2", "readyReleasesCount": 2, "platform": "docker",
+ "releases": [{"_id": "r2", "state": "READY", "createdAt": "2026-10-22T08:00:00Z", "finishedAt": "2026-10-22T08:02:10Z",
+               "gitInfo": {"commit": "8c17bc2"}},
+              {"_id": "r1", "state": "READY", "createdAt": "2026-10-21T08:00:00Z", "finishedAt": "2026-10-21T08:03:00Z"}]}

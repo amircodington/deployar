@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     boxapi_base_url: str = "https://ai.boxapi.ir/ai/v1"
     boxapi_api_key: SecretStr = SecretStr("")
 
-    liara_api_base: str = "https://api.iran.liara.ir"
+    liara_api_base: str = "https://api.liara.ir"
     deployar_workdir: Path = Path("~/.deployar/work").expanduser()
     agent_url: str = "http://localhost:8800"
 

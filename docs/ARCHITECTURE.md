@@ -374,7 +374,8 @@ Card payloads (selection):
 
 ## 9. Tool registry
 
-Endpoints are **to verify in T-01**. "Limitation case" is what the tool returns when the API can't help.
+Endpoints below were the first guess; the **verified** list (base `https://api.liara.ir`, `teamID` for
+teams) is `skills/liara-api/SKILL.md`. "Limitation case" is what the tool returns when the API can't help.
 
 | Tool | Risk | Endpoint | Inputs | Output | Limitation case |
 |---|---|---|---|---|---|

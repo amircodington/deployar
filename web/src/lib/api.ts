@@ -43,9 +43,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ decision, signature }),
     }),
-  connectLiara: (token: string) =>
-    call<{ id: string; token_last4: string }>("/api/connections/liara", {
+  connectLiara: (token: string, team_id?: string) =>
+    call<{ id: string; token_last4: string; account: string | null }>("/api/connections/liara", {
       method: "POST",
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, team_id: team_id || null }),
     }),
+  liaraConnection: () =>
+    call<{ id: string; token_last4: string; team_id: string | null; account: string | null }>("/api/connections/liara"),
 };

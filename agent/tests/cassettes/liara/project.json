@@ -1,0 +1,4 @@
+{"project": {"_id": "p1", "project_id": "torob-gard", "type": "docker", "status": "ACTIVE", "scale": 1,
+  "planID": "mars", "hourlyPrice": 2290, "isDeployed": true, "zeroDowntime": true,
+  "envs": [{"key": "DATABASE_URL", "value": "postgres://app:hunter2-db-pass@db:5432/x", "encrypted": false},
+           {"key": "DJANGO_SECRET_KEY", "value": "django-insecure-very-secret-value", "encrypted": true}]}}

@@ -1,0 +1,3 @@
+[{"type": "stdout", "datetime": "2026-10-22T09:00:01Z", "message": "Booting gunicorn"},
+ {"type": "stderr", "datetime": "2026-10-22T09:05:44Z", "message": "WORKER TIMEOUT (pid:42)"},
+ {"type": "stdout", "datetime": "2026-10-22T09:06:00Z", "message": "GET /api/health 200"}]

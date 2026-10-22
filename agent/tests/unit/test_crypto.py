@@ -65,3 +65,11 @@ def test_bad_keys_rejected() -> None:
         TokenVault({"1": base64.b64encode(b"short").decode()}, current_version=1)
     with pytest.raises(ValueError):
         TokenVault({"1": K1}, current_version=2)
+
+
+def test_malformed_blob_fails_cleanly() -> None:
+    vault = TokenVault({"1": K1}, current_version=1)
+    for blob in (b"", b"\x00", b"\x00" * 20):
+        with pytest.raises(DeployarError) as e:
+            vault.decrypt(blob, 1, AAD)
+        assert e.value.code == "token_decrypt_failed"

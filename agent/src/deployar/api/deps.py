@@ -18,6 +18,7 @@ from deployar.llm.fake_backend import FakeBackend, demo_registry
 from deployar.runtime.approvals import ApprovalService
 from deployar.runtime.events import EventBus
 from deployar.runtime.orchestrator import Runtime
+from deployar.tools.liara import read as _liara_read  # noqa: F401  registers the Liara read tools
 from deployar.tools.registry import REGISTRY
 
 COOKIE = "deployar_session"

@@ -46,7 +46,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-05 | Tool registry, result types, `tool_call` recording | P0 | B-03, B-00 | — | | ✓ |
 | B-06 | LLM seam, Claude backend, orchestrator, event bus, runs API + SSE | P0 | B-04, B-05 | — | | ✓ |
 | B-07 | Web shell: RTL layout, tokens, chat, checklist, approval card, SSE | P0 | B-06 (fake events ok) | T-16, T-21 | | ✓ |
-| B-08 | LiaraClient + connections + read tools | P0 | B-05 | T-01, T-04 | | ○ |
+| B-08 | LiaraClient + connections + read tools | P0 | B-05 | T-01, T-04 | | ✓ |
 | B-09 | GitHub client + repo analyzer + `analyze_repo` | P1 | B-05 | T-06, T-13 | | ○ |
 | B-10 | Plan proposal (`list_plans`, price, plan card) + migration 0101 | P1 | B-08, B-09 | T-04 | | ○ |
 | B-11 | Sensitive deploy tools: create_app, create_database, set_env, deploy_release | P1 | B-04, B-08 | T-01 | | ○ |
@@ -199,6 +199,8 @@ The 50 security points live here. Write the tests first.
   `get_metrics`, `list_releases`, `get_env_keys`; every value `{value, source, observed_at}`.
 - **Done when**: pasting a token in settings validates it with `get_balance`, stores it encrypted, shows
   last4; each read tool passes against a cassette; one `-m live` test reads the real balance.
+- **Status 2026-10-22**: done against synthetic cassettes from the official OpenAPI spec
+  (`skills/liara-api/SKILL.md`); the live balance test waits for Mohammad's token in Settings.
 - **Also**: add `make push-test` → `cd agent && uv run pytest -m live` (Mohammad's call, 2026-10-22).
   Register the `live` marker and keep it out of `make check` (`addopts = "-m 'not live'"`). Live tests
   that create or change anything on Liara spend balance: ask Mohammad before adding them.
