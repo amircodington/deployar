@@ -277,7 +277,9 @@ erDiagram
 - Unique: `(project_id, commit_sha, detector_version)` — re-analysis of the same commit is a cache hit.
 - Index `(project_id, created_at desc)` — "latest analysis" for the plan card.
 
-`detected` shape (every fact carries the file it came from):
+`detected` shape (every fact carries the file it came from). As built (`detect@1`), the per-app facts
+below sit in an `apps[]` list (a monorepo like ترب‌گرد gives `api` + `web`), and `database`, `cache`,
+`env_vars`, `warnings` are repo-level:
 
 ```json
 {

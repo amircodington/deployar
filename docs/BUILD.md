@@ -47,7 +47,7 @@ Order inside a phase is the build order. `○` todo · `✱` doing · `✓` done
 | B-06 | LLM seam, Claude backend, orchestrator, event bus, runs API + SSE | P0 | B-04, B-05 | — | | ✓ |
 | B-07 | Web shell: RTL layout, tokens, chat, checklist, approval card, SSE | P0 | B-06 (fake events ok) | T-16, T-21 | | ✓ |
 | B-08 | LiaraClient + connections + read tools | P0 | B-05 | T-01, T-04 | | ✓ |
-| B-09 | GitHub client + repo analyzer + `analyze_repo` | P1 | B-05 | T-06, T-13 | | ○ |
+| B-09 | GitHub client + repo analyzer + `analyze_repo` | P1 | B-05 | T-06, T-13 | | ✓ |
 | B-10 | Plan proposal (`list_plans`, price, plan card) + migration 0101 | P1 | B-08, B-09 | T-04 | | ○ |
 | B-11 | Sensitive deploy tools: create_app, create_database, set_env, deploy_release | P1 | B-04, B-08 | T-01 | | ○ |
 | B-12 | Deploy mode: prompt, step template, deployment watcher, live URL | P1 | B-10, B-11, B-07 | T-14, T-11 | | ○ |
@@ -221,6 +221,8 @@ per-step approvals, with build logs streaming in the checklist (`SYSTEM-DESIGN.m
   `agent/tests/unit/test_detectors.py`, `web/src/components/cards/RepoAnalysisCard.tsx`.
 - **Done when**: on the T-06 fixtures, platform and DB detection match the labels (T-13 runs the
   scoring); each finding lists the evidence file; private repo without access → reconnect card.
+- **Status 2026-10-22**: T-06 fixtures don't exist yet; tests use ترب‌گرد's real manifests plus five
+  synthetic repo shapes (`tests/repo_fixtures.py`, `test_detectors.py`). T-13 re-scores on T-06 later.
 
 ### B-10 · Plan proposal · 3 h
 

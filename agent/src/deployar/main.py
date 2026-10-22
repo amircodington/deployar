@@ -11,7 +11,7 @@ from deployar.core.errors import DeployarError
 _STATUS = {
     "approval_bad_signature": 403, "approval_not_pending": 409, "no_user": 401, "unauthorized": 401,
     "bad_passphrase": 401, "not_found": 404, "no_liara_connection": 404, "liara_unauthorized": 400,
-    "liara_unreachable": 502,
+    "liara_unreachable": 502, "no_github_connection": 404, "github_unauthorized": 400,
 }  # fmt: skip
 
 

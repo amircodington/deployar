@@ -48,6 +48,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token, team_id: team_id || null }),
     }),
+  connectGithub: (token: string) =>
+    call<{ id: string; token_last4: string; login: string }>("/api/connections/github", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+  githubConnection: () => call<{ id: string; token_last4: string; login: string }>("/api/connections/github"),
   liaraConnection: () =>
     call<{ id: string; token_last4: string; team_id: string | null; account: string | null }>("/api/connections/liara"),
 };

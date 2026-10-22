@@ -79,3 +79,33 @@ describe("cards render from fixtures", () => {
     expect(renderToStaticMarkup(<RiskChip risk="human_only" />)).toContain("فقط خودت");
   });
 });
+
+describe("repo analysis card", () => {
+  it("shows every app with its source file, the database with extensions, and env fills", async () => {
+    const { RepoAnalysisCard } = await import("./RepoAnalysisCard");
+    const html = renderToStaticMarkup(
+      <RepoAnalysisCard
+        data={{
+          repo: "amox/torob-gard",
+          commit_sha: "8c17bc2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          apps: [
+            { root: "api", platform: { value: "docker", source: "api/Dockerfile" }, framework: { name: "django" },
+              runtime: { name: "python", version: "3.13", source: "api/pyproject.toml" }, port: { value: 8000, source: "api/Dockerfile" },
+              ram_estimate_mb: { value: 1024, basis: "" }, warnings: [{ code: "dev_server_in_cmd", message_fa: "سرور توسعه" }] },
+            { root: "web", platform: { value: "next", source: "web/package.json" }, ram_estimate_mb: { value: 1024, basis: "" }, warnings: [] },
+          ],
+          database: { kind: "postgres", extensions: ["pgvector", "postgis"], evidence: ["api/torobgard/settings.py#DATABASES"] },
+          cache: { kind: "redis" },
+          env_vars: [{ key: "DATABASE_URL", secret: true, fill: "from_created_db", source: ".env.example:1" }],
+          warnings: [],
+        }}
+      />,
+    );
+    expect(html).toContain("amox/torob-gard@8c17bc2");
+    expect(html).toContain("api/Dockerfile");
+    expect(html).toContain("postgis");
+    expect(html).toContain("از دیتابیسی که می‌سازم");
+    expect(html).toContain("حدود ۱۰۲۴ مگابایت RAM");
+    expect(html).toContain("سرور توسعه");
+  });
+});

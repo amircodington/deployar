@@ -161,7 +161,11 @@ async def _execute(
         tool_names: dict[str, str] = {}
         parts: list[str] = []
         done: Done | None = None
-        tool_ctx = ToolContext(run_id, project_id, user_id, rt.sessions)
+
+        async def emit(card_type: str, payload: dict[str, Any]) -> None:
+            await rt.bus.publish(run_id, "card", {"card_type": card_type, "payload": payload})
+
+        tool_ctx = ToolContext(run_id, project_id, user_id, rt.sessions, emit)
         async for ev in rt.llm.run(prompt=text, system_prompt=_prompt(spec), registry=rt.registry,
                                    tool_ctx=tool_ctx, can_use_tool=can_use_tool, max_turns=spec.MAX_TURNS,
                                    resume=resume):  # fmt: skip

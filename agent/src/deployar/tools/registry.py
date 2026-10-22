@@ -35,6 +35,7 @@ class ToolContext:
     project_id: uuid.UUID | None  # a chat run may start before any project exists
     user_id: uuid.UUID
     sessions: async_sessionmaker[AsyncSession]
+    emit: Callable[[str, dict[str, Any]], Awaitable[None]] | None = None  # pushes a card to the run's stream
 
 
 ToolFn = Callable[[ToolContext, dict[str, Any]], Awaitable[ToolResult]]
@@ -107,6 +108,8 @@ class Registry:
             await self._record(ctx, spec, args, tool_call_id, result, _ms(started), crash=repr(e))
             return _mcp(result)
         await self._record(ctx, spec, args, tool_call_id, result, _ms(started))
+        if isinstance(result, Ok) and result.card and ctx.emit:
+            await ctx.emit(result.card[0], redact(result.card[1]))
         return _mcp(result)
 
     async def _start(self, ctx: ToolContext, spec: ToolSpec, args: dict[str, Any]) -> uuid.UUID:

@@ -5,6 +5,9 @@ import { RiskChip } from "@/components/RiskChip";
 import { ApprovalCard } from "@/components/cards/ApprovalCard";
 import { HumanOnlyCard } from "@/components/cards/HumanOnlyCard";
 import { LimitationBox } from "@/components/cards/LimitationBox";
+import { RepoAnalysisCard } from "@/components/cards/RepoAnalysisCard";
+import { fa } from "@/lib/fa";
+import Link from "next/link";
 import type { ChatItem } from "@/lib/runState";
 
 function ToolRow({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
@@ -63,6 +66,17 @@ export function MessageList({
             return <LimitationBox key={item.id} message_fa={item.message_fa} workaround_fa={item.workaround_fa} />;
           case "human_only":
             return <HumanOnlyCard key={item.id} task={item.task} steps_fa={item.steps_fa} />;
+          case "repo_analysis":
+            return <RepoAnalysisCard key={item.id} data={item.data} />;
+          case "github_reconnect":
+            return (
+              <div key={item.id}>
+                <LimitationBox message_fa={item.message_fa} />
+                <Link href="/settings/connections" className="pressable mt-2 inline-flex min-h-11 items-center rounded-full bg-raised px-5 text-[15px]">
+                  {fa.reconnect}
+                </Link>
+              </div>
+            );
         }
       })}
     </div>

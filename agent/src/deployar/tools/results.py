@@ -16,6 +16,7 @@ class Ok:
     data: Any
     source: str | None = None
     observed_at: str = field(default_factory=_now)
+    card: tuple[str, dict[str, Any]] | None = None  # (card_type, payload) the UI draws from this result
 
 
 @dataclass(frozen=True)
