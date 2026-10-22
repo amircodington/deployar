@@ -5,6 +5,7 @@ worker stays LLM-free, ADR 7). Everything the user sees goes through the event b
 """
 
 import asyncio
+import re
 import uuid
 from dataclasses import dataclass, field
 from importlib import resources
@@ -23,10 +24,12 @@ from deployar.models import Approval, Conversation, Message, Project, Run, RunSt
 from deployar.runtime.approvals import ApprovalService, Created
 from deployar.runtime.events import EventBus
 from deployar.runtime.gate import PREFIX, GateContext, make_gate
-from deployar.runtime.modes import chat
+from deployar.runtime.modes import chat, deploy
 from deployar.tools.registry import Registry, ToolContext
 
-MODES: dict[str, ModuleType] = {"chat": chat}
+MODES: dict[str, ModuleType] = {"chat": chat, "deploy": deploy}
+# a repo link or a "put it online" ask starts a deploy run; anything else is a chat
+DEPLOY_HINT = re.compile(r"github\.com/|بالا بیار|آنلاین کن|دیپلوی|deploy|منتشر کن|بساز|ادامه بده", re.I)
 
 
 @dataclass
@@ -47,10 +50,11 @@ async def start_run(
     rt: Runtime,
     user_id: uuid.UUID,
     text: str,
-    mode: str = "chat",
+    mode: str | None = None,
     project_id: uuid.UUID | None = None,
     conversation_id: uuid.UUID | None = None,
 ) -> tuple[uuid.UUID, uuid.UUID]:
+    mode = mode or ("deploy" if DEPLOY_HINT.search(text) else "chat")
     if mode not in MODES:
         raise DeployarError("unknown_mode", fa.UNKNOWN_MODE, mode)
     spec = MODES[mode]
@@ -102,6 +106,24 @@ async def _set_step(rt: Runtime, step: RunStep, status: str) -> None:
     times = {"started_at": func.now()} if status == "running" else {"finished_at": func.now()}
     async with rt.sessions.begin() as s:
         await s.execute(update(RunStep).where(RunStep.id == step.id).values(status=status, **times))
+
+
+async def _advance(
+    rt: Runtime, run_id: uuid.UUID, steps: list[RunStep], spec: ModuleType, current: RunStep, tool: str
+) -> tuple[RunStep, dict[str, str]] | None:
+    """Move the checklist to the step that owns this tool; steps never move backwards."""
+    owner = next((i for i, st in enumerate(spec.STEPS) if tool in st.get("tools", ())), None)
+    at = steps.index(current)
+    if owner is None or owner <= at:
+        return None
+    for st in steps[at:owner]:
+        await _set_step(rt, st, "done")
+        await rt.bus.publish(run_id, "step.done", {"step_id": str(st.id), "key": st.key, "title_fa": st.label_fa})
+    nxt = steps[owner]
+    ref = {"step_id": str(nxt.id), "key": nxt.key, "title_fa": nxt.label_fa}
+    await _set_step(rt, nxt, "running")
+    await rt.bus.publish(run_id, "step.started", ref)
+    return nxt, ref
 
 
 async def _execute(
@@ -177,6 +199,7 @@ async def _execute(
             elif isinstance(ev, ToolUse):
                 name = ev.name.removeprefix(PREFIX)
                 tool_names[ev.id] = name
+                step, step_ref = await _advance(rt, run_id, steps, spec, step, name) or (step, step_ref)
                 await rt.bus.publish(run_id, "tool.called",
                                      {"name": name, "risk": rt.registry.risk_of(name), "status": "called"})  # fmt: skip
             elif isinstance(ev, ToolResult):
@@ -198,6 +221,8 @@ async def _execute(
             raise DeployarError("llm_failed", fa.LLM_FAILED, (done.error or "") if done else "no result")
         await _set_step(rt, step, "done")
         await rt.bus.publish(run_id, "step.done", step_ref)
+        for later in steps[steps.index(step) + 1 :]:  # not reached this run (e.g. waiting for the user's yes)
+            await _set_step(rt, later, "skipped")
         await _set_run(rt, run_id, status="succeeded", finished_at=func.now())
         await rt.bus.publish(run_id, "run.done", {"status": "succeeded"})
     except asyncio.CancelledError:

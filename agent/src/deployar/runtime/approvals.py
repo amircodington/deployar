@@ -25,7 +25,7 @@ from deployar import messages_fa as fa
 from deployar.core.errors import DeployarError
 from deployar.core.ids import new_id
 from deployar.core.redact import redact
-from deployar.models import Approval, ToolCall
+from deployar.models import Approval, Run, ToolCall
 
 TTL = timedelta(minutes=10)
 _DECISION_KEY_TTL_S = 15 * 60
@@ -85,6 +85,12 @@ class ApprovalService:
         self.sessions = sessions
         self.redis = redis
         self._secret = secret
+
+    async def run_project(self, run_id: uuid.UUID) -> uuid.UUID | None:
+        """A run started from home gets its project mid-run (analyze_repo); the gate asks here."""
+        async with self.sessions() as s:
+            pid: uuid.UUID | None = await s.scalar(select(Run.project_id).where(Run.id == run_id))
+        return pid
 
     def _sign(
         self, approval_id: uuid.UUID, tool_call_id: uuid.UUID, h: bytes, user_id: uuid.UUID, expires_at: datetime

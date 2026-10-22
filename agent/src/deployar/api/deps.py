@@ -22,6 +22,7 @@ from deployar.tools.github import analyze as _github_analyze  # noqa: F401  regi
 from deployar.tools.liara import deploy as _liara_deploy  # noqa: F401  registers the sensitive Liara tools
 from deployar.tools.liara import plan as _liara_plan  # noqa: F401  registers propose_plan
 from deployar.tools.liara import read as _liara_read  # noqa: F401  registers the Liara read tools
+from deployar.tools.liara import watch as _liara_watch  # noqa: F401  registers watch_deployment, request_env_values
 from deployar.tools.registry import REGISTRY
 
 COOKIE = "deployar_session"

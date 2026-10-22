@@ -6,7 +6,7 @@ import { RunChecklist } from "@/components/checklist/RunChecklist";
 import { StatusChip } from "@/components/ui";
 import { AgentError, api } from "@/lib/api";
 import { fa } from "@/lib/fa";
-import { addUserMessage, applyEvent, emptyView, setApproval, type View } from "@/lib/runState";
+import { addUserMessage, applyEvent, emptyView, markEnvSent, setApproval, type View } from "@/lib/runState";
 import { subscribeRun } from "@/lib/sse";
 import { useDashboard } from "@/lib/useDashboard";
 import { Composer } from "./Composer";
@@ -127,7 +127,14 @@ export function Workspace({ projectId }: { projectId?: string }) {
                 </div>
               </div>
             ) : (
-              <MessageList items={view.items} onDecide={decide} />
+              <MessageList
+                items={view.items}
+                onDecide={decide}
+                onEnvDone={(id, refs) => {
+                  setView((v) => markEnvSent(v, id));
+                  send(fa.envMessage(refs.map((r) => `${r.key}=${r.value_ref}`).join("، ")));
+                }}
+              />
             )}
             {reconnecting && busy && <p className="text-[13px] text-ink-muted">{fa.connectionLost}</p>}
             <div ref={bottom} />

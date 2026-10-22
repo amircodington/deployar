@@ -69,11 +69,12 @@ def make_gate(
         if risk == "human_only":
             await _record_limitation(service, ctx, name, args)
             return PermissionResultDeny(message=fa.GUIDES[name])
-        if risk != "sensitive" or ctx.project_id is None:  # an approval always belongs to a project
+        project_id = ctx.project_id or await service.run_project(ctx.run_id)
+        if risk != "sensitive" or project_id is None:  # an approval always belongs to a project
             return PermissionResultDeny(message=fa.TOOL_NOT_ALLOWED)
 
         preview = preview_for(name, args) if preview_for else {"tool": name}
-        created = await service.create(ctx.run_id, ctx.project_id, ctx.user_id, name, args, preview)
+        created = await service.create(ctx.run_id, project_id, ctx.user_id, name, args, preview)
         if on_requested:
             await on_requested(created)
         status = await service.wait(created.approval_id, timeout_s=wait_s)

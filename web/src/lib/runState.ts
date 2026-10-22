@@ -1,5 +1,6 @@
 /** Pure reducer from SSE events to what the workspace shows; tested without a browser. */
 import type { ApprovalState } from "@/components/cards/ApprovalCard";
+import type { DeployProgress, EnvRequest, LiveUrl } from "@/components/cards/DeployCards";
 import type { PlanProposal } from "@/components/cards/PlanCard";
 import type { RepoAnalysis } from "@/components/cards/RepoAnalysisCard";
 import type { Step } from "@/components/checklist/RunChecklist";
@@ -15,7 +16,10 @@ export type ChatItem =
   | { kind: "human_only"; id: string; task: string; steps_fa: string[] }
   | { kind: "repo_analysis"; id: string; data: RepoAnalysis }
   | { kind: "github_reconnect"; id: string; message_fa: string }
-  | { kind: "plan_proposal"; id: string; data: PlanProposal };
+  | { kind: "plan_proposal"; id: string; data: PlanProposal }
+  | { kind: "deploy_progress"; id: string; data: DeployProgress }
+  | { kind: "live_url"; id: string; data: LiveUrl }
+  | { kind: "env_request"; id: string; data: EnvRequest; sent?: boolean };
 
 export type RunPhase = "idle" | "running" | "awaiting_approval" | "succeeded" | "failed" | "cancelled";
 
@@ -49,6 +53,10 @@ export function setApproval(v: View, approvalId: string, state: ApprovalState, e
     (i) => i.kind === "approval" && i.id === approvalId,
     (i) => ({ ...(i as Extract<ChatItem, { kind: "approval" }>), state, error }),
   );
+}
+
+export function markEnvSent(v: View, id: string): View {
+  return patchItem(v, (i) => i.kind === "env_request" && i.id === id, (i) => ({ ...i, sent: true }) as ChatItem);
 }
 
 export function applyEvent(v: View, e: RunEvent): View {
@@ -125,7 +133,21 @@ export function applyEvent(v: View, e: RunEvent): View {
       if (e.data.card_type === "github_reconnect") {
         return { ...v, items: [...v.items, { kind: "github_reconnect", id: localId("g"), message_fa: String(p.message_fa ?? "") }] };
       }
-      return v; // other cards land with their tasks (B-10, B-13, B-19)
+      if (e.data.card_type === "deploy_progress") {
+        // one card per deployment, updated in place as the build moves
+        const data = p as unknown as DeployProgress;
+        const has = v.items.some((i) => i.kind === "deploy_progress" && i.id === data.deployment_id);
+        return has
+          ? patchItem(v, (i) => i.kind === "deploy_progress" && i.id === data.deployment_id, (i) => ({ ...i, data }) as ChatItem)
+          : { ...v, items: [...v.items, { kind: "deploy_progress", id: data.deployment_id, data }] };
+      }
+      if (e.data.card_type === "live_url") {
+        return { ...v, items: [...v.items, { kind: "live_url", id: localId("live"), data: p as unknown as LiveUrl }] };
+      }
+      if (e.data.card_type === "env_request") {
+        return { ...v, items: [...v.items, { kind: "env_request", id: localId("env"), data: p as unknown as EnvRequest }] };
+      }
+      return v; // other cards land with their tasks (B-13, B-19)
     }
     case "run.done":
       return { ...v, phase: e.data.status, summary_fa: e.data.summary_fa };

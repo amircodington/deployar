@@ -110,3 +110,19 @@ async def test_gate_ids_are_uuids(service: ApprovalService) -> None:
     gate, _, requested = await gate_for(service, wait_s=0.1)
     await gate("mcp__deployar__restart_app", {"project": "p"}, CTX)
     assert isinstance(requested[0].approval_id, uuid.UUID)
+
+
+async def test_a_run_bound_to_a_project_mid_run_still_gets_cards(service: ApprovalService) -> None:
+    c = await make_ctx()  # the run row has the project; the gate was made before it existed
+    requested: list[Created] = []
+
+    async def on_requested(created: Created) -> None:
+        requested.append(created)
+
+    gate = make_gate(service, GateContext(run_id=c.run, project_id=None, user_id=c.user), RISK.get, wait_s=5,
+                     on_requested=on_requested)  # fmt: skip
+    pending = asyncio.create_task(gate("mcp__deployar__restart_app", {"project": "p"}, CTX))
+    created = await first_request(requested, pending)
+    assert await sql("select project_id from approval where id = $1", created.approval_id) == c.project
+    await service.decide(created.approval_id, c.user, "reject", created.token)
+    assert isinstance(await pending, PermissionResultDeny)

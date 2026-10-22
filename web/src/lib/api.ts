@@ -96,6 +96,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token }),
     }),
+  envValue: (projectId: string, key: string, value: string) =>
+    call<{ key: string; value_ref: string }>(`/api/projects/${projectId}/env-values`, {
+      method: "POST",
+      body: JSON.stringify({ key, value }),
+    }),
   githubConnection: () => call<{ id: string; token_last4: string; login: string }>("/api/connections/github"),
   liaraConnection: () =>
     call<{ id: string; token_last4: string; team_id: string | null; account: string | null }>("/api/connections/liara"),

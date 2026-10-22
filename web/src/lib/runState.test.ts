@@ -43,4 +43,16 @@ describe("run state", () => {
     });
     expect(v.items[0]).toMatchObject({ kind: "limitation", message_fa: "نمی‌شود" });
   });
+
+  it("keeps one build card per deployment and updates it in place", () => {
+    const card = (state: string, line: string): RunEvent => ({
+      type: "card",
+      data: { card_type: "deploy_progress", payload: { deployment_id: "d1", app: "torob-gard", state, log_tail: [line] } },
+    });
+    let v = [card("BUILDING", "Step 1/5"), card("DEPLOYING", "Step 5/5")].reduce(applyEvent, emptyView);
+    expect(v.items).toHaveLength(1);
+    expect(v.items[0].kind === "deploy_progress" && v.items[0].data.state).toBe("DEPLOYING");
+    v = applyEvent(v, { type: "card", data: { card_type: "live_url", payload: { url: "https://torob-gard.liara.run" } } });
+    expect(v.items.map((i) => i.kind)).toEqual(["deploy_progress", "live_url"]);
+  });
 });

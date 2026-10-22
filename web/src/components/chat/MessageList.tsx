@@ -3,6 +3,7 @@
 import { Icon } from "@/components/Icon";
 import { RiskChip } from "@/components/RiskChip";
 import { ApprovalCard } from "@/components/cards/ApprovalCard";
+import { DeployProgressCard, EnvRequestCard, LiveUrlCard } from "@/components/cards/DeployCards";
 import { HumanOnlyCard } from "@/components/cards/HumanOnlyCard";
 import { LimitationBox } from "@/components/cards/LimitationBox";
 import { PlanCard } from "@/components/cards/PlanCard";
@@ -30,9 +31,11 @@ function ToolRow({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
 export function MessageList({
   items,
   onDecide,
+  onEnvDone,
 }: {
   items: ChatItem[];
   onDecide: (approvalId: string, decision: "approve" | "reject") => void;
+  onEnvDone: (itemId: string, refs: { key: string; value_ref: string }[]) => void;
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -69,6 +72,12 @@ export function MessageList({
             return <HumanOnlyCard key={item.id} task={item.task} steps_fa={item.steps_fa} />;
           case "plan_proposal":
             return <PlanCard key={item.id} data={item.data} />;
+          case "deploy_progress":
+            return <DeployProgressCard key={item.id} data={item.data} />;
+          case "live_url":
+            return <LiveUrlCard key={item.id} data={item.data} />;
+          case "env_request":
+            return <EnvRequestCard key={item.id} data={item.data} sent={item.sent} onDone={(refs) => onEnvDone(item.id, refs)} />;
           case "repo_analysis":
             return <RepoAnalysisCard key={item.id} data={item.data} />;
           case "github_reconnect":

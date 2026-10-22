@@ -44,7 +44,13 @@ export function ApprovalCard({
   const open = state === "pending" && left > 0;
 
   return (
-    <section className="rise rounded-[24px] bg-amber-soft p-5" aria-live="polite">
+    <section
+      // amber means "your yes is needed" and nothing else, so a decided card goes neutral
+      className={`rise rounded-[24px] p-5 transition-colors duration-300 ${
+        state === "pending" || state === "approving" ? "bg-amber-soft" : "bg-raised/50"
+      }`}
+      aria-live="polite"
+    >
       <header className="mb-2 flex items-center gap-2">
         <h3 className="flex-1 text-lg font-medium">{card.summary_fa}</h3>
         <RiskChip risk="sensitive" />

@@ -20,7 +20,7 @@ Rt = Annotated[Runtime, Depends(get_runtime)]
 
 class RunIn(BaseModel):
     text: str
-    mode: str = "chat"
+    mode: str | None = None  # None: deploy when the text asks for it, else chat
     project_id: uuid.UUID | None = None
     conversation_id: uuid.UUID | None = None
 
