@@ -1,0 +1,43 @@
+# Liara console check — 2026-10-22
+
+Read in the built-in browser on Mohammad's logged-in account. Nothing was created or changed; the
+create-app wizard was opened up to step 4 (plans) and left. The API token page was opened but its
+token section was not read (hard rule 2).
+
+## Account
+
+- Team credit: **2,000,000 toman** (shown as «اعتبار تیم», so this is a team account).
+- Apps: none yet.
+- Two-factor login: **off**. Turn it on before the demo; this account holds a token with full access.
+- API token page: `console.liara.ir/API` (token has an expiry setting).
+
+## Create-app wizard (what `create_app` must cover)
+
+1. Platform: NodeJS, NextJS, Laravel, PHP, Python, Django, Flask, .NET, React, Angular, Vue, Static, Go, Docker.
+2. App id → `<id>.liara.run`. **The liara.run address is active for 7 days from the first deploy**
+   (meant for testing). Demo timing and B-14 (custom domain) depend on this.
+3. **Private network**: app and database must be in the same private network to talk. `create_app`
+   and `create_database` need a network step (or pick an existing one).
+4. Plan (tiers پایه / نقره‌ای / طلایی; numbers below are the default tab, پایه).
+5. (not opened: final step creates the app)
+
+## App plans, tier پایه (VAT added on top; location Iran; traffic unlimited, fair use)
+
+| Plan | Monthly (toman) | Hourly (toman) | RAM | vCPU | Disk |
+|---|---|---|---|---|---|
+| زمین | 950,000 | 1,318 | 512 MB | 0.5 | 5 GB |
+| مریخ | 1,650,000 | 2,290 | 1 GB | 1 | 10 GB |
+| مشتری | 2,950,000 | 4,096 | 2 GB | 1 | 20 GB |
+| زحل | 5,300,000 | 7,360 | 4 GB | 2 | 40 GB |
+| اورانوس | 9,200,000 | 12,776 | 8 GB | 4 | 80 GB |
+| نپتون | 16,000,000 | 22,222 | 16 GB | 8 | 160 GB |
+| پلوتون | 28,000,000 | 38,888 | 32 GB | 16 | 320 GB |
+
+Billing is hourly, so a demo run costs hours, not a month: one زمین app for 48 h ≈ 63,000 toman
+before VAT. This is the dated static table B-10 may fall back to if the API has no prices.
+
+## Other
+
+- Liara sells an AI API (news: Claude Sonnet 4.5, GPT-5, Qwen, JEV, embeddings), billed from the same
+  credit. Possible later replacement for BoxAPI behind the `LLMClient` seam (decision #2); not decided.
+- Liara Postgres has pgvector (news item). PostGIS support not checked.

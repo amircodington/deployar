@@ -10,3 +10,4 @@ Numbered. Do not reverse one without asking Mohammad.
 6. **2026-10-22 — Working name «همکار فنی».**
 7. **2026-10-22 — Liara account ready** with an API token and ~2,000,000 toman balance for the demo.
 8. **2026-10-22 — No amox-os.** Conventions come from `diarman`, `future-mission-2d` and `In-Store-Agent (Torob)`.
+9. **2026-10-22 — Test projects = `torob-gard` and `trading-engine (Wallex)`.** Both live in `~/Workspace`; Hamkar is tested by deploying and operating them on Liara. Extends #5 (demo app). Neither has a git remote yet, and `analyze_repo` reads from GitHub, so each needs a GitHub repo first.
