@@ -79,7 +79,7 @@ async def test_database_url_goes_to_set_env_only_as_ciphertext() -> None:
     respx.get(f"{API}/v1/me").respond(json={"user": {}, "databaseVersions": {"postgres": [
         {"value": "16.14", "postgisValue": "3.6"}, {"value": "17.6"}]}})  # fmt: skip
     created = respx.post(f"{API}/v1/databases").respond(json={"databaseID": "db-9"})
-    db_row = {"status": "RUNNING", "hostname": "torob-gard-db", "port": 5432, "username": "root",
+    db_row = {"status": "RUNNING", "hostname": "torob-gard-db", "port": 31234, "internalPort": 5432, "username": "root",
               "root_password": CANARY}  # fmt: skip
     respx.get(f"{API}/v1/databases/db-9").respond(json={"database": db_row})
     respx.get(f"{API}/v1/projects/torob-gard").respond(json={"project": {"envs": [{"key": "KEEP", "value": "1"}]}})

@@ -154,7 +154,8 @@ class LiaraClient:
     async def database_connection(self, db_id: str) -> dict[str, Any]:
         """Status plus what a connection string needs. root_password stays inside the caller."""
         d = (await self.request("GET", f"/v1/databases/{db_id}") or {}).get("database") or {}
-        keep = ("status", "type", "hostname", "internalHostname", "port", "username", "root_password", "dbName")
+        # `port` is the public node port; inside the private network the app uses hostname:internalPort
+        keep = ("status", "type", "hostname", "internalPort", "username", "root_password", "dbName")
         return {k: d.get(k) for k in keep}
 
     async def env_pairs(self, name: str) -> list[dict[str, str]]:

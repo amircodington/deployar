@@ -186,9 +186,12 @@ async def _wait_ready(c: Any, db_id: str, tries: int = 36, every_s: float = 5.0)
 
 def _url(kind: str, conn: dict[str, Any]) -> str:
     """Built here so the password exists only inside this function and the vault."""
-    host = conn.get("internalHostname") or conn.get("hostname")
+    host = conn.get("hostname")
     scheme = {"postgres": "postgresql", "mysql": "mysql", "mariadb": "mysql", "mongodb": "mongodb", "redis": "redis"}
-    port = conn.get("port") or {"postgres": 5432, "mysql": 3306, "mariadb": 3306, "mongodb": 27017, "redis": 6379}[kind]
+    port = (
+        conn.get("internalPort")
+        or {"postgres": 5432, "mysql": 3306, "mariadb": 3306, "mongodb": 27017, "redis": 6379}[kind]
+    )
     user = conn.get("username") or ("default" if kind == "redis" else "root")
     db = conn.get("dbName") or ("postgres" if kind == "postgres" else "")
     tail = f"/{db}" if db else ""

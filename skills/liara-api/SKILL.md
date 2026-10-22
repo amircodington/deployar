@@ -52,7 +52,15 @@ toman amounts (console shows hourly/monthly; `/v1/me` `plans` shape to confirm w
   `pro-max`. `-g2` ids are half price but need a `projectBundlePlans` bundle; not used yet.
 - `databaseVersions.postgres[]` = `{value, postgisValue, pgvectorValue}` (16.14 → PostGIS 3.6, pgvector 0.8.1).
 
-## Write shapes (from the open-source Liara CLI, 2026-10-22; confirm in the live smoke)
+## Write shapes (checked against developers.liara.ir/spec/{paas,dbaas}.yaml and the open-source CLI, 2026-10-22)
+
+The official spec confirms create app (`name, planID, platform, network, readOnlyRootFilesystem`), sources,
+releases (`sourceID, port, type`), update-envs, resize, logs/metrics `since`, releases `page/count`, and
+DB create (`hostname, type, planID, version, publicNetwork, options`). DB detail has **two ports**: `port`
+is the public node port, `internalPort` is the one inside the private network (use `hostname:internalPort`).
+Not in the spec, only in the CLI (confirm in the live smoke): `/v1/networks`, `network` on DB create,
+`GET /v1/releases/{id}`, `GET /v2/releases/{id}/build-logs`, and the DB `status` values.
+
 
 - Network: `GET /v1/networks` → `{networks[{_id, name, createdAt}]}`; create `POST /v1/networks {networkName}`.
 - App: `POST /v1/projects {name, planID, platform, network: <network _id>, readOnlyRootFilesystem}`; first-gen
