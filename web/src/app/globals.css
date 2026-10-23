@@ -6,6 +6,43 @@
   font-weight: 100 900;
   font-display: swap;
 }
+/* Dana is licensed, so its files stay out of the public repo (.gitignore); without them Vazirmatn takes over. */
+@font-face {
+  font-family: "Dana";
+  src: url("/fonts/Dana-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dana";
+  src: url("/fonts/Dana-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dana";
+  src: url("/fonts/Dana-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dana";
+  src: url("/fonts/Dana-DemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dana";
+  src: url("/fonts/Dana-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Dana";
+  src: url("/fonts/Dana-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
 
 /* Brand tokens (docs/design/brand/tokens.json). Dark is the face; light is complete. */
 :root {
@@ -80,7 +117,7 @@
   --color-red-soft: var(--red-soft);
   --color-limit: var(--limit);
   --color-limit-soft: var(--limit-soft);
-  --font-sans: "Vazirmatn", "IRANYekan", system-ui, -apple-system, sans-serif;
+  --font-sans: "Dana", "Vazirmatn", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
   --radius-sm: 10px;
   --radius-md: 16px;

@@ -51,7 +51,7 @@ edge-to-edge and the side panel becomes a top sheet.
 Rows inside cards (issues, steps) are `raised` with `radius-md`. A broken thing gets a `red` 1px
 outline on `red-soft`, never a red fill.
 
-**Type.** Vazirmatn for everything Persian; JetBrains Mono for logs, numbers in evidence, env names.
+**Type.** Dana for everything Persian (Vazirmatn as fallback; Dana files are licensed and git-ignored); JetBrains Mono for logs, numbers in evidence, env names.
 The signature is the **two-weight greeting**: a light line in `ink-faint` above a heavy line in `ink`
 (`greeting-light` + `greeting`). Big metrics are light (`metric`, weight 300), never bold.
 

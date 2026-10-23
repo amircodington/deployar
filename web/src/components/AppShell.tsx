@@ -19,9 +19,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col bg-shell md:rounded-[36px] md:shadow-shell">
         <header className="flex items-center gap-3 px-4 pb-2 pt-[calc(14px+env(safe-area-inset-top,0px))] md:px-8 md:pt-7">
           <Link href="/" className="pressable flex items-center gap-2.5 rounded-full pe-2">
-            <span className="grid size-9 place-items-center rounded-[12px] bg-amber text-on-amber" aria-hidden="true">
-              <Icon name="box" size={18} />
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 36px static mark, next/image adds nothing */}
+            <img src="/logo.png" alt="" width={36} height={36} className="size-9 rounded-[10px]" />
+
             <span className="text-[15px] font-bold">{fa.brand}</span>
           </Link>
           <span className="flex-1" />
