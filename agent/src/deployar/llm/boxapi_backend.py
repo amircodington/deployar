@@ -47,14 +47,21 @@ def _status(out: dict[str, Any]) -> str:
 class BoxAPIBackend:
     def __init__(self, http: httpx.AsyncClient | None = None) -> None:
         s = get_settings()
-        self.model = s.boxapi_model
-        self.keys = [k.get_secret_value() for k in (s.boxapi_api_key, s.boxapi_key_second) if k.get_secret_value()]
+        second = s.boxapi_model_second or s.boxapi_model
+        keys = ((s.boxapi_api_key, s.boxapi_model), (s.boxapi_key_second, second))
+        pairs = [(k.get_secret_value(), m) for k, m in keys
+                 if k.get_secret_value()]  # fmt: skip
+        self.keys, self.models = [k for k, _ in pairs], [m for _, m in pairs] or [s.boxapi_model]
         self.key = 0  # process-wide index: once the first key is spent, every run uses the second
         self.http = http or httpx.AsyncClient(base_url=s.boxapi_base_url.rstrip("/"), timeout=120.0)
 
+    @property
+    def model(self) -> str:
+        return self.models[self.key]  # each key may allow other models (BoxAPI per-key allow list)
+
     async def _chat(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> dict[str, Any]:
-        body = {"model": self.model, "messages": messages, "tools": tools}
         while True:
+            body = {"model": self.model, "messages": messages, "tools": tools}
             headers = {"Authorization": f"Bearer {self.keys[self.key]}"} if self.keys else {}
             r = await self.http.post("/chat/completions", json=body, headers=headers)
             if is_quota_error(r) and self.key + 1 < len(self.keys):

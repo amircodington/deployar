@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     boxapi_api_key: SecretStr = SecretStr("")
     boxapi_key_second: SecretStr = SecretStr("")  # used once the first key is out of credit
     boxapi_model: str = "anthropic/claude-haiku-5.5"
+    boxapi_model_second: str = "openai/gpt-5.4-mini"  # the second key's BoxAPI allow list has only this model
 
     liara_api_base: str = "https://api.liara.ir"
     deployar_workdir: Path = Path("~/.deployar/work").expanduser()

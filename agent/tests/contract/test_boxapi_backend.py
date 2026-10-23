@@ -18,11 +18,11 @@ def _msg(content: str | None = None, calls: list[tuple[str, str, dict[str, Any]]
                                                                "tool_calls": tool_calls or None}}]})  # fmt: skip
 
 
-def _backend(keys: list[str]) -> Any:
+def _backend(keys: list[str], models: list[str] | None = None) -> Any:
     from deployar.llm.boxapi_backend import BoxAPIBackend
 
     b = BoxAPIBackend(http=httpx.AsyncClient(base_url=BASE))
-    b.keys, b.key = keys, 0
+    b.keys, b.models, b.key = keys, models or ["m1"] * len(keys), 0
     return b
 
 
@@ -78,14 +78,15 @@ async def test_a_denied_tool_never_runs() -> None:
 async def test_second_key_takes_over_when_the_first_is_out_of_credit() -> None:
     route = respx.post(f"{BASE}/chat/completions")
     route.side_effect = [httpx.Response(402, json={"error": "insufficient credit"}), _msg("سلام")]
-    backend = _backend(["k1", "k2"])
+    backend = _backend(["k1", "k2"], ["haiku", "gpt-mini"])  # the second key may allow another model only
 
     async def gate(*_: Any) -> Any:
         return PermissionResultAllow()
 
     evs = await _events(backend, gate)
     assert [c.request.headers["authorization"] for c in route.calls] == ["Bearer k1", "Bearer k2"]
-    assert backend.key == 1 and evs[-1].is_error is False
+    assert [json.loads(c.request.content)["model"] for c in route.calls] == ["haiku", "gpt-mini"]
+    assert backend.key == 1 and evs[-1].is_error is False and evs[-1].model == "gpt-mini"
 
 
 @respx.mock
