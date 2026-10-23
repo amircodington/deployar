@@ -75,13 +75,15 @@ async def watch_deployment(ctx: ToolContext, args: dict[str, Any]) -> ToolResult
                 .join(Project, Project.id == Deployment.project_id)
                 .where(Project.user_id == ctx.user_id)
             )
-            # the id deploy_release returned, else this run's latest deployment
-            q = (
-                q.where(Deployment.id == uuid.UUID(args["deployment_id"]))
-                if args.get("deployment_id")
-                else q.where(Deployment.run_id == ctx.run_id)
-            )
-            d = await s.scalar(q.order_by(Deployment.created_at.desc()).limit(1))
+            # the id deploy_release returned (or Liara's release id), else this run's latest, else the user's latest
+            did = str(args.get("deployment_id") or "")
+            try:
+                q = q.where(Deployment.id == uuid.UUID(did)) if did else q
+            except ValueError:
+                q = q.where(Deployment.liara_release_id == did)
+            latest = q.order_by(Deployment.created_at.desc()).limit(1)
+            d = None if did else await s.scalar(latest.where(Deployment.run_id == ctx.run_id))
+            d = d or await s.scalar(latest)
         if d is None or not d.liara_release_id:
             return ToolError("no_deployment", fa.NO_DEPLOYMENT)
         url = f"https://{d.liara_app_name}.liara.run"

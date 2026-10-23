@@ -88,3 +88,18 @@ async def test_failed_build_gives_a_reason_and_the_tail(monkeypatch: pytest.Monk
     finally:
         await conn.close()
     assert status == "failed"
+
+
+@respx.mock
+async def test_liara_release_id_finds_the_deployment(monkeypatch: pytest.MonkeyPatch) -> None:
+    from deployar.tools.liara import watch
+    from deployar.tools.registry import REGISTRY
+
+    monkeypatch.setattr(watch, "POLL_S", 0)
+    respx.get(f"{API}/v1/releases/6adb2510aa8f2ba374027585").respond(json={"release": {"state": "TIMEDOUT"}})
+    respx.get(f"{API}/v2/releases/6adb2510aa8f2ba374027585/build-logs").respond(json={"buildOutput": []})
+
+    ctx = await _ctx_with_connection()
+    await _deployment(ctx, "6adb2510aa8f2ba374027585")  # the model passed Liara's id, not ours
+    out = _payload(await REGISTRY.run(ctx, "watch_deployment", {"deployment_id": "6adb2510aa8f2ba374027585"}))
+    assert out["status"] == "ok" and out["data"]["state"] == "TIMEDOUT", out

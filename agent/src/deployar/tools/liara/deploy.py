@@ -299,7 +299,8 @@ async def deploy_release(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
         try:
             async with GitHubClient(await github_token(ctx)) as gh:
                 sha = await gh.commit_sha(owner, repo, args.get("ref") or p.repo_default_branch or "main")
-                source = repack(await gh.tarball(owner, repo, sha), p.app_root)
+                # repack is CPU-bound (seconds on 0.5 CPU): off the loop, or the SSE stream stalls and the proxy cuts it
+                source = await asyncio.to_thread(repack, await gh.tarball(owner, repo, sha), p.app_root)
         except GitHubNoAccess:
             return ToolError("github_no_access", fa.GITHUB_NO_ACCESS)
         if len(source) > MAX_SOURCE:
