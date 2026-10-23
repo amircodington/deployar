@@ -6,7 +6,7 @@ on:
     paths: ["agent/**", "web/**", "deploy/**", ".github/workflows/image.yml"]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write  # the pin step below commits the root Dockerfile
   packages: write
 jobs:
   build:
@@ -31,3 +31,12 @@ jobs:
           labels: org.opencontainers.image.source=https://github.com/amircodington/deployar
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      # Liara's builder keeps an old copy of :latest and never re-pulls it, so the root Dockerfile names this exact
+      # build. The pin commit only touches Dockerfile, which this workflow's paths filter ignores (no loop).
+      - name: Pin the image Liara pulls
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          sed -i "s|^FROM ghcr.io/amircodington/deployar:.*|FROM ghcr.io/amircodington/deployar:${GITHUB_SHA}|" Dockerfile
+          git diff --quiet || { git commit -am "ci: pin the Liara image to ${GITHUB_SHA::7}" && git push origin HEAD:main; }
