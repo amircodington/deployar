@@ -166,7 +166,8 @@ async def _execute(
                 "approval_id": str(created.approval_id), "tool": preview.get("tool", ""),
                 "summary_fa": preview.get("title_fa") or preview.get("tool", ""), "why_fa": preview.get("why_fa"),
                 "cost_delta_toman": preview.get("cost_delta_toman"), "cost_source": preview.get("cost_source"),
-                "changes": preview.get("changes"),
+                "changes": preview.get("changes"), "danger": bool(preview.get("danger")),
+                "confirm_text": preview.get("confirm_text"),
                 "expires_at": created.expires_at.isoformat(), "signature": created.token,
             })  # fmt: skip
 

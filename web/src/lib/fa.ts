@@ -78,6 +78,8 @@ export const fa = {
   chats: "چت‌ها",
   appChats: (app: string) => `چت‌های ${app}`,
   newChat: "چت جدید",
+  irreversible: "برگشت‌ناپذیر",
+  typeToConfirm: (name: string) => `برای باز شدن تأیید، «${name}» را دقیقاً تایپ کن.`,
   showValue: "نمایش مقدار",
   hideValue: "پنهان کردن مقدار",
   noChats: "هنوز چتی نیست. هر گفتگو این‌جا می‌ماند تا بعداً ادامه‌اش بدهی.",

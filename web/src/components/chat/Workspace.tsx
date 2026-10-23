@@ -150,12 +150,12 @@ export function Workspace({ projectId }: { projectId?: string }) {
     [projectId, app, follow, listChats],
   );
 
-  const decide = useCallback(async (approvalId: string, decision: "approve" | "reject") => {
+  const decide = useCallback(async (approvalId: string, decision: "approve" | "reject", confirm?: string) => {
     const item = view.items.find((i) => i.kind === "approval" && i.id === approvalId);
     if (!item || item.kind !== "approval") return;
     setView((v) => setApproval(v, approvalId, "approving"));
     try {
-      const { status } = await api.decide(approvalId, decision, item.card.signature);
+      const { status } = await api.decide(approvalId, decision, item.card.signature, confirm);
       setView((v) => setApproval(v, approvalId, status as "approved" | "rejected"));
     } catch (err) {
       const message = err instanceof AgentError ? err.message : fa.decisionFailed;

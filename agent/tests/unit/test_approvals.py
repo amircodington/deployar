@@ -196,8 +196,18 @@ def test_decision_endpoint_maps_errors() -> None:
 
     class FakeService:
         async def decide(
-            self, approval_id: uuid.UUID, user_id: uuid.UUID, decision: str, token: str, note: object
+            self,
+            approval_id: uuid.UUID,
+            user_id: uuid.UUID,
+            decision: str,
+            token: str,
+            note: object,
+            confirm: str | None = None,
         ) -> str:
+            if token == "delete":
+                if confirm != "shop":
+                    raise DeployarError("approval_confirm_mismatch", "x")
+                return "approved"
             if token == "replayed":
                 raise DeployarError("approval_not_pending", "x")
             if token != "good":
@@ -213,6 +223,11 @@ def test_decision_endpoint_maps_errors() -> None:
         assert client.post(url, json={"decision": "approve", "signature": "forged"}).status_code == 403
         r = client.post(url, json={"decision": "approve", "signature": "replayed"})
         assert r.status_code == 409 and r.json()["error"]["code"] == "approval_not_pending"
+        # an irreversible card: the typed name travels with the decision and a wrong one is refused
+        r = client.post(url, json={"decision": "approve", "signature": "delete", "confirm": "shp"})
+        assert r.status_code == 400 and r.json()["error"]["code"] == "approval_confirm_mismatch"
+        ok = client.post(url, json={"decision": "approve", "signature": "delete", "confirm": "shop"})
+        assert ok.json() == {"status": "approved"}
         assert client.post(url, json={"decision": "maybe", "signature": "good"}).status_code == 422
     finally:
         app.dependency_overrides.clear()

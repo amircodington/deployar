@@ -16,6 +16,7 @@ class DecisionIn(BaseModel):
     decision: Decision
     signature: str
     note: str | None = None
+    confirm: str | None = None  # the name the user typed, for cards that ask for it (irreversible deletes)
 
 
 class DecisionOut(BaseModel):
@@ -33,4 +34,5 @@ async def decide(
     user_id: Annotated[uuid.UUID, Depends(require_user)],
     service: Annotated[ApprovalService, Depends(get_approval_service)],
 ) -> DecisionOut:
-    return DecisionOut(status=await service.decide(approval_id, user_id, body.decision, body.signature, body.note))
+    status = await service.decide(approval_id, user_id, body.decision, body.signature, body.note, body.confirm)
+    return DecisionOut(status=status)

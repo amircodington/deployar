@@ -103,10 +103,10 @@ export const api = {
     call<{ user_id: string }>("/api/session", { method: "POST", body: JSON.stringify({ passphrase }) }),
   startRun: (body: { text: string; project_id?: string; conversation_id?: string; mode?: string }) =>
     call<{ run_id: string; conversation_id: string }>("/api/runs", { method: "POST", body: JSON.stringify(body) }),
-  decide: (approvalId: string, decision: "approve" | "reject", signature: string) =>
+  decide: (approvalId: string, decision: "approve" | "reject", signature: string, confirm?: string) =>
     call<{ status: string }>(`/api/approvals/${approvalId}/decision`, {
       method: "POST",
-      body: JSON.stringify({ decision, signature }),
+      body: JSON.stringify({ decision, signature, confirm }),
     }),
   connectLiara: (token: string, team_id?: string) =>
     call<{ id: string; token_last4: string; account: string | null }>("/api/connections/liara", {

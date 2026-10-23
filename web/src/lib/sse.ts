@@ -42,6 +42,8 @@ export interface ApprovalRequested {
   cost_delta_toman?: number;
   cost_source?: { source: string; observed_at: string };
   changes?: Record<string, unknown>;
+  danger?: boolean; // irreversible (a delete): red card
+  confirm_text?: string | null; // typed by the user before the slider unlocks; the server checks it too
   expires_at: string;
   signature: string;
 }

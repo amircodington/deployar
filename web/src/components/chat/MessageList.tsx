@@ -37,7 +37,7 @@ export function MessageList({
   onSend,
 }: {
   items: ChatItem[];
-  onDecide: (approvalId: string, decision: "approve" | "reject") => void;
+  onDecide: (approvalId: string, decision: "approve" | "reject", confirm?: string) => void;
   onEnvDone: (itemId: string, refs: { key: string; value_ref: string }[]) => void;
   onSend: (text: string) => void;
 }) {
@@ -67,7 +67,7 @@ export function MessageList({
                 card={item.card}
                 state={item.state}
                 error={item.error}
-                onDecide={(d) => onDecide(item.id, d)}
+                onDecide={(d, c) => onDecide(item.id, d, c)}
               />
             );
           case "limitation":

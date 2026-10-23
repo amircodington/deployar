@@ -20,6 +20,7 @@ from deployar.runtime.approvals import ApprovalService
 from deployar.runtime.events import EventBus
 from deployar.runtime.orchestrator import Runtime
 from deployar.tools.github import analyze as _github_analyze  # noqa: F401  registers analyze_repo
+from deployar.tools.liara import delete as _liara_delete  # noqa: F401  registers delete_app, delete_database
 from deployar.tools.liara import deploy as _liara_deploy  # noqa: F401  registers the sensitive Liara tools
 from deployar.tools.liara import domain as _liara_domain  # noqa: F401  registers add_domain, check_dns, human-only steps
 from deployar.tools.liara import incident as _liara_incident  # noqa: F401  registers http_probe, diagnosis, verify

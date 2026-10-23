@@ -157,13 +157,22 @@ class ApprovalService:
         return hmac.compare_digest(given, self._sign(a.id, a.tool_call_id, a.args_hash, user_id, a.expires_at))
 
     async def decide(
-        self, approval_id: uuid.UUID, user_id: uuid.UUID, decision: Decision, token: str, reason: str | None = None
+        self,
+        approval_id: uuid.UUID,
+        user_id: uuid.UUID,
+        decision: Decision,
+        token: str,
+        reason: str | None = None,
+        confirm: str | None = None,
     ) -> str:
         status = {"approve": "approved", "reject": "rejected"}[decision]
         async with self.sessions.begin() as s:
             a = await s.get(Approval, approval_id)
             if a is None or not self._token_ok(a, user_id, token):
                 raise DeployarError("approval_bad_signature", fa.APPROVAL_BAD_SIGNATURE, str(approval_id))
+            wanted = (a.preview or {}).get("confirm_text")  # irreversible: the slider alone is not enough
+            if decision == "approve" and wanted and (confirm or "").strip() != wanted:
+                raise DeployarError("approval_confirm_mismatch", fa.CONFIRM_MISMATCH, str(approval_id))
             # One-time use: only one request can win this conditional update.
             won = await s.scalar(
                 update(Approval)

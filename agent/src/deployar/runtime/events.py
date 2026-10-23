@@ -76,6 +76,8 @@ class ApprovalRequested(_M):
     cost_source: dict[str, Any] | None = None
     changes: dict[str, Any] | None = None
     diff_url: str | None = None
+    danger: bool = False  # irreversible: the card is red
+    confirm_text: str | None = None  # the user types this before approving (checked again server-side)
     expires_at: str
     signature: str
 

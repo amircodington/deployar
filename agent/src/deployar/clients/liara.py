@@ -211,6 +211,10 @@ class LiaraClient:
     async def delete_app(self, name: str) -> None:
         await self.request("DELETE", f"/v1/projects/{name}")
 
+    async def databases(self) -> list[dict[str, Any]]:
+        data = await self.request("GET", "/v1/databases")
+        return list(data.get("databases") or [])
+
     async def delete_database(self, db_id: str) -> None:
         await self.request("DELETE", f"/v1/databases/{db_id}")
 
