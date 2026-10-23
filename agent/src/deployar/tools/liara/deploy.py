@@ -89,7 +89,8 @@ async def _network(ctx: ToolContext, c: Any) -> str:
 
 
 def _preview_app(a: dict[str, Any]) -> dict[str, Any]:
-    return {"title_fa": f"ساخت اپ {a.get('name') or a.get('app_root', '')} روی لیارا ({a.get('plan_id')})",
+    label = a.get("name") or (a.get("app_root") or ".").strip("/")  # the repo's root is ".", not a name to show
+    return {"title_fa": f"ساخت اپ {label if label != '.' else 'جدید'} روی لیارا ({a.get('plan_id')})",
             "why_fa": a.get("reason_fa"), "changes": {"platform": a.get("platform"), "plan": a.get("plan_id")},
             **_cost(a.get("plan_id"))}  # fmt: skip
 
@@ -248,11 +249,15 @@ async def set_env(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
 
 
 def repack(tar_gz: bytes, app_root: str) -> bytes:
-    """GitHub's tarball has one top folder (owner-repo-sha/); Liara wants the app's own folder as the root."""
+    """GitHub's tarball has one top folder (owner-repo-sha/); Liara wants the app's own folder as the root.
+    gzip level 1: 0.9 s vs 10.7 s at tarfile's default 9 on a 29 MB repo (laptop); 0.5 CPU on Liara is far slower."""
     out = io.BytesIO()
     prefix = "" if app_root in ("", ".") else app_root.strip("/") + "/"
     found = False
-    with tarfile.open(fileobj=io.BytesIO(tar_gz), mode="r:gz") as src, tarfile.open(fileobj=out, mode="w:gz") as dst:
+    with (
+        tarfile.open(fileobj=io.BytesIO(tar_gz), mode="r:gz") as src,
+        tarfile.open(fileobj=out, mode="w:gz", compresslevel=1) as dst,
+    ):
         for m in src.getmembers():
             parts = m.name.split("/", 1)
             if len(parts) < 2 or not parts[1].startswith(prefix) or m.issym() or m.islnk():

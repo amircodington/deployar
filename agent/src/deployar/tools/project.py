@@ -19,7 +19,7 @@ async def project_of(ctx: ToolContext) -> uuid.UUID | None:
 async def resolve_project(ctx: ToolContext, project_id: str | None) -> uuid.UUID | None:
     """A tool's project_id arg: a project uuid, or the Liara app name the model often passes instead."""
     if not project_id:
-        return await project_of(ctx)
+        return await project_of(ctx) or await _latest_app(ctx)
     try:
         return uuid.UUID(project_id)
     except ValueError:
@@ -28,6 +28,16 @@ async def resolve_project(ctx: ToolContext, project_id: str | None) -> uuid.UUID
                 Project.user_id == ctx.user_id, Project.liara_app_name == project_id,
                 Project.archived_at.is_(None)))  # fmt: skip
         return pid
+
+
+async def _latest_app(ctx: ToolContext) -> uuid.UUID | None:
+    """A new chat has no project and the model often sends no id: use the user's latest app on Liara."""
+    # shortcut: with several apps the latest one wins; ask the user which one when this picks wrong
+    async with ctx.sessions() as s:
+        pid: uuid.UUID | None = await s.scalar(select(Project.id).where(
+            Project.user_id == ctx.user_id, Project.liara_app_name.is_not(None), Project.archived_at.is_(None))
+            .order_by(Project.updated_at.desc(), Project.created_at.desc()).limit(1))  # fmt: skip
+    return pid
 
 
 async def ensure_project(ctx: ToolContext, repo_full_name: str, default_branch: str) -> uuid.UUID | None:

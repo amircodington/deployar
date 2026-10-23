@@ -3,10 +3,11 @@
 from dataclasses import replace
 from typing import Any
 
+import asyncpg
 import httpx
 import respx
 from test_deploy_tools import approve
-from test_liara_client import API, _ctx_with_connection, _payload
+from test_liara_client import API, PG_TEST, _ctx_with_connection, _payload
 
 URL = "https://torob-gard.liara.run/api/health"
 SUMMARY = {"cpuUsage": [{"value": [1, "0.40"]}], "memoryUsage": [{"value": [1, str(500 * 1_048_576)]}]}
@@ -98,3 +99,21 @@ async def test_the_app_name_works_where_a_project_id_is_expected() -> None:
     ctx = await _ctx_with_connection()
     out = _payload(await REGISTRY.run(ctx, "http_probe", {"project_id": "torob-gard", "path": "/api/health", "n": 1}))
     assert out["status"] == "ok" and out["data"]["app"] == "torob-gard"  # the model passed the app name, not a uuid
+
+
+@respx.mock
+async def test_a_new_chat_without_a_project_id_uses_the_latest_app() -> None:
+    from deployar.tools.liara import incident  # noqa: F401
+    from deployar.tools.registry import REGISTRY
+
+    respx.get(f"{API}/v1/projects/torob-gard/metrics/summary").respond(json=SUMMARY)
+    respx.get(URL).respond(200)
+    ctx = await _ctx_with_connection()
+    conn = await asyncpg.connect(PG_TEST)
+    try:  # a new chat: its run has no project yet, and the model sends no project_id
+        run = await conn.fetchval("insert into run (kind, trigger) values ('chat', 'user_message') returning id")
+    finally:
+        await conn.close()
+    ctx = replace(ctx, project_id=None, run_id=run)
+    out = _payload(await REGISTRY.run(ctx, "http_probe", {"path": "/api/health", "n": 1}))
+    assert out["status"] == "ok" and out["data"]["app"] == "torob-gard"

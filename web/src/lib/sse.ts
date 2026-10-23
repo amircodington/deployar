@@ -1,5 +1,6 @@
-/** Run events over SSE. EventSource reconnects on its own and sends Last-Event-ID, so the agent
- * replays what was missed; we close it ourselves on run.done. */
+/** Run events over SSE. EventSource retries on its own (with Last-Event-ID) only after a network drop; when a
+ * proxy answers the retry with an error it gives up for good (readyState CLOSED, as on Liara mid-deploy), so
+ * then we open a new one from the last event id (?after=) and the agent replays what was missed. */
 
 export interface StepRef {
   key: string;
@@ -56,15 +57,33 @@ export function subscribeRun(
   onEvent: (e: RunEvent) => void,
   onConnection: (state: "open" | "reconnecting") => void,
 ): () => void {
-  const es = new EventSource(`/api/runs/${runId}/events`);
-  es.onopen = () => onConnection("open");
-  es.onerror = () => onConnection("reconnecting");
-  for (const type of EVENT_TYPES) {
-    es.addEventListener(type, (msg) => {
-      const env = JSON.parse((msg as MessageEvent).data);
-      onEvent({ type, data: env.data } as RunEvent);
-      if (type === "run.done") es.close();
-    });
-  }
-  return () => es.close();
+  let es: EventSource;
+  let last = "";
+  let done = false;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  const open = () => {
+    es = new EventSource(`/api/runs/${runId}/events${last ? `?after=${encodeURIComponent(last)}` : ""}`);
+    es.onopen = () => onConnection("open");
+    es.onerror = () => {
+      onConnection("reconnecting");
+      if (es.readyState === EventSource.CLOSED && !done) retry = setTimeout(open, 2000);
+    };
+    for (const type of EVENT_TYPES) {
+      es.addEventListener(type, (msg) => {
+        const m = msg as MessageEvent;
+        if (m.lastEventId) last = m.lastEventId;
+        onEvent({ type, data: JSON.parse(m.data).data } as RunEvent);
+        if (type === "run.done") {
+          done = true;
+          es.close();
+        }
+      });
+    }
+  };
+  open();
+  return () => {
+    done = true;
+    clearTimeout(retry);
+    es.close();
+  };
 }

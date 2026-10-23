@@ -21,18 +21,19 @@ async def events(
     user_id: Annotated[uuid.UUID, Depends(require_user)],
     rt: Annotated[Runtime, Depends(get_runtime)],
     last_event_id: Annotated[str | None, Header()] = None,
+    after: str | None = None,  # the web client's own reconnect, when EventSource gave up (no header then)
 ) -> StreamingResponse:
     await owned_run(rt, run_id, user_id)
 
     async def stream() -> AsyncIterator[str]:
-        after = last_event_id or "0"
+        cursor = last_event_id or after or "0"
         while not await request.is_disconnected():
-            batch = await rt.bus.read(run_id, after, block_ms=15000)
+            batch = await rt.bus.read(run_id, cursor, block_ms=15000)
             if not batch:
                 yield ": ping\n\n"  # keeps proxies from closing an idle stream
                 continue
             for entry_id, env in batch:
-                after = entry_id
+                cursor = entry_id
                 yield f"id: {entry_id}\nevent: {env.type}\ndata: {env.model_dump_json()}\n\n"
                 if env.type == "run.done":
                     return

@@ -91,6 +91,9 @@ async def test_run_streams_events_and_replays_after_last_event_id() -> None:
         replay = parse_sse((await client.get(f"/api/runs/{run_id}/events",
                                              headers={"Last-Event-ID": events[2][0]})).text)  # fmt: skip
         assert [e[0] for e in replay] == [e[0] for e in events[3:]]
+        # the web client's own reconnect (EventSource gave up, so no header): same replay from ?after=
+        again = parse_sse((await client.get(f"/api/runs/{run_id}/events", params={"after": events[2][0]})).text)
+        assert [e[0] for e in again] == [e[0] for e in events[3:]]
 
         final = (await client.get(f"/api/runs/{run_id}")).json()
         assert final["status"] == "succeeded" and final["steps"][0]["status"] == "done"
