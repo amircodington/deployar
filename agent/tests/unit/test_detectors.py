@@ -92,5 +92,7 @@ def test_a_root_dockerfile_that_builds_the_sub_apps_is_one_app() -> None:
         "Dockerfile": "FROM node:24 AS web\nCOPY web/ ./\nFROM python:3.13\nCOPY agent/ ./\nEXPOSE 3000\n",
     }
     assert [a["root"] for a in analyze(Repo.from_files(files))["apps"]] == ["."]
+    files["Dockerfile"] = "FROM ghcr.io/me/app:latest\nEXPOSE 3000\n"  # pulls the image CI built from them
+    assert [a["root"] for a in analyze(Repo.from_files(files))["apps"]] == ["."]
     files["Dockerfile"] = "FROM python:3.13\nCOPY . .\n"  # a local-dev image: the sub-apps stay separate
     assert [a["root"] for a in analyze(Repo.from_files(files))["apps"]] == ["agent", "web"]

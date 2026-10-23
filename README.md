@@ -115,7 +115,9 @@ make check   # ruff، mypy، pytest، eslint، tsc، vitest
 
 ### اجرا روی سرور (لیارا)
 
-`Dockerfile` ریشه وب (Next.js) و ایجنت را در یک کانتینر می‌گذارد: ایجنت فقط روی loopback گوش می‌دهد و `/api`
+`deploy/Dockerfile` وب (Next.js) و ایجنت را در یک کانتینر می‌گذارد؛ GitHub Actions آن را می‌سازد و در
+`ghcr.io/amircodington/deployar` می‌گذارد و `Dockerfile` ریشه فقط همان را می‌کشد، چون بسته‌ی basic لیارا build را
+بعد از ۵ دقیقه قطع می‌کند: ایجنت فقط روی loopback گوش می‌دهد و `/api`
 از طریق Next.js به آن می‌رسد، پس یک اپ لیارا کافی است و ایجنت هیچ‌وقت عمومی نیست. روی سرور ورود Claude Code
 نیست، پس `LLM_BACKEND=boxapi` است: همان حلقه‌ی ابزارها با `anthropic/claude-haiku-5.5` از BoxAPI، و هر ابزار
 همچنان از همان دروازه‌ی تأیید و تریگر دیتابیس رد می‌شود. وقتی اعتبار `BOXAPI_API_KEY` تمام شود،

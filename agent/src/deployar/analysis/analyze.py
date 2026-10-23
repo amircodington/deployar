@@ -50,8 +50,8 @@ def app_roots(repo: Repo) -> list[str]:
     # A Dockerfile that is only a database image (e.g. deploy/db) is not an app.
     roots = {r for r in roots if not _only_db_image(repo, r)}
     if "." in roots and len(roots) > 1 and not _has_app_manifest(repo, "."):
-        if _builds_subroots(repo, roots):
-            return ["."]  # one root Dockerfile that builds the sub-apps into a single image
+        if _builds_subroots(repo, roots) or _prebuilt_image(repo):
+            return ["."]  # one root Dockerfile that builds the sub-apps into a single image, or pulls it
         roots.discard(".")  # a root Dockerfile/compose for local dev in a monorepo
     # Django settings packages live under the app root; keep the shallowest root only.
     return sorted(r for r in roots if not any(r != o and r.startswith(f"{o}/") for o in roots if o != "."))
@@ -65,6 +65,12 @@ def _has_app_manifest(repo: Repo, root: str) -> bool:
 def _builds_subroots(repo: Repo, roots: set[str]) -> bool:
     text = repo.files.get("Dockerfile", "")
     return any(re.search(rf"^\s*COPY\s+(--\S+\s+)*\.?/?{re.escape(r)}/", text, re.M | re.I) for r in roots - {"."})
+
+
+def _prebuilt_image(repo: Repo) -> bool:
+    """A root Dockerfile with no COPY/ADD only pulls an image built elsewhere (CI), so it is the deploy target."""
+    text = repo.files.get("Dockerfile", "")
+    return bool(text) and not docker.database_image(text) and not re.search(r"^\s*(COPY|ADD)\s", text, re.M | re.I)
 
 
 def _only_db_image(repo: Repo, root: str) -> bool:
