@@ -98,3 +98,37 @@ async def test_an_http_failure_ends_the_run_as_an_error() -> None:
 
     evs = await _events(_backend(["k1"]), gate)
     assert evs[-1].is_error and evs[-1].error == "boxapi: HTTPStatusError"
+
+
+@respx.mock
+async def test_after_a_restart_the_chat_remembers_its_saved_turns() -> None:
+    import asyncpg
+    from pgtest import PG_TEST
+
+    from deployar.tools.liara import incident  # noqa: F401
+    from deployar.tools.registry import REGISTRY
+
+    ctx = await _ctx_with_connection()
+    conn = await asyncpg.connect(PG_TEST)
+    try:  # an earlier turn saved in the database; this process has no memory of it (SESSIONS is empty for it)
+        conv = await conn.fetchval("insert into conversation (user_id) values ($1) returning id", ctx.user_id)
+        for seq, (role, text) in enumerate([("user", "اپ من shop است"), ("assistant", "باشد، shop"),
+                                            ("user", "اسم اپم چه بود؟")], 1):  # fmt: skip
+            mid = await conn.fetchval(
+                "insert into message (conversation_id, seq, role, content) values ($1, $2, $3, $4::jsonb) returning id",
+                conv, seq, role, json.dumps([{"type": "text", "text_fa": text}]))  # fmt: skip
+        await conn.execute("update run set conversation_id = $1, triggered_by_message_id = $2 where id = $3",
+                           conv, mid, ctx.run_id)  # fmt: skip
+    finally:
+        await conn.close()
+    route = respx.post(f"{BASE}/chat/completions").mock(return_value=_msg("shop"))
+
+    async def gate(*_: Any) -> Any:
+        return PermissionResultAllow()
+
+    evs = [ev async for ev in _backend(["k1"]).run(prompt="اسم اپم چه بود؟", system_prompt="sys", registry=REGISTRY,
+                                                    tool_ctx=ctx, can_use_tool=gate, max_turns=2,
+                                                    resume="lost-after-restart")]  # fmt: skip
+    sent = json.loads(route.calls[0].request.content)["messages"]
+    assert [m["content"] for m in sent] == ["sys", "اپ من shop است", "باشد، shop", "اسم اپم چه بود؟"]
+    assert not evs[-1].is_error

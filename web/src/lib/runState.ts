@@ -166,3 +166,15 @@ export function applyEvent(v: View, e: RunEvent): View {
       return v;
   }
 }
+
+/** One saved turn of a reopened chat: the user's text, its run's events replayed, else the saved answer text
+ * (run events expire after 30 days; the messages stay). */
+export function replayTurn(v: View, text: string, events: RunEvent[], answer: string | null): View {
+  let out = addUserMessage(v, text);
+  const before = out.items.length;
+  for (const e of events) out = applyEvent(out, e);
+  if (answer && !out.items.slice(before).some((i) => i.kind === "assistant")) {
+    out = { ...out, items: [...out.items, { kind: "assistant", id: localId("a"), text: answer, done: true }] };
+  }
+  return events.length ? out : { ...out, phase: "succeeded" };
+}

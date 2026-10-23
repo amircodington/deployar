@@ -72,7 +72,29 @@ export interface Monitor {
   releases: Sourced & { current: string | null; items: { id: string; state: string; created_at: string }[] };
 }
 
+export interface ChatSummary {
+  id: string;
+  title_fa: string | null;
+  app: string | null;
+  project_id: string | null;
+  last_message_at: string;
+}
+export interface ChatTurn {
+  text: string;
+  run_id: string | null;
+  status: RunStatus | null;
+  answer: string | null;
+}
+
 export const api = {
+  chats: (app?: string) =>
+    call<{ project_id: string | null; items: ChatSummary[] }>(
+      `/api/conversations${app ? `?app=${encodeURIComponent(app)}` : ""}`,
+    ),
+  chat: (id: string) =>
+    call<{ id: string; title_fa: string | null; project_id: string | null; turns: ChatTurn[] }>(
+      `/api/conversations/${id}`,
+    ),
   dashboard: () => call<Dashboard>("/api/dashboard"),
   monitor: (name: string, minutes: number) =>
     call<Monitor>(`/api/apps/${encodeURIComponent(name)}/monitor?minutes=${minutes}`),

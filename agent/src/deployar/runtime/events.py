@@ -117,7 +117,7 @@ class Envelope(_M):
     data: dict[str, Any]
 
 
-_TTL_S = 24 * 3600
+_TTL_S = 30 * 24 * 3600  # a reopened chat replays its cards from here (conversations API)
 _MAXLEN = 1000
 
 

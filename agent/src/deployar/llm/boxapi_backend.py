@@ -13,18 +13,35 @@ from typing import Any
 
 import httpx
 from claude_agent_sdk import PermissionResultAllow, ToolPermissionContext
+from sqlalchemy import select
 
 from deployar.core.config import get_settings
 from deployar.llm.client import Done, LLMEvent, TextDelta, ToolResult, ToolUse
+from deployar.models import Message, Run
 from deployar.runtime.gate import PREFIX, CanUseTool
 from deployar.tools.registry import Registry, ToolContext
 
 log = logging.getLogger(__name__)
 _QUOTA = re.compile(r"credit|quota|balance|insufficient|billing", re.I)
 
-# shortcut: conversation history lives in process memory, so an agent restart forgets earlier turns of a
-# conversation (the next message starts fresh). Upgrade to the message table if multi-turn memory matters.
+# Tool-call detail of a conversation lives in process memory; after a restart the history is rebuilt from the
+# saved user and assistant texts (message table), so the model remembers what was said, not the raw tool output.
 SESSIONS: dict[str, list[dict[str, Any]]] = {}
+
+
+async def saved_history(ctx: ToolContext) -> list[dict[str, Any]]:
+    """The run's conversation before its own message, as chat turns."""
+    async with ctx.sessions() as s:
+        run = await s.get(Run, ctx.run_id)
+        if run is None or run.conversation_id is None:
+            return []
+        upto = await s.scalar(select(Message.seq).where(Message.id == run.triggered_by_message_id)) or 0
+        rows = (await s.scalars(select(Message).where(
+            Message.conversation_id == run.conversation_id, Message.seq < upto,
+            Message.role.in_(("user", "assistant"))).order_by(Message.seq))).all()  # fmt: skip
+    turns = [{"role": m.role, "content": " ".join(p.get("text_fa", "") for p in m.content if isinstance(p, dict))}
+             for m in rows]  # fmt: skip
+    return [t for t in turns if t["content"].strip()]
 
 
 def is_quota_error(r: httpx.Response) -> bool:
@@ -82,8 +99,11 @@ class BoxAPIBackend:
         max_turns: int,
         resume: str | None = None,
     ) -> AsyncIterator[LLMEvent]:
-        session_id = resume if resume in SESSIONS else str(uuid.uuid4())
-        history = SESSIONS.setdefault(session_id, [])
+        if resume in SESSIONS:
+            session_id, history = resume, SESSIONS[resume]
+        else:  # a new chat, or the agent restarted since this one's last turn
+            session_id, history = str(uuid.uuid4()), await saved_history(tool_ctx)
+            SESSIONS[session_id] = history
         history.append({"role": "user", "content": prompt})
         tools = _tools(registry)
         try:

@@ -140,10 +140,10 @@ export function AppsCard({ data }: { data: Dashboard | null }) {
       ) : (
         <ul className="flex flex-col gap-1.5">
           {apps.items.map((a) => (
-            <li key={a.name}>
+            <li key={a.name} className="flex items-center gap-1.5">
               <Link
                 href={`/monitor#${a.name}`}
-                className="pressable flex min-h-14 items-center gap-3 rounded-[16px] bg-raised/60 px-3 hover:bg-raised"
+                className="pressable flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[16px] bg-raised/60 px-3 hover:bg-raised"
               >
                 <span className="grid size-9 place-items-center rounded-full bg-raised">
                   <Icon name="box" size={16} />
@@ -158,6 +158,15 @@ export function AppsCard({ data }: { data: Dashboard | null }) {
                   {a.status ?? "—"}
                 </StatusChip>
               </Link>
+              {/* a full load, so the workspace reads ?app= and opens this app's latest chat */}
+              <a
+                href={`/?app=${encodeURIComponent(a.name)}`}
+                aria-label={`${fa.chatWithApp}: ${a.name}`}
+                title={fa.chatWithApp}
+                className="pressable grid size-14 shrink-0 place-items-center rounded-[16px] bg-raised/60 text-ink-muted hover:bg-raised hover:text-ink"
+              >
+                <Icon name="chat" size={18} />
+              </a>
             </li>
           ))}
         </ul>

@@ -75,6 +75,12 @@ export const fa = {
   connectedChip: "وصل است",
   connectNow: "وصل کن",
   conversation: "گفتگو",
+  chats: "چت‌ها",
+  appChats: (app: string) => `چت‌های ${app}`,
+  newChat: "چت جدید",
+  noChats: "هنوز چتی نیست. هر گفتگو این‌جا می‌ماند تا بعداً ادامه‌اش بدهی.",
+  chatWithApp: "گفتگو درباره‌ی این اپ",
+  loadingChat: "در حال باز کردن چت…",
   suggestions: [
     { label: "ترب‌گرد را روی لیارا بالا بیاور", text: "ترب‌گرد را روی لیارا بالا بیاور: https://github.com/amircodington/torob-gard" },
     { label: "موجودی لیارا چقدر است؟", text: "موجودی لیارا چقدر است؟" },

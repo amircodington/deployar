@@ -4,11 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AppsCard, StatTiles } from "@/components/dash/Overview";
 import { RunChecklist } from "@/components/checklist/RunChecklist";
 import { StatusChip } from "@/components/ui";
-import { AgentError, api } from "@/lib/api";
+import { AgentError, api, type ChatSummary } from "@/lib/api";
 import { fa } from "@/lib/fa";
-import { addUserMessage, applyEvent, emptyView, markEnvSent, setApproval, type View } from "@/lib/runState";
-import { subscribeRun } from "@/lib/sse";
+import { addUserMessage, applyEvent, emptyView, markEnvSent, replayTurn, setApproval, type View } from "@/lib/runState";
+import { fetchRunEvents, subscribeRun } from "@/lib/sse";
 import { useDashboard } from "@/lib/useDashboard";
+import { ChatList } from "./ChatList";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
 
@@ -21,10 +22,22 @@ const STATE_LINE: Record<View["phase"], string> = {
   cancelled: fa.stateFailed,
 };
 
-/** Home: greeting, live tiles, the conversation with its cards, and the run checklist beside it. */
+/** The open chat lives in the URL (?c=), an app's chats in ?app=, so a reload or a link reopens the same one. */
+function setUrl(c?: string, app?: string) {
+  const q = new URLSearchParams();
+  if (app) q.set("app", app);
+  if (c) q.set("c", c);
+  window.history.replaceState(null, "", q.size ? `?${q}` : window.location.pathname);
+}
+
+/** Home: greeting, live tiles, the conversation with its cards, saved chats and the run checklist beside it. */
 export function Workspace({ projectId }: { projectId?: string }) {
   const [view, setView] = useState<View>(emptyView);
   const [reconnecting, setReconnecting] = useState(false);
+  const [chats, setChats] = useState<ChatSummary[] | null>(null);
+  const [active, setActive] = useState<string | undefined>(undefined);
+  const [app, setApp] = useState<string | undefined>(undefined);
+  const appProject = useRef<string | undefined>(undefined);
   const conversation = useRef<string | undefined>(undefined);
   const unsubscribe = useRef<() => void>(() => {});
   const bottom = useRef<HTMLDivElement>(null);
@@ -32,6 +45,80 @@ export function Workspace({ projectId }: { projectId?: string }) {
   const { reload } = dash;
 
   useEffect(() => () => unsubscribe.current(), []);
+
+  const listChats = useCallback(async (forApp?: string) => {
+    try {
+      const r = await api.chats(forApp);
+      appProject.current = r.project_id ?? undefined;
+      setChats(r.items);
+      return r.items;
+    } catch {
+      setChats([]);
+      return [];
+    }
+  }, []);
+
+  const follow = useCallback((runId: string) => {
+    unsubscribe.current();
+    unsubscribe.current = subscribeRun(
+      runId,
+      (e) => setView((v) => applyEvent(v, e)),
+      (s) => setReconnecting(s === "reconnecting"),
+    );
+  }, []);
+
+  /** Reopens a saved chat: each turn's cards come back from its run's events, a run still going is followed live. */
+  const openChat = useCallback(
+    async (id: string, forApp?: string) => {
+      unsubscribe.current();
+      conversation.current = id;
+      setActive(id);
+      setUrl(id, forApp);
+      setView({ ...emptyView, summary_fa: fa.loadingChat });
+      try {
+        const chat = await api.chat(id);
+        let v = emptyView;
+        for (const [n, t] of chat.turns.entries()) {
+          const live = n === chat.turns.length - 1 && (t.status === "running" || t.status === "awaiting_approval");
+          if (live && t.run_id) {
+            v = addUserMessage(v, t.text);
+            setView(v);
+            follow(t.run_id); // replays this run from its start, then keeps streaming
+            return;
+          }
+          v = replayTurn(v, t.text, t.run_id ? await fetchRunEvents(t.run_id) : [], t.answer);
+        }
+        setView(v);
+      } catch (err) {
+        setView({ ...emptyView, phase: "failed", summary_fa: err instanceof AgentError ? err.message : fa.connectionLost });
+      }
+    },
+    [follow],
+  );
+
+  const newChat = useCallback(() => {
+    unsubscribe.current();
+    conversation.current = undefined;
+    setActive(undefined);
+    setUrl(undefined, app);
+    setView(emptyView);
+  }, [app]);
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const c = q.get("c") ?? undefined;
+    const forApp = q.get("app") ?? undefined;
+    api.chats(forApp).then(
+      (r) => {
+        appProject.current = r.project_id ?? undefined;
+        setApp(forApp);
+        setChats(r.items);
+        if (c) openChat(c, forApp);
+        else if (forApp && r.items[0]) openChat(r.items[0].id, forApp); // an app opens its latest chat to continue
+      },
+      () => setChats([]),
+    );
+  }, [openChat]);
   useEffect(() => {
     if (view.items.length) bottom.current?.scrollIntoView({ block: "end", behavior: "smooth" }); // never return it
   }, [view.items.length]);
@@ -45,22 +132,22 @@ export function Workspace({ projectId }: { projectId?: string }) {
       try {
         const { run_id, conversation_id } = await api.startRun({
           text,
-          project_id: projectId,
+          project_id: projectId ?? (conversation.current ? undefined : appProject.current),
           conversation_id: conversation.current,
         });
-        conversation.current = conversation_id;
-        unsubscribe.current();
-        unsubscribe.current = subscribeRun(
-          run_id,
-          (e) => setView((v) => applyEvent(v, e)),
-          (s) => setReconnecting(s === "reconnecting"),
-        );
+        if (conversation.current !== conversation_id) {
+          conversation.current = conversation_id;
+          setActive(conversation_id);
+          setUrl(conversation_id, app);
+        }
+        follow(run_id);
+        listChats(app);
       } catch (err) {
         const message = err instanceof AgentError ? err.message : fa.connectionLost;
         setView((v) => ({ ...v, phase: "failed", summary_fa: message }));
       }
     },
-    [projectId],
+    [projectId, app, follow, listChats],
   );
 
   const decide = useCallback(async (approvalId: string, decision: "approve" | "reject") => {
@@ -147,6 +234,7 @@ export function Workspace({ projectId }: { projectId?: string }) {
         </section>
 
         <aside className="flex flex-col gap-4 md:gap-6">
+          <ChatList chats={chats} active={active} app={app} onOpen={(id) => openChat(id, app)} onNew={newChat} />
           <section
             className="tile-in hidden rounded-[28px] bg-card p-5 lg:block"
             style={{ "--i": 5 } as React.CSSProperties}

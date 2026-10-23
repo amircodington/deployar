@@ -97,3 +97,12 @@ async def test_run_streams_events_and_replays_after_last_event_id() -> None:
 
         final = (await client.get(f"/api/runs/{run_id}")).json()
         assert final["status"] == "succeeded" and final["steps"][0]["status"] == "done"
+
+        # the chat is saved: it is listed, and reopening it gives its turn with the run to replay and the answer
+        conv_id = r.json()["conversation_id"]
+        listed = (await client.get("/api/conversations")).json()["items"]
+        assert conv_id in [c["id"] for c in listed]
+        chat = (await client.get(f"/api/conversations/{conv_id}")).json()
+        assert chat["turns"][0]["text"] == "اپ را ری‌استارت کن" and chat["turns"][0]["run_id"] == run_id
+        assert chat["turns"][0]["answer"] and chat["project_id"] == str(project_id)
+        assert (await client.get(f"/api/conversations/{uuid.uuid4()}")).status_code == 404

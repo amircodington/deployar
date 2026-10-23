@@ -87,3 +87,25 @@ export function subscribeRun(
     es.close();
   };
 }
+
+/** A finished run's saved events, read in one go (the stream ends at run.done), for reopening a chat. */
+export async function fetchRunEvents(runId: string): Promise<RunEvent[]> {
+  const res = await fetch(`/api/runs/${runId}/events`, { credentials: "same-origin" });
+  return res.ok ? parseSse(await res.text()) : [];
+}
+
+export function parseSse(body: string): RunEvent[] {
+  const out: RunEvent[] = [];
+  for (const block of body.split("\n\n")) {
+    let type = "";
+    let data = "";
+    for (const line of block.split("\n")) {
+      if (line.startsWith("event: ")) type = line.slice(7);
+      else if (line.startsWith("data: ")) data += line.slice(6);
+    }
+    if (type && data && (EVENT_TYPES as string[]).includes(type)) {
+      out.push({ type, data: JSON.parse(data).data } as RunEvent);
+    }
+  }
+  return out;
+}

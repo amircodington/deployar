@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { addUserMessage, applyEvent, emptyView } from "./runState";
+import { addUserMessage, applyEvent, emptyView, replayTurn } from "./runState";
+import { parseSse } from "./sse";
 import type { RunEvent } from "./sse";
 
 const run: RunEvent[] = [
@@ -54,5 +55,23 @@ describe("run state", () => {
     expect(v.items[0].kind === "deploy_progress" && v.items[0].data.state).toBe("DEPLOYING");
     v = applyEvent(v, { type: "card", data: { card_type: "live_url", payload: { url: "https://torob-gard.liara.run" } } });
     expect(v.items.map((i) => i.kind)).toEqual(["deploy_progress", "live_url"]);
+  });
+});
+
+describe("reopening a saved chat", () => {
+  it("replays a turn's events and keeps their cards", () => {
+    const events = parseSse(
+      'id: 1-0\nevent: message.done\ndata: {"data":{"message_id":"m1","text":"زنده شد"}}\n\n' +
+        ": ping\n\n" +
+        'id: 1-1\nevent: run.done\ndata: {"data":{"status":"succeeded"}}\n\n',
+    );
+    const v = replayTurn(emptyView, "منتشرش کن", events, "زنده شد");
+    expect(v.items.map((i) => i.kind)).toEqual(["user", "assistant"]);
+    expect(v.phase).toBe("succeeded");
+  });
+
+  it("falls back to the saved answer when the events expired", () => {
+    const v = replayTurn(emptyView, "موجودی؟", [], "۲ میلیون تومان");
+    expect(v.items).toMatchObject([{ kind: "user", text: "موجودی؟" }, { kind: "assistant", text: "۲ میلیون تومان" }]);
   });
 });
