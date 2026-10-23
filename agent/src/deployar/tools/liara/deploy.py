@@ -107,9 +107,16 @@ async def create_app(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
         name = args.get("name") or _slug(f"{repo.name}-{root}" if root != "." else repo.name)
         if not NAME.match(name):
             return ToolError("bad_app_name", fa.LIARA_EXISTS)
+        existing = False
         async with await liara_client(ctx) as c:
             net = await _network(ctx, c)
-            await c.create_app(name, args["platform"], args["plan_id"], net)
+            try:
+                await c.create_app(name, args["platform"], args["plan_id"], net)
+            except DeployarError as e:
+                if e.code != "liara_exists":
+                    raise
+                await c.project(name)  # 409 and readable with this token: the user's own app (Deployar's data was reset)
+                existing = True
         async with ctx.sessions.begin() as s:  # one project per app (ADR 11): the repo project or a sibling
             target = await s.scalar(select(Project).where(
                 Project.user_id == ctx.user_id, Project.repo_full_name == repo.repo_full_name, Project.app_root == root,
@@ -126,9 +133,10 @@ async def create_app(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
             target.platform, target.plan_id = args["platform"], args["plan_id"]
             await s.flush()
             pid = target.id
-        await _record(ctx, "app", name, pid, plan_id=args["plan_id"])
+        if not existing:
+            await _record(ctx, "app", name, pid, plan_id=args["plan_id"])
         return Ok({"project_id": str(pid), "app": name, "app_root": root, "url": f"https://{name}.liara.run",
-                   "network": NETWORK}, source="liara:POST /v1/projects")  # fmt: skip
+                   "network": NETWORK, "already_existed": existing}, source="liara:POST /v1/projects")  # fmt: skip
 
     return await _guard(run())
 

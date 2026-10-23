@@ -68,6 +68,21 @@ async def test_sensitive_tools_refuse_without_approval() -> None:
 
 
 @respx.mock
+async def test_create_app_adopts_the_users_existing_app_on_409() -> None:
+    from deployar.tools.liara import deploy  # noqa: F401
+    from deployar.tools.registry import REGISTRY
+
+    respx.get(f"{API}/v1/networks").respond(json={"networks": [{"_id": "net-1", "name": "deployar"}]})
+    respx.post(f"{API}/v1/projects").respond(409, json={"message": "project exists"})
+    mine = respx.get(f"{API}/v1/projects/shop").respond(json={"project": {"name": "shop"}})
+    ctx = await _ctx_with_connection()
+    args = {"app_root": ".", "name": "shop", "platform": "docker", "plan_id": "small-g2"}
+    await approve(ctx, "create_app", args)
+    out = _payload(await REGISTRY.run(ctx, "create_app", args))
+    assert out["status"] == "ok" and out["data"]["already_existed"] is True and mine.called  # Deployar's data was reset
+
+
+@respx.mock
 async def test_database_url_goes_to_set_env_only_as_ciphertext() -> None:
     from deployar.tools.liara import deploy  # noqa: F401
     from deployar.tools.registry import REGISTRY
