@@ -1,5 +1,6 @@
 """Settings from env / the repo-root .env (names in .env.example)."""
 
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -23,10 +24,18 @@ class Settings(BaseSettings):
     llm_backend: str = "claude"
     boxapi_base_url: str = "https://ai.boxapi.ir/ai/v1"
     boxapi_api_key: SecretStr = SecretStr("")
+    boxapi_key_second: SecretStr = SecretStr("")  # used once the first key is out of credit
+    boxapi_model: str = "anthropic/claude-haiku-5.5"
 
     liara_api_base: str = "https://api.liara.ir"
     deployar_workdir: Path = Path("~/.deployar/work").expanduser()
     agent_url: str = "http://localhost:8800"
+
+    @field_validator("database_url")
+    @classmethod
+    def _asyncpg(cls, v: str) -> str:
+        # Liara (and create_database) hand out postgresql:// URLs; the agent's engine needs the asyncpg driver.
+        return re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", v)
 
     @field_validator("deployar_workdir")
     @classmethod

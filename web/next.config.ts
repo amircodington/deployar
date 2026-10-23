@@ -5,6 +5,7 @@ import type { NextConfig } from "next";
 const agentUrl = process.env.AGENT_URL ?? "http://localhost:8800";
 
 const nextConfig: NextConfig = {
+  output: "standalone", // the production image (root Dockerfile) runs .next/standalone/server.js
   // gzip buffers the proxied SSE stream until the run ends; this app is served on localhost only.
   compress: false,
   cacheComponents: true,

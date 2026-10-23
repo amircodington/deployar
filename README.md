@@ -113,4 +113,16 @@ make check   # ruff، mypy، pytest، eslint، tsc، vitest
 و همان کارت‌ها اجرا می‌کند. آزمایشگاه خطا در `lab/` است: یک اپ کوچک که `FAULT=memory|error|slow` آن را عمداً
 خراب می‌کند تا حلقه‌ی SRE روی حساب واقعی لیارا نشان داده شود.
 
+### اجرا روی سرور (لیارا)
+
+`Dockerfile` ریشه وب (Next.js) و ایجنت را در یک کانتینر می‌گذارد: ایجنت فقط روی loopback گوش می‌دهد و `/api`
+از طریق Next.js به آن می‌رسد، پس یک اپ لیارا کافی است و ایجنت هیچ‌وقت عمومی نیست. روی سرور ورود Claude Code
+نیست، پس `LLM_BACKEND=boxapi` است: همان حلقه‌ی ابزارها با `anthropic/claude-haiku-5.5` از BoxAPI، و هر ابزار
+همچنان از همان دروازه‌ی تأیید و تریگر دیتابیس رد می‌شود. وقتی اعتبار `BOXAPI_API_KEY` تمام شود،
+`BOXAPI_KEY_SECOND` خودکار جایش را می‌گیرد.
+
+envهای لازم: `DATABASE_URL` و `REDIS_URL` (از دیتابیس‌های لیارا؛ آدرس `postgresql://` خودکار به asyncpg تبدیل
+می‌شود)، `DEPLOYAR_TOKEN_KEYS`، `APPROVAL_SECRET`، `DEPLOYAR_PASSPHRASE`، `DEPLOYAR_EMAIL` (کاربر یکتا، هنگام
+شروع ساخته می‌شود)، `BOXAPI_API_KEY` و `BOXAPI_KEY_SECOND`. مهاجرت‌ها هنگام شروع کانتینر اجرا می‌شوند.
+
 اسناد طراحی: `docs/SYSTEM-DESIGN.md`، `docs/ARCHITECTURE.md`، `docs/DATA-MODEL.md`، `docs/decisions.md`.

@@ -83,3 +83,14 @@ def test_static_and_laravel_and_custom_docker() -> None:
 def test_nothing_deployable_is_a_warning_not_a_guess() -> None:
     r = analyze(Repo.from_files({"README.md": "hello"}))
     assert r["apps"] == [] and r["warnings"][0]["code"] == "no_app_found"
+
+
+def test_a_root_dockerfile_that_builds_the_sub_apps_is_one_app() -> None:
+    files = {
+        "web/package.json": json.dumps({"dependencies": {"next": "16"}}),
+        "agent/pyproject.toml": "[project]\n",
+        "Dockerfile": "FROM node:24 AS web\nCOPY web/ ./\nFROM python:3.13\nCOPY agent/ ./\nEXPOSE 3000\n",
+    }
+    assert [a["root"] for a in analyze(Repo.from_files(files))["apps"]] == ["."]
+    files["Dockerfile"] = "FROM python:3.13\nCOPY . .\n"  # a local-dev image: the sub-apps stay separate
+    assert [a["root"] for a in analyze(Repo.from_files(files))["apps"]] == ["agent", "web"]

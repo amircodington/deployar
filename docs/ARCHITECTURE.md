@@ -475,7 +475,7 @@ docker-compose.yml  Makefile  .env.example  .githooks/
 | 8 | Deterministic detectors and signal scores, LLM explains | repeatable diagnoses, testable evals | eval top-1 plateaus below 80% |
 | 9 | `Limitation` is a result type, not an exception | the agent must relay it; the UI shows it; counted for the md doc | never |
 | 10 | SSE with a Redis stream per run and `Last-Event-ID` replay | simple, one direction, resumable | two-way live editing |
-| 11 | Agent on host, rest in Compose; target app on Liara | the Claude login lives on the host | BoxAPI backend ships |
+| 11 | Agent on host, rest in Compose; target app on Liara | the Claude login lives on the host | BoxAPI backend ships (done: decision 14, root Dockerfile) |
 | 12 | Tokens AES-GCM with key id, resolved server-side per call | never in the LLM, rotatable | multi-tenant → KMS |
 | 13 | Own HTTP probe for latency | Liara likely exposes no response-time metric; source labelled `probe` | Liara adds latency metrics |
 | 14 | No 24/7 monitoring stack; scheduled checks only | brief says not needed; less to run | paying users |
