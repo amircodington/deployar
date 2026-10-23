@@ -6,7 +6,8 @@ if [ -z "$DATABASE_URL" ]; then
   # shortcut: data lives in the container and resets on restart; set DATABASE_URL to a Liara database to keep it.
   PG=$(ls -d /usr/lib/postgresql/*/bin | tail -1)
   mkdir -p /var/lib/deployar-pg && chown postgres /var/lib/deployar-pg
-  su postgres -s /bin/sh -c "$PG/initdb -D /var/lib/deployar-pg -U deployar --auth=trust >/dev/null"
+  # UTF8 explicitly: the image has no locale, so initdb would pick SQL_ASCII and every Persian insert fails
+  su postgres -s /bin/sh -c "$PG/initdb -D /var/lib/deployar-pg -U deployar --auth=trust -E UTF8 --locale=C.UTF-8 >/dev/null"
   su postgres -s /bin/sh -c "$PG/pg_ctl -D /var/lib/deployar-pg -l /tmp/pg.log -w start \
     -o '-c listen_addresses=127.0.0.1 -c shared_buffers=32MB -c max_connections=30'"
   su postgres -s /bin/sh -c "$PG/createdb -h 127.0.0.1 -U deployar deployar"
