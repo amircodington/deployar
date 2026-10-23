@@ -54,18 +54,6 @@ def test_repack_keeps_only_the_app_root() -> None:
     assert "web/package.json" in names(repack(src, ".")) and ".git/config" not in names(repack(src, "."))
 
 
-def test_a_dockerfile_pulling_latest_releases_without_build_cache() -> None:
-    from deployar.tools.liara.deploy import pulls_moving_tag, repack
-
-    def src(dockerfile: str) -> bytes:
-        return repack(tarball({"Dockerfile": dockerfile, "README.md": "hi"}), ".")
-
-    assert pulls_moving_tag(src("FROM ghcr.io/me/app:latest\nEXPOSE 3000\n"))
-    assert pulls_moving_tag(src("FROM ghcr.io/me/app\n"))
-    assert not pulls_moving_tag(src("FROM ghcr.io/me/app:1.4.2\n"))  # a pinned tag can be cached
-    assert not pulls_moving_tag(src("FROM node:24\nCOPY . .\n"))  # a real build keeps its cache (5-minute limit)
-
-
 @respx.mock
 async def test_sensitive_tools_refuse_without_approval() -> None:
     from deployar.tools.liara import deploy  # noqa: F401

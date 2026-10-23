@@ -286,25 +286,9 @@ async def _port(ctx: ToolContext, p: Project) -> int:
     return 3000 if p.platform in ("node", "next") else 80
 
 
-def pulls_moving_tag(source: bytes) -> bool:
-    """A Dockerfile that only pulls `image:latest` (or no tag) needs Liara's build cache off, or it reuses the old
-    pull and ships the previous image (seen 2026-10-23 on deployar-app)."""
-    try:
-        with tarfile.open(fileobj=io.BytesIO(source), mode="r:gz") as t:
-            f = t.extractfile("Dockerfile")
-            text = f.read().decode(errors="replace") if f else ""
-    except (KeyError, tarfile.TarError):
-        return False
-    if re.search(r"^\s*(COPY|ADD)\s", text, re.M | re.I):
-        return False
-    images = re.findall(r"^\s*FROM\s+(\S+)", text, re.M | re.I)
-    return any(":latest" in i or (":" not in i.rsplit("/", 1)[-1] and "@" not in i) for i in images)
-
-
 @deployar_tool("deploy_release", group="liara", risk="sensitive", description=fa.DEPLOY_DESC, preview=_preview_deploy,
                input_schema={"type": "object", "properties": {"project_id": {"type": "string"},
                                                               "ref": {"type": "string"},
-                                                              "no_cache": {"type": "boolean"},
                                                               "reason_fa": {"type": "string"}}})  # fmt: skip
 async def deploy_release(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
     async def run() -> ToolResult:
@@ -325,7 +309,6 @@ async def deploy_release(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
             source_id = await c.upload_source(p.liara_app_name, source)
             release_id = await c.create_release(p.liara_app_name, {
                 "sourceID": source_id, "port": port, "type": p.platform,
-                "build": {"cache": not (args.get("no_cache") or pulls_moving_tag(source))},
                 "gitInfo": {"commit": sha, "branch": args.get("ref") or p.repo_default_branch},
                 "message": f"deployar {sha[:7]}"})  # fmt: skip
         async with ctx.sessions.begin() as s:
