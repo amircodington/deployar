@@ -311,7 +311,8 @@ async def deploy_release(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
             release_id = await c.create_release(p.liara_app_name, {
                 "sourceID": source_id, "port": port, "type": p.platform,
                 "gitInfo": {"commit": sha, "branch": args.get("ref") or p.repo_default_branch},
-                "message": f"deployar {sha[:7]}"})  # fmt: skip
+                # Iran's builder stalled on apt-get (deb.debian.org) for 15+ min; the basic bundle has germanyBuilder
+                "build": {"location": "germany"}, "message": f"deployar {sha[:7]}"})  # fmt: skip
         async with ctx.sessions.begin() as s:
             d = Deployment(project_id=p.id, run_id=ctx.run_id, app_root=p.app_root, liara_app_name=p.liara_app_name,
                            commit_sha=sha, liara_source_id=source_id, liara_release_id=release_id,

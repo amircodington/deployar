@@ -149,6 +149,7 @@ async def test_deploy_release_uploads_the_app_folder_and_records_a_deployment() 
     assert names(archive) == ["Dockerfile", "manage.py"]
     sent = json.loads(release.calls[0].request.content)
     assert sent["sourceID"] == "src-1" and sent["type"] == "docker" and sent["gitInfo"]["commit"] == SHA
+    assert sent["build"] == {"location": "germany"}  # builds outside Iran, where apt and pypi answer
 
     conn = await asyncpg.connect(PG_TEST)
     try:
