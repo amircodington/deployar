@@ -19,7 +19,7 @@ async def test_dashboard_and_monitor() -> None:
                "isDeployed": True}  # fmt: skip
     respx.get(f"{API}/v1/projects").respond(json={"projects": [app_row]})
     respx.get(f"{API}/v1/projects/torob-gard").respond(json=cassette("project"))
-    respx.get(f"{API}/v1/projects/torob-gard/logs").respond(json=cassette("logs"))
+    respx.get(f"{API}/v2/projects/torob-gard/logs").respond(json=cassette("logs"))
     respx.get(f"{API}/v1/projects/torob-gard/releases").respond(json=cassette("releases"))
     respx.get(url__regex=rf"{API}/v1/projects/torob-gard/metrics/(memory|cpu)").respond(json={"result": [
         {"applet": "web", "values": [[1, "2"], [2, "3"]]}, {"applet": "worker", "values": [[1, "5"]]}]})  # fmt: skip

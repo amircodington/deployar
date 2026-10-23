@@ -21,5 +21,11 @@ cd /app/agent
 .venv/bin/deployar-seed --email "${DEPLOYAR_EMAIL:-admin@deployar.local}"  # login needs the one user
 # shortcut: no supervisor, so if the agent dies the web keeps serving and /api returns 502; add one if it bites.
 .venv/bin/uvicorn deployar.main:app --host 127.0.0.1 --port 8800 &
+# Next.js answers Liara's health check, so start it only once /api works (the agent takes ~10 s on 0.5 CPU)
+for _ in $(seq 60); do
+  .venv/bin/python -c "import urllib.request as u; u.urlopen('http://127.0.0.1:8800/api/health', timeout=1)" \
+    2>/dev/null && break
+  sleep 1
+done
 cd /app/web
 PORT="${PORT:-3000}" HOSTNAME=0.0.0.0 exec node server.js

@@ -5,7 +5,9 @@ before anything else can see them. No request logging: httpx is kept at WARNING 
 """
 
 import asyncio
+import json
 import time
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -18,6 +20,15 @@ from deployar.runtime.plan import bundle_for
 _RETRY_STATUS = {429, 500, 502, 503, 504}
 _BACKOFF_S = (0.5, 1.0, 2.0)
 _MIN_INTERVAL_S = 0.2  # 5 requests/s per token
+
+
+def _entry(line: str) -> dict[str, str]:
+    """A v2 log line is JSON {"type": "stdout|stderr", "_entry": "..."}; older/plain lines pass through."""
+    try:
+        d = json.loads(line)
+        return {"type": str(d.get("type", "stdout")), "message": str(d["_entry"])}
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return {"type": "stdout", "message": line}
 
 
 def _message(r: httpx.Response) -> str:
@@ -117,7 +128,13 @@ class LiaraClient:
         return p
 
     async def logs(self, name: str, since: int) -> list[dict[str, Any]]:
-        return list(await self.request("GET", f"/v1/projects/{name}/logs", params={"since": since}) or [])
+        """v2 (the v1 route now answers "please upgrade your client"): groups of [ns timestamp, line], flattened
+        to the old [{type, datetime, message}] shape, oldest first, as the CLI does."""
+        params = {"start": since, "direction": "forward", "last_lines": "false"}
+        data = await self.request("GET", f"/v2/projects/{name}/logs", params=params) or {}
+        rows = [(int(ts), line) for group in data.get("data") or [] for ts, line in group.get("values") or []]
+        return [{"datetime": datetime.fromtimestamp(ts / 1e9, UTC).isoformat(), **_entry(line)}
+                for ts, line in sorted(rows)]  # fmt: skip
 
     async def releases(self, name: str, count: int = 10) -> dict[str, Any]:
         data: dict[str, Any] = await self.request(

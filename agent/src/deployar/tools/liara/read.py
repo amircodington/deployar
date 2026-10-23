@@ -139,7 +139,7 @@ async def get_logs(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
         if grep := args.get("grep"):
             lines = [ln for ln in lines if grep.lower() in str(ln.get("message", "")).lower()]
         tail = [{"ts": ln.get("datetime"), "type": ln.get("type"), "message": ln.get("message")} for ln in lines[-500:]]
-        return Ok({"lines": tail, "count": len(lines)}, source=f"liara:/v1/projects/{name}/logs")
+        return Ok({"lines": tail, "count": len(lines)}, source=f"liara:/v2/projects/{name}/logs")
 
     return await _guard(run())
 

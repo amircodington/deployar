@@ -97,7 +97,7 @@ async def test_every_read_tool_against_its_cassette() -> None:
     respx.get(f"{API}/v1/billing").respond(json=cassette("billing"))
     respx.get(f"{API}/v1/me").respond(json=cassette("me"))
     respx.get(f"{API}/v1/projects/torob-gard").respond(json=cassette("project"))
-    respx.get(f"{API}/v1/projects/torob-gard/logs").respond(json=cassette("logs"))
+    respx.get(f"{API}/v2/projects/torob-gard/logs").respond(json=cassette("logs"))
     respx.get(f"{API}/v1/projects/torob-gard/releases").respond(json=cassette("releases"))
     respx.get(f"{API}/v1/projects/torob-gard/metrics/summary").respond(json=cassette("metrics_summary"))
     respx.get(url__regex=rf"{API}/v1/projects/torob-gard/metrics/(memory|cpu)").respond(json=cassette("metrics_series"))

@@ -1,3 +1,23 @@
-[{"type": "stdout", "datetime": "2026-10-22T09:00:01Z", "message": "Booting gunicorn"},
- {"type": "stderr", "datetime": "2026-10-22T09:05:44Z", "message": "WORKER TIMEOUT (pid:42)"},
- {"type": "stdout", "datetime": "2026-10-22T09:06:00Z", "message": "GET /api/health 200"}]
+{
+ "data": [
+  {
+   "metaData": {
+    "releaseId": "r2"
+   },
+   "values": [
+    [
+     "1792659601000000000",
+     "Booting gunicorn"
+    ],
+    [
+     "1792659944000000000",
+     "{\"type\": \"stderr\", \"_entry\": \"WORKER TIMEOUT (pid:42)\"}"
+    ],
+    [
+     "1792659960000000000",
+     "GET /api/health 200"
+    ]
+   ]
+  }
+ ]
+}

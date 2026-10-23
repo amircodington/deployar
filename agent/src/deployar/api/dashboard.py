@@ -100,7 +100,7 @@ async def monitor(
                          "type": p.get("type"), "source": base}  # fmt: skip
         lines = await c.logs(name, since)
         out["logs"] = {"lines": [{"ts": ln.get("datetime"), "type": ln.get("type"), "message": ln.get("message")}
-                                 for ln in lines[-300:]], "source": f"{base}/logs"}  # fmt: skip
+                                 for ln in lines[-300:]], "source": f"liara:/v2/projects/{name}/logs"}  # fmt: skip
         try:
             memory = _series(await c.metrics(name, "memory", since))
             cpu = _series(await c.metrics(name, "cpu", since))
