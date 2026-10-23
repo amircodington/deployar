@@ -4,22 +4,34 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { AuthGate } from "@/components/AuthGate";
 import { Icon } from "@/components/Icon";
-import { CopyCommand, Skeleton, SourceTag, StatusChip } from "@/components/ui";
+import { CopyCommand, Segmented, Skeleton, SourceTag, StatusChip } from "@/components/ui";
 import { AgentError, api, type Dashboard } from "@/lib/api";
 import { fa } from "@/lib/fa";
 import { toman } from "@/lib/money";
 import { relativeFa } from "@/lib/persian";
+import { setTheme, type Theme, useTheme } from "@/lib/theme";
 import { useDashboard } from "@/lib/useDashboard";
 
 const INPUT =
   "mono min-h-12 w-full rounded-[16px] border border-line bg-ground px-4 outline-none transition-colors duration-150 focus-visible:border-amber";
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children, ltr = false }: { label: string; children: React.ReactNode; ltr?: boolean }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-4 border-b border-line/60 py-2 last:border-0">
-      <dt className="text-[13px] text-ink-muted">{label}</dt>
-      <dd className="min-w-0 truncate text-[14px]">{children}</dd>
+    <div className="flex min-h-12 items-center justify-between gap-4 border-b border-line/50 py-2 last:border-0">
+      <dt className="shrink-0 text-[13px] text-ink-muted">{label}</dt>
+      <dd dir={ltr ? "ltr" : undefined} className="min-w-0 truncate text-[14px]">
+        {children}
+      </dd>
     </div>
+  );
+}
+
+/** A long id reads as its two ends; the whole value stays in the tooltip. */
+function ShortId({ id }: { id: string }) {
+  return (
+    <span className="mono text-ink" title={id}>
+      {id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id}
+    </span>
   );
 }
 
@@ -38,6 +50,7 @@ function ConnectionCard({
   icon,
   connected,
   details,
+  highlight,
   steps,
   form,
   index,
@@ -46,6 +59,7 @@ function ConnectionCard({
   icon: "box" | "git";
   connected: boolean | null;
   details: React.ReactNode;
+  highlight?: React.ReactNode;
   steps: React.ReactNode;
   form: (close: () => void) => React.ReactNode;
   index: number;
@@ -53,8 +67,11 @@ function ConnectionCard({
   const [editing, setEditing] = useState(false);
   const open = connected === false || editing;
   return (
-    <section className="tile-in rounded-[28px] bg-card p-5 md:p-6" style={{ "--i": index } as React.CSSProperties}>
-      <header className="mb-4 flex items-center gap-3">
+    <section
+      className="tile-in flex h-full min-w-0 flex-col rounded-[28px] bg-card p-5 md:p-6"
+      style={{ "--i": index } as React.CSSProperties}
+    >
+      <header className="mb-5 flex items-center gap-3">
         <span className="grid size-11 place-items-center rounded-full bg-raised">
           <Icon name={icon} />
         </span>
@@ -74,11 +91,16 @@ function ConnectionCard({
           <Skeleton className="h-5 w-2/3" />
         </div>
       ) : (
-        connected && <dl className="rounded-[18px] bg-raised/60 px-4">{details}</dl>
+        connected && (
+          <>
+            {highlight}
+            <dl className="rounded-[18px] bg-raised/60 px-4">{details}</dl>
+          </>
+        )
       )}
 
       <div className="disclose" data-open={open}>
-        <div>
+        <div className="min-w-0">
           <div className={connected ? "pt-5" : ""}>
             <ol className="mb-4 flex flex-col gap-2 text-[14px] text-ink-muted">{steps}</ol>
             {form(() => setEditing(false))}
@@ -87,15 +109,17 @@ function ConnectionCard({
       </div>
 
       {connected && (
-        <button
-          type="button"
-          onClick={() => setEditing((e) => !e)}
-          aria-expanded={editing}
-          className="pressable mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-raised px-4 text-[14px] hover:bg-line"
-        >
-          <Icon name={editing ? "x" : "key"} size={18} />
-          {editing ? fa.cancel : fa.replaceToken}
-        </button>
+        <div className="mt-auto flex pt-5">
+          <button
+            type="button"
+            onClick={() => setEditing((e) => !e)}
+            aria-expanded={editing}
+            className="pressable inline-flex min-h-11 items-center gap-2 rounded-full border border-line px-4 text-[14px] text-ink-muted transition-colors duration-150 hover:border-ink-faint hover:text-ink"
+          >
+            <Icon name={editing ? "x" : "key"} size={18} />
+            {editing ? fa.cancel : fa.replaceToken}
+          </button>
+        </div>
       )}
     </section>
   );
@@ -107,7 +131,7 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
       <span className="grid size-6 shrink-0 place-items-center rounded-full bg-raised text-[12px] text-ink">
         {new Intl.NumberFormat("fa-IR").format(n)}
       </span>
-      <span className="flex-1 pt-0.5 leading-6">{children}</span>
+      <span className="min-w-0 flex-1 pt-0.5 leading-6">{children}</span>
     </li>
   );
 }
@@ -182,23 +206,32 @@ function LiaraCard({ data, reload }: { data: Dashboard | null; reload: () => Pro
       details={
         l && (
           <>
-            <Row label={fa.account}>{l.account ?? "—"}</Row>
-            <Row label={fa.token}>
+            <Row label={fa.account} ltr>
+              {l.account ?? "—"}
+            </Row>
+            <Row label={fa.token} ltr>
               <Masked last4={l.token_last4} />
             </Row>
-            <Row label={fa.team}>{l.team_id ? <span className="mono">{l.team_id}</span> : fa.personal}</Row>
-            <Row label={l.team_id ? fa.teamCredit : fa.accountCredit}>
-              {l.balance?.toman != null ? (
-                <span className="flex flex-col items-end">
-                  <span>{toman(l.balance.toman)}</span>
-                  <SourceTag source={l.balance.source} at={l.balance.observed_at} />
-                </span>
-              ) : (
-                <span className="text-red">{l.error?.message_fa ?? "—"}</span>
-              )}
+            <Row label={fa.team} ltr={Boolean(l.team_id)}>
+              {l.team_id ? <ShortId id={l.team_id} /> : fa.personal}
             </Row>
             <Row label={fa.lastChecked}>{relativeFa(l.verified_at)}</Row>
           </>
+        )
+      }
+      highlight={
+        l && (
+          <div className="mb-3 rounded-[18px] bg-mint-soft/60 px-4 py-3">
+            <p className="text-[13px] text-ink-muted">{l.team_id ? fa.teamCredit : fa.accountCredit}</p>
+            {l.balance?.toman != null ? (
+              <>
+                <p className="whitespace-nowrap text-[24px] font-light leading-9 text-ink">{toman(l.balance.toman)}</p>
+                <SourceTag source={l.balance.source} at={l.balance.observed_at} />
+              </>
+            ) : (
+              <p className="text-[14px] text-red">{l.error?.message_fa ?? "—"}</p>
+            )}
+          </div>
         )
       }
       steps={fa.liaraSteps.map((t, i) => (
@@ -250,10 +283,10 @@ function GithubCard({ data, reload }: { data: Dashboard | null; reload: () => Pr
       details={
         g && (
           <>
-            <Row label={fa.account}>
+            <Row label={fa.account} ltr>
               <span className="mono">{g.login}</span>
             </Row>
-            <Row label={fa.token}>
+            <Row label={fa.token} ltr>
               <Masked last4={g.token_last4} />
             </Row>
             <Row label={fa.lastChecked}>{relativeFa(g.verified_at)}</Row>
@@ -264,7 +297,7 @@ function GithubCard({ data, reload }: { data: Dashboard | null; reload: () => Pr
         <>
           <Step n={1}>
             {fa.githubSteps[0]}
-            <span className="mt-2 block">
+            <span className="mt-3 block">
               <CopyCommand command="gh auth token | pbcopy" />
             </span>
           </Step>
@@ -291,6 +324,21 @@ function GithubCard({ data, reload }: { data: Dashboard | null; reload: () => Pr
   );
 }
 
+function Appearance() {
+  const theme = useTheme();
+  const options = (["system", "light", "dark"] as const).map((v) => ({ value: v, label: fa.themes[v] }));
+  return (
+    <section className="tile-in mt-4 flex flex-wrap items-center justify-between gap-4 rounded-[28px] bg-card p-5 md:p-6"
+      style={{ "--i": 2 } as React.CSSProperties}>
+      <div className="min-w-0">
+        <h2 className="text-lg font-medium">{fa.appearance}</h2>
+        <p className="mt-1 text-[13px] leading-6 text-ink-muted">{fa.appearanceLead}</p>
+      </div>
+      <Segmented<Theme> label={fa.appearance} value={theme} options={options} onChange={setTheme} />
+    </section>
+  );
+}
+
 function Connections() {
   const { data, reload } = useDashboard();
   return (
@@ -298,10 +346,11 @@ function Connections() {
       <p className="text-[32px] font-light leading-10 text-ink-faint">{fa.settingsLight}</p>
       <h1 className="mb-3 text-[32px] font-extrabold leading-10">{fa.settings}</h1>
       <p className="mb-8 max-w-xl text-[14px] leading-6 text-ink-muted">{fa.connectionsLead}</p>
-      <div className="grid gap-4 md:grid-cols-2 md:items-start">
+      <div className="grid gap-4 md:grid-cols-2">
         <LiaraCard data={data} reload={reload} />
         <GithubCard data={data} reload={reload} />
       </div>
+      <Appearance />
     </main>
   );
 }

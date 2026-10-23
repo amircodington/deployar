@@ -7,7 +7,7 @@ import { AuthGate } from "@/components/AuthGate";
 import { Icon } from "@/components/Icon";
 import { LimitationBox } from "@/components/cards/LimitationBox";
 import { LineChart } from "@/components/monitor/LineChart";
-import { Skeleton, SourceTag, StatusChip } from "@/components/ui";
+import { Segmented, Skeleton, SourceTag, StatusChip } from "@/components/ui";
 import { AgentError, api, type LogLine, type Monitor as MonitorData } from "@/lib/api";
 import { fa } from "@/lib/fa";
 import { clockFa, relativeFa, toPersianDigits } from "@/lib/persian";
@@ -18,37 +18,6 @@ const REFRESH_MS = 15_000;
 
 const mb = (bytes: number) => `${toPersianDigits(Math.round(bytes / 1_048_576))} مگابایت`;
 const cores = (v: number) => `${toPersianDigits(v.toFixed(2)).replace(".", "٫")} هسته`;
-
-function Segmented<T extends string | number>({
-  value,
-  options,
-  onChange,
-  label,
-}: {
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (v: T) => void;
-  label: string;
-}) {
-  return (
-    <div role="radiogroup" aria-label={label} className="flex min-w-0 max-w-full gap-1 overflow-x-auto rounded-full bg-card p-1 scroll-thin">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={o.value === value}
-          onClick={() => onChange(o.value)}
-          className={`pressable min-h-10 shrink-0 rounded-full px-4 text-[13px] transition-colors duration-150 ${
-            o.value === value ? "bg-raised text-ink" : "text-ink-muted hover:text-ink"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function Card({ i, title, aside, children, className = "" }: {
   i: number; title: string; aside?: React.ReactNode; children: React.ReactNode; className?: string;

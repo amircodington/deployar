@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { THEME_BOOT } from "@/lib/themeBoot";
 
 // Fonts are self-hosted from /public/fonts: nothing may load from outside Iran at runtime (rule 5).
 export const metadata: Metadata = {
@@ -20,7 +21,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="fa" dir="rtl" className="h-full antialiased">
+    // data-theme is set by THEME_BOOT before hydration, so React must not warn about it
+    <html lang="fa" dir="rtl" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body className="min-h-dvh">{children}</body>
     </html>
   );

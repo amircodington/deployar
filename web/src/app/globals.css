@@ -76,8 +76,9 @@
   color-scheme: dark;
 }
 
+/* Theme: the system decides unless the user picked one in Settings (html[data-theme], set before paint). */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --ground: #f4f2ee;
     --shell: #fbfaf8;
     --card: #ffffff;
@@ -104,6 +105,33 @@
     --shadow-shell: 0 30px 60px -24px rgba(23, 21, 26, 0.18);
     color-scheme: light;
   }
+}
+:root[data-theme="light"] {
+  --ground: #f4f2ee;
+  --shell: #fbfaf8;
+  --card: #ffffff;
+  --raised: #eeebe6;
+  --line: #dedad3;
+  --ink: #17151a;
+  --ink-muted: #625c68;
+  --ink-faint: #8a8490;
+  --amber: #b86e00;
+  --amber-ink: #8a5200;
+  --amber-soft: #fbebd3;
+  --peach: #e9c49a;
+  --mint: #0d5e46;
+  --mint-soft: #ddf3ea;
+  --violet: #5550c8;
+  --red: #b03030;
+  --red-soft: #f9e1e1;
+  --go: #0e9f6e;
+  --go-hi: #34d399;
+  --go-soft: #dcf7ea;
+  --on-go: #ffffff;
+  --limit: #5e5965;
+  --limit-soft: #eceae6;
+  --shadow-shell: 0 30px 60px -24px rgba(23, 21, 26, 0.18);
+  color-scheme: light;
 }
 
 @theme inline {
