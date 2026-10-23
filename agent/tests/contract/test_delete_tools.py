@@ -75,3 +75,24 @@ async def test_delete_database_finds_it_by_name_and_never_returns_its_password()
     out = await REGISTRY.run(ctx, "delete_database", args)
     data = _payload(out)["data"]
     assert data["verified_gone"] is True and gone.called and "Pw-1" not in str(out)
+
+
+@respx.mock
+async def test_an_app_deployar_has_no_record_of_gets_a_project_when_its_chat_opens() -> None:
+    import asyncpg
+    from pgtest import PG_TEST
+
+    from deployar.api.conversations import _adopt
+    from deployar.api.deps import get_runtime
+
+    respx.get(f"{API}/v1/projects/legacy-shop").respond(json={"project": {"type": "docker", "planID": "small-g2"}})
+    respx.get(f"{API}/v1/projects/not-mine").respond(404)
+    ctx = await _ctx_with_connection()
+    pid = await _adopt(get_runtime(), ctx.user_id, "legacy-shop")
+    assert pid is not None and await _adopt(get_runtime(), ctx.user_id, "not-mine") is None
+    conn = await asyncpg.connect(PG_TEST)
+    try:
+        row = await conn.fetchrow("select liara_app_name, platform, plan_id from project where id = $1", pid)
+    finally:
+        await conn.close()
+    assert dict(row) == {"liara_app_name": "legacy-shop", "platform": "docker", "plan_id": "small-g2"}

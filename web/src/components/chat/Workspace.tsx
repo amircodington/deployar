@@ -132,7 +132,7 @@ export function Workspace({ projectId }: { projectId?: string }) {
       try {
         const { run_id, conversation_id } = await api.startRun({
           text,
-          project_id: projectId ?? (conversation.current ? undefined : appProject.current),
+          project_id: projectId ?? appProject.current, // an app's chat always runs on that app
           conversation_id: conversation.current,
         });
         if (conversation.current !== conversation_id) {
