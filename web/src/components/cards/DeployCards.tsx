@@ -104,6 +104,7 @@ export function EnvRequestCard({
   onDone: (refs: { key: string; value_ref: string }[]) => void;
 }) {
   const [values, setValues] = useState<Record<string, string>>({});
+  const [shown, setShown] = useState<Record<string, boolean>>({}); // the user checks what they typed; never sent
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ready = data.keys.every((k) => values[k.key]?.trim());
@@ -118,6 +119,7 @@ export function EnvRequestCard({
           const refs = [];
           for (const k of data.keys) refs.push(await api.envValue(data.project_id, k.key, values[k.key].trim()));
           setValues({});
+          setShown({});
           onDone(refs);
         } catch (err) {
           setError(err instanceof AgentError ? err.message : fa.connectionLost);
@@ -136,15 +138,29 @@ export function EnvRequestCard({
         <label key={k.key} className="flex flex-col gap-1.5">
           <span className="mono text-[13px]">{k.key}</span>
           {k.hint_fa && <span className="text-[12px] text-ink-faint">{k.hint_fa}</span>}
-          <input
-            type="password"
-            autoComplete="off"
-            spellCheck={false}
-            disabled={sent}
-            value={values[k.key] ?? ""}
-            onChange={(e) => setValues((v) => ({ ...v, [k.key]: e.target.value }))}
-            className="mono min-h-12 rounded-[14px] border border-line bg-ground px-4 outline-none focus-visible:border-amber disabled:opacity-50"
-          />
+          <span dir="ltr" className="relative flex">
+            <input
+              type={shown[k.key] ? "text" : "password"}
+              autoComplete="off"
+              spellCheck={false}
+              disabled={sent}
+              value={values[k.key] ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, [k.key]: e.target.value }))}
+              className="mono min-h-12 w-full rounded-[14px] border border-line bg-ground ps-4 pe-12 outline-none focus-visible:border-amber disabled:opacity-50"
+            />
+            {!sent && (
+              <button
+                type="button"
+                onClick={() => setShown((s) => ({ ...s, [k.key]: !s[k.key] }))}
+                aria-label={shown[k.key] ? fa.hideValue : fa.showValue}
+                aria-pressed={!!shown[k.key]}
+                title={shown[k.key] ? fa.hideValue : fa.showValue}
+                className="pressable absolute inset-y-0 end-0 grid w-12 place-items-center rounded-e-[14px] text-ink-muted hover:text-ink"
+              >
+                <Icon name={shown[k.key] ? "eyeOff" : "eye"} size={18} />
+              </button>
+            )}
+          </span>
         </label>
       ))}
       {!sent && (

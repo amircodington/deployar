@@ -78,6 +78,8 @@ export const fa = {
   chats: "چت‌ها",
   appChats: (app: string) => `چت‌های ${app}`,
   newChat: "چت جدید",
+  showValue: "نمایش مقدار",
+  hideValue: "پنهان کردن مقدار",
   noChats: "هنوز چتی نیست. هر گفتگو این‌جا می‌ماند تا بعداً ادامه‌اش بدهی.",
   chatWithApp: "گفتگو درباره‌ی این اپ",
   loadingChat: "در حال باز کردن چت…",
