@@ -17,7 +17,7 @@ from deployar import messages_fa as fa
 from deployar.core.redact import redact
 from deployar.models import Deployment, Project
 from deployar.tools.liara.read import _guard, liara_client
-from deployar.tools.project import project_of
+from deployar.tools.project import resolve_project
 from deployar.tools.registry import ToolContext, deployar_tool
 from deployar.tools.results import Ok, ToolError, ToolResult
 
@@ -148,7 +148,7 @@ async def _set(ctx: ToolContext, deployment_id: uuid.UUID, status: str, **values
             "key": {"type": "string"}, "hint_fa": {"type": "string"}}}}}})  # fmt: skip
 async def request_env_values(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
     """Shows a form card; values go from the form to /api/projects/{id}/env-values, never through chat."""
-    pid = args.get("project_id") or await project_of(ctx)
+    pid = await resolve_project(ctx, args.get("project_id"))  # the model often passes the app name, not the uuid
     if pid is None:
         return ToolError("no_project", fa.NO_PROJECT)
     keys = [{"key": str(k["key"]), "hint_fa": k.get("hint_fa")} for k in args.get("keys") or []]

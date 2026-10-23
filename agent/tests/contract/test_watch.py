@@ -103,3 +103,21 @@ async def test_liara_release_id_finds_the_deployment(monkeypatch: pytest.MonkeyP
     await _deployment(ctx, "6adb2510aa8f2ba374027585")  # the model passed Liara's id, not ours
     out = _payload(await REGISTRY.run(ctx, "watch_deployment", {"deployment_id": "6adb2510aa8f2ba374027585"}))
     assert out["status"] == "ok" and out["data"]["state"] == "TIMEDOUT", out
+
+
+async def test_the_env_form_gets_the_project_uuid_even_when_the_model_sends_the_app_name() -> None:
+    from dataclasses import replace
+
+    from deployar.tools.liara import watch  # noqa: F401
+    from deployar.tools.registry import REGISTRY
+
+    cards: list[tuple[str, dict[str, Any]]] = []
+
+    async def emit(kind: str, payload: dict[str, Any]) -> None:
+        cards.append((kind, payload))
+
+    ctx = replace(await _ctx_with_connection(), emit=emit)
+    await REGISTRY.run(ctx, "request_env_values", {"project_id": "torob-gard", "keys": [{"key": "API_KEY"}]})
+    assert cards == [
+        ("env_request", {"project_id": str(ctx.project_id), "keys": [{"key": "API_KEY", "hint_fa": None}]})
+    ]
