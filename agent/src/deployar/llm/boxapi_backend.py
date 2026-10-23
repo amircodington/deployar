@@ -4,6 +4,7 @@ The model sees every registered tool, but each call still goes through can_use_t
 Claude SDK uses), so approval stays in code. When the first key is out of credit, the second takes over.
 """
 
+import asyncio
 import json
 import logging
 import re
@@ -22,6 +23,8 @@ from deployar.runtime.gate import PREFIX, CanUseTool
 from deployar.tools.registry import Registry, ToolContext
 
 log = logging.getLogger(__name__)
+BACKOFF_S = (2.0, 5.0, 10.0)  # a retried call may be billed twice; better than a run that dies on one dropped connect
+RETRY_STATUS = {429, 502, 503, 504}
 _QUOTA = re.compile(r"credit|quota|balance|insufficient|billing", re.I)
 
 # Tool-call detail of a conversation lives in process memory; after a restart the history is rebuilt from the
@@ -77,10 +80,23 @@ class BoxAPIBackend:
         return self.models[self.key]  # each key may allow other models (BoxAPI per-key allow list)
 
     async def _chat(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> dict[str, Any]:
+        tries = 0
         while True:
             body = {"model": self.model, "messages": messages, "tools": tools}
             headers = {"Authorization": f"Bearer {self.keys[self.key]}"} if self.keys else {}
-            r = await self.http.post("/chat/completions", json=body, headers=headers)
+            try:
+                r = await self.http.post("/chat/completions", json=body, headers=headers)
+            except httpx.TransportError as e:  # GapGPT from Iran: dropped connects, TLS resets, read timeouts
+                r = None
+                err: Exception = e
+            if (r is None or r.status_code in RETRY_STATUS) and tries < len(BACKOFF_S):
+                log.warning("LLM gateway %s; retry %s in %ss", r.status_code if r else type(err).__name__, tries + 1,
+                            BACKOFF_S[tries])  # fmt: skip
+                await asyncio.sleep(BACKOFF_S[tries])
+                tries += 1
+                continue
+            if r is None:
+                raise err
             if is_quota_error(r) and self.key + 1 < len(self.keys):
                 self.key += 1
                 log.warning("BoxAPI key out of credit (HTTP %s); using the second key", r.status_code)

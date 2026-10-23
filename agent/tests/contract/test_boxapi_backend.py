@@ -132,3 +132,32 @@ async def test_after_a_restart_the_chat_remembers_its_saved_turns() -> None:
     sent = json.loads(route.calls[0].request.content)["messages"]
     assert [m["content"] for m in sent] == ["sys", "اپ من shop است", "باشد، shop", "اسم اپم چه بود؟"]
     assert not evs[-1].is_error
+
+
+@respx.mock
+async def test_dropped_connections_are_retried_then_the_run_goes_on(monkeypatch: Any) -> None:
+    from deployar.llm import boxapi_backend
+
+    monkeypatch.setattr(boxapi_backend, "BACKOFF_S", (0.0, 0.0, 0.0))
+    route = respx.post(f"{BASE}/chat/completions")
+    route.side_effect = [httpx.ConnectError("reset"), httpx.Response(503), _msg("سلام")]
+
+    async def gate(*_: Any) -> Any:
+        return PermissionResultAllow()
+
+    evs = await _events(_backend(["k1"]), gate)
+    assert route.call_count == 3 and not evs[-1].is_error
+
+
+@respx.mock
+async def test_a_gateway_that_stays_down_ends_the_run_as_an_error(monkeypatch: Any) -> None:
+    from deployar.llm import boxapi_backend
+
+    monkeypatch.setattr(boxapi_backend, "BACKOFF_S", (0.0, 0.0))
+    route = respx.post(f"{BASE}/chat/completions").mock(side_effect=httpx.ConnectTimeout("no route"))
+
+    async def gate(*_: Any) -> Any:
+        return PermissionResultAllow()
+
+    evs = await _events(_backend(["k1"]), gate)
+    assert route.call_count == 3 and evs[-1].is_error and "ConnectTimeout" in (evs[-1].error or "")
