@@ -115,7 +115,7 @@ async def create_app(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
             except DeployarError as e:
                 if e.code != "liara_exists":
                     raise
-                await c.project(name)  # 409 and readable with this token: the user's own app (Deployar's data was reset)
+                await c.project(name)  # 409 but readable with this token: the user's own app (our data was reset)
                 existing = True
         async with ctx.sessions.begin() as s:  # one project per app (ADR 11): the repo project or a sibling
             target = await s.scalar(select(Project).where(
