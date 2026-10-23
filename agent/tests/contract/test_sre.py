@@ -86,3 +86,15 @@ def test_human_only_tools_are_registered_and_never_run() -> None:
 
     for name in ("top_up_balance", "registrar_dns_records"):
         assert REGISTRY.risk_of(name) == "human_only" and fa.HUMAN_STEPS[name]
+
+
+@respx.mock
+async def test_the_app_name_works_where_a_project_id_is_expected() -> None:
+    from deployar.tools.liara import incident  # noqa: F401
+    from deployar.tools.registry import REGISTRY
+
+    respx.get(f"{API}/v1/projects/torob-gard/metrics/summary").respond(json=SUMMARY)
+    respx.get(URL).respond(200)
+    ctx = await _ctx_with_connection()
+    out = _payload(await REGISTRY.run(ctx, "http_probe", {"project_id": "torob-gard", "path": "/api/health", "n": 1}))
+    assert out["status"] == "ok" and out["data"]["app"] == "torob-gard"  # the model passed the app name, not a uuid

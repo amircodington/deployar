@@ -16,7 +16,7 @@ from deployar.clients.liara import LiaraClient, LiaraNotFound
 from deployar.core.crypto import aad_for, get_vault
 from deployar.core.errors import DeployarError
 from deployar.models import LiaraConnection, Project
-from deployar.tools.project import project_of
+from deployar.tools.project import resolve_project
 from deployar.tools.registry import REGISTRY, ToolContext, deployar_tool
 from deployar.tools.results import Limitation, Ok, ToolError, ToolResult
 
@@ -52,7 +52,7 @@ async def liara_client_for(sessions: async_sessionmaker[AsyncSession], user_id: 
 
 
 async def app_name(ctx: ToolContext, project_id: str | None) -> str:
-    pid = uuid.UUID(project_id) if project_id else await project_of(ctx)
+    pid = await resolve_project(ctx, project_id)
     if pid is None:
         raise DeployarError("app_not_created", fa.APP_NOT_CREATED)
     async with ctx.sessions() as s:

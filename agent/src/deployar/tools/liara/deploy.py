@@ -23,7 +23,7 @@ from deployar.core.redact import _is_secret_key
 from deployar.models import Deployment, LiaraResource, Project, RepoAnalysis
 from deployar.tools.github.analyze import github_token
 from deployar.tools.liara.read import _guard, liara_client
-from deployar.tools.project import project_of
+from deployar.tools.project import resolve_project
 from deployar.tools.registry import ToolContext, deployar_tool
 from deployar.tools.results import Ok, ToolError, ToolResult
 from deployar.tools.secrets import load_secret, store_secret
@@ -57,7 +57,7 @@ def _slug(text: str) -> str:
 
 
 async def _project(ctx: ToolContext, project_id: str | None = None) -> Project:
-    pid = uuid.UUID(project_id) if project_id else await project_of(ctx)
+    pid = await resolve_project(ctx, project_id)
     if pid is None:
         raise DeployarError("no_project", fa.NO_PROJECT)
     async with ctx.sessions() as s:

@@ -16,6 +16,20 @@ async def project_of(ctx: ToolContext) -> uuid.UUID | None:
     return pid
 
 
+async def resolve_project(ctx: ToolContext, project_id: str | None) -> uuid.UUID | None:
+    """A tool's project_id arg: a project uuid, or the Liara app name the model often passes instead."""
+    if not project_id:
+        return await project_of(ctx)
+    try:
+        return uuid.UUID(project_id)
+    except ValueError:
+        async with ctx.sessions() as s:
+            pid: uuid.UUID | None = await s.scalar(select(Project.id).where(
+                Project.user_id == ctx.user_id, Project.liara_app_name == project_id,
+                Project.archived_at.is_(None)))  # fmt: skip
+        return pid
+
+
 async def ensure_project(ctx: ToolContext, repo_full_name: str, default_branch: str) -> uuid.UUID | None:
     """Binds the run (and its conversation) to a draft project for this repo; None without a Liara connection."""
     if pid := await project_of(ctx):

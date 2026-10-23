@@ -1,5 +1,6 @@
 "use client";
 
+import { Markdown } from "./Markdown";
 import { Icon } from "@/components/Icon";
 import { RiskChip } from "@/components/RiskChip";
 import { ApprovalCard } from "@/components/cards/ApprovalCard";
@@ -52,8 +53,8 @@ export function MessageList({
             );
           case "assistant":
             return (
-              <div key={item.id} className="rise max-w-[90%] self-end whitespace-pre-wrap rounded-[24px] bg-card px-4 py-3 text-[15px] leading-6">
-                {item.text}
+              <div key={item.id} className="rise max-w-[90%] self-end rounded-[24px] bg-card px-4 py-3 text-[15px] leading-7 [overflow-wrap:anywhere]">
+                <Markdown text={item.text} />
                 {!item.done && <span className="pulse ms-1 inline-block size-2 rounded-full bg-ink-muted align-middle" />}
               </div>
             );
