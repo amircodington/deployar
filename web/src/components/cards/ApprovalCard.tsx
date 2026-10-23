@@ -95,7 +95,7 @@ export function ApprovalCard({
                 disabled={!open}
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
-                placeholder={needs}
+                placeholder={fa.typeHere} // never the name itself: it looked already typed and the slider stayed locked
                 className="mono min-h-12 rounded-[14px] border border-red/40 bg-ground px-4 outline-none focus-visible:border-red disabled:opacity-50"
               />
             </label>
