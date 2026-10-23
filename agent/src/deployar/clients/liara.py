@@ -13,6 +13,7 @@ import httpx
 from deployar import messages_fa as fa
 from deployar.core.config import get_settings
 from deployar.core.errors import DeployarError
+from deployar.runtime.plan import bundle_for
 
 _RETRY_STATUS = {429, 500, 502, 503, 504}
 _BACKOFF_S = (0.5, 1.0, 2.0)
@@ -141,13 +142,13 @@ class LiaraClient:
         await self.request("POST", "/v1/networks", json={"networkName": name})
 
     async def create_app(self, name: str, platform: str, plan_id: str, network_id: str) -> None:
-        body = {"name": name, "planID": plan_id, "platform": platform, "network": network_id,
-                "readOnlyRootFilesystem": False}  # fmt: skip
+        body = {"name": name, "planID": plan_id, "bundlePlanID": bundle_for(plan_id), "platform": platform,
+                "network": network_id, "readOnlyRootFilesystem": False}  # fmt: skip
         await self.request("POST", "/v1/projects", json=body)
 
     async def create_database(self, hostname: str, kind: str, version: str, plan_id: str, network_id: str) -> str:
-        body = {"hostname": hostname, "type": kind, "version": version, "planID": plan_id, "network": network_id,
-                "publicNetwork": False}  # fmt: skip
+        body = {"hostname": hostname, "type": kind, "version": version, "planID": plan_id,
+                "bundlePlanID": bundle_for(plan_id), "network": network_id, "publicNetwork": False}  # fmt: skip
         data = await self.request("POST", "/v1/databases", json=body) or {}
         return str(data.get("databaseID") or data.get("_id") or "")
 

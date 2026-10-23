@@ -121,8 +121,9 @@ make check   # ruff، mypy، pytest، eslint، tsc، vitest
 همچنان از همان دروازه‌ی تأیید و تریگر دیتابیس رد می‌شود. وقتی اعتبار `BOXAPI_API_KEY` تمام شود،
 `BOXAPI_KEY_SECOND` خودکار جایش را می‌گیرد.
 
-envهای لازم: `DATABASE_URL` و `REDIS_URL` (از دیتابیس‌های لیارا؛ آدرس `postgresql://` خودکار به asyncpg تبدیل
-می‌شود)، `DEPLOYAR_TOKEN_KEYS`، `APPROVAL_SECRET`، `DEPLOYAR_PASSPHRASE`، `DEPLOYAR_EMAIL` (کاربر یکتا، هنگام
+envهای لازم: `DATABASE_URL` و `REDIS_URL` اختیاری‌اند: اگر نباشند کانتینر خودش Postgres و Redis را روی loopback
+بالا می‌آورد (یک اپ `small-g2`، حدود ۱٬۰۰۰ تومان در ساعت، داده با ری‌استارت پاک می‌شود)؛ با دیتابیس لیارا آدرس
+`postgresql://` خودکار به asyncpg تبدیل می‌شود. `DEPLOYAR_TOKEN_KEYS`، `APPROVAL_SECRET`، `DEPLOYAR_PASSPHRASE`، `DEPLOYAR_EMAIL` (کاربر یکتا، هنگام
 شروع ساخته می‌شود)، `BOXAPI_API_KEY` و `BOXAPI_KEY_SECOND`. مهاجرت‌ها هنگام شروع کانتینر اجرا می‌شوند.
 
 اسناد طراحی: `docs/SYSTEM-DESIGN.md`، `docs/ARCHITECTURE.md`، `docs/DATA-MODEL.md`، `docs/decisions.md`.

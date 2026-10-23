@@ -93,6 +93,7 @@ async def test_database_url_goes_to_set_env_only_as_ciphertext() -> None:
     assert db["status"] == "ok", db
     assert json.loads(created.calls[0].request.content)["network"] == "net-1"
     assert json.loads(created.calls[0].request.content)["version"] == "16.14"  # the one with PostGIS
+    assert json.loads(created.calls[0].request.content)["bundlePlanID"] == "default"  # Liara 400s without it
     ref = db["data"]["value_ref"]
     assert ref.startswith("secret:") and CANARY not in json.dumps(db_out)
 

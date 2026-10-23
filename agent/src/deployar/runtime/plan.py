@@ -21,25 +21,36 @@ class Plan:
     toman_hour: int
 
 
+BUNDLES = {"projects": "projectBundlePlans", "databases": "databaseBundlePlans"}
+BUNDLE = "basic"  # the cheapest paid bundle; Liara refuses new apps/databases without one (400, 2026-10-23)
+
+
+def bundle_for(plan_id: str) -> str:
+    return BUNDLE if plan_id.endswith("-g2") else "default"
+
+
 def catalogue(
     static: list[dict[str, Any]], live: dict[str, Any] | None = None, kind: str = "projects"
 ) -> tuple[list[Plan], str]:
     """Live plans from /v1/me when usable; otherwise the dated console table (labelled).
 
-    Live shape (confirmed 2026-10-22): plans[kind][plan_id] = {available, price (toman per HOUR),
-    RAM.amount (GB), CPU.amount, volume (GB)}. `-g2` plans need a paid bundle on top, so only the
-    first-generation plans are offered; their prices match the console's پایه tab.
+    Live shape (confirmed 2026-10-23): plans[kind][plan_id] = {available, price (toman per HOUR), RAM.amount (GB),
+    CPU.amount}, and plans[<kind>BundlePlans][plan_id][bundle] = {available, price}. Creating a first-generation
+    plan now fails ("bundlePlanID must be one of free, basic, standard, pro"), so only `-g2` plans are offered,
+    priced as plan + the basic bundle, which is what Liara bills per hour.
     """
     plans: list[Plan] = []
+    bundles = (live or {}).get(BUNDLES[kind]) or {}
     for pid, p in ((live or {}).get(kind) or {}).items():
         try:
-            if not p.get("available") or pid.endswith("-g2"):
+            b = (bundles.get(pid) or {}).get(BUNDLE) or {}
+            if not p.get("available") or not pid.endswith("-g2") or not b.get("available"):
                 continue
-            hourly = float(p["price"])
+            hourly = float(p["price"]) + float(b["price"])
             plans.append(
                 Plan(
                     pid,
-                    pid,
+                    f"{pid} + {BUNDLE}",
                     int(float(p["RAM"]["amount"]) * 1024),
                     float(p["CPU"]["amount"]),
                     int(round(hourly * 720, -3)),

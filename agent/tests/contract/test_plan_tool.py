@@ -68,8 +68,8 @@ async def test_plan_card_with_price_source_time_and_balance() -> None:
     card = emitted[-1][1]
     assert emitted[-1][0] == "plan_proposal"
     assert card["balance_toman"] == 2_000_000 and card["prices_fetched_at"] and card["plan_ids_confirmed"]
-    assert [i["plan_id"] for i in card["items"]] == ["ir-medium", "ir-medium", "ir-medium"]
-    assert card["totals"]["toman_hour"] == 3 * 2292
+    assert [i["plan_id"] for i in card["items"]] == ["medium-g2", "medium-g2", "medium-g2"]
+    assert card["totals"]["toman_hour"] == 3 * 1806  # plan + basic bundle (2026-10-23 /v1/me)
     conn = await asyncpg.connect(PG_TEST)
     try:
         rows = await conn.fetch("select status::text from plan_proposal where project_id = $1", ctx.project_id)

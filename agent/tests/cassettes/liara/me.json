@@ -1,100 +1,243 @@
 {
- "user": {
-  "_id": "64e7aaaaaaaaaaaaaaaaaaaa",
-  "email": "owner@example.com",
-  "nationalCode": "0011223344",
-  "storage": {
-   "accessKey": "FAKEACCESSKEY123",
-   "secretKey": "FAKE-SECRET-KEY-should-never-leave"
-  }
- },
- "plans": {
-  "projects": {
-   "512mb": {
-    "available": false,
-    "price": 100,
-    "RAM": {
-     "amount": 0.5
-    },
-    "CPU": {
-     "amount": 1
-    },
-    "volume": 5
-   },
-   "ir-small": {
-    "available": true,
-    "price": 1319.44,
-    "RAM": {
-     "amount": 0.5
-    },
-    "CPU": {
-     "amount": 0.5
-    },
-    "volume": 5
-   },
-   "ir-medium": {
-    "available": true,
-    "price": 2291.66,
-    "RAM": {
-     "amount": 1
-    },
-    "CPU": {
-     "amount": 1
-    },
-    "volume": 10
-   },
-   "standard-base": {
-    "available": true,
-    "price": 4097.22,
-    "RAM": {
-     "amount": 2
-    },
-    "CPU": {
-     "amount": 1
-    },
-    "volume": 20
-   },
-   "medium-g2": {
-    "available": true,
-    "price": 1145.83,
-    "RAM": {
-     "amount": 1
-    },
-    "CPU": {
-     "amount": 1
-    },
-    "volume": 10
-   }
+  "user": {
+    "_id": "64e7aaaaaaaaaaaaaaaaaaaa",
+    "email": "owner@example.com",
+    "nationalCode": "0011223344",
+    "storage": {
+      "accessKey": "FAKEACCESSKEY123",
+      "secretKey": "FAKE-SECRET-KEY-should-never-leave"
+    }
   },
-  "databases": {
-   "ir-small": {
-    "available": true,
-    "price": 1319.44,
-    "RAM": {
-     "amount": 0.5
+  "plans": {
+    "projects": {
+      "512mb": {
+        "available": false,
+        "price": 100,
+        "RAM": {
+          "amount": 0.5
+        },
+        "CPU": {
+          "amount": 1
+        },
+        "volume": 5
+      },
+      "ir-small": {
+        "available": true,
+        "price": 1319.44,
+        "RAM": {
+          "amount": 0.5
+        },
+        "CPU": {
+          "amount": 0.5
+        },
+        "volume": 5
+      },
+      "ir-medium": {
+        "available": true,
+        "price": 2291.66,
+        "RAM": {
+          "amount": 1
+        },
+        "CPU": {
+          "amount": 1
+        },
+        "volume": 10
+      },
+      "standard-base": {
+        "available": true,
+        "price": 4097.22,
+        "RAM": {
+          "amount": 2
+        },
+        "CPU": {
+          "amount": 1
+        },
+        "volume": 20
+      },
+      "medium-g2": {
+        "available": true,
+        "price": 1145.83,
+        "RAM": {
+          "amount": 1,
+          "shared": false
+        },
+        "CPU": {
+          "amount": 1,
+          "shared": true
+        },
+        "volume": 5
+      },
+      "small-g2": {
+        "available": true,
+        "price": 659.72,
+        "RAM": {
+          "amount": 0.5,
+          "shared": false
+        },
+        "CPU": {
+          "amount": 0.5,
+          "shared": true
+        },
+        "volume": 5
+      },
+      "standard-base-g2": {
+        "available": true,
+        "price": 2048.61,
+        "RAM": {
+          "amount": 2,
+          "shared": false
+        },
+        "CPU": {
+          "amount": 1,
+          "shared": true
+        },
+        "volume": 5
+      }
     },
-    "CPU": {
-     "amount": 0.5
+    "databases": {
+      "ir-small": {
+        "available": true,
+        "price": 1319.44,
+        "RAM": {
+          "amount": 0.5
+        },
+        "CPU": {
+          "amount": 0.5
+        },
+        "volume": 5
+      },
+      "ir-medium": {
+        "available": true,
+        "price": 2291.66,
+        "RAM": {
+          "amount": 1
+        },
+        "CPU": {
+          "amount": 1
+        },
+        "volume": 10
+      },
+      "small-g2": {
+        "available": true,
+        "price": 659.72,
+        "RAM": {
+          "amount": 0.5,
+          "shared": false
+        },
+        "CPU": {
+          "amount": 0.5,
+          "shared": true
+        },
+        "volume": 5
+      },
+      "medium-g2": {
+        "available": true,
+        "price": 1145.83,
+        "RAM": {
+          "amount": 1,
+          "shared": false
+        },
+        "CPU": {
+          "amount": 1,
+          "shared": true
+        },
+        "volume": 5
+      },
+      "standard-base-g2": {
+        "available": true,
+        "price": 2048.61,
+        "RAM": {
+          "amount": 2,
+          "shared": false
+        },
+        "CPU": {
+          "amount": 1,
+          "shared": true
+        },
+        "volume": 5
+      }
     },
-    "volume": 5
-   },
-   "ir-medium": {
-    "available": true,
-    "price": 2291.66,
-    "RAM": {
-     "amount": 1
+    "projectBundlePlans": {
+      "g1": {
+        "default": {
+          "available": true,
+          "price": 0
+        }
+      },
+      "small-g2": {
+        "free": {
+          "available": false,
+          "price": 0
+        },
+        "basic": {
+          "available": true,
+          "price": 381.94
+        }
+      },
+      "medium-g2": {
+        "free": {
+          "available": false,
+          "price": 0
+        },
+        "basic": {
+          "available": true,
+          "price": 659.72
+        }
+      },
+      "standard-base-g2": {
+        "free": {
+          "available": false,
+          "price": 0
+        },
+        "basic": {
+          "available": true,
+          "price": 1145.83
+        }
+      }
     },
-    "CPU": {
-     "amount": 1
-    },
-    "volume": 10
-   }
+    "databaseBundlePlans": {
+      "g1": {
+        "default": {
+          "available": true,
+          "price": 0
+        }
+      },
+      "small-g2": {
+        "free": {
+          "available": false,
+          "price": 0
+        },
+        "basic": {
+          "available": true,
+          "price": 381.94
+        }
+      },
+      "medium-g2": {
+        "free": {
+          "available": false,
+          "price": 0
+        },
+        "basic": {
+          "available": true,
+          "price": 659.72
+        }
+      },
+      "standard-base-g2": {
+        "free": {
+          "available": false,
+          "price": 0
+        },
+        "basic": {
+          "available": true,
+          "price": 1145.83
+        }
+      }
+    }
+  },
+  "databaseVersions": {
+    "postgres": [
+      "16.14",
+      "17.10"
+    ]
   }
- },
- "databaseVersions": {
-  "postgres": [
-   "16.14",
-   "17.10"
-  ]
- }
 }

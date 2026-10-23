@@ -52,9 +52,9 @@ export function ApprovalSlider({ onApprove, disabled = false }: { onApprove: () 
   return (
     <div
       ref={track}
-      className={`relative h-14 rounded-full border border-ink-faint bg-raised p-1 ${disabled ? "opacity-60" : ""}`}
+      className={`relative h-14 rounded-full border border-go/30 bg-raised p-1 ${disabled ? "opacity-60" : ""}`}
     >
-      <span ref={label} className="pointer-events-none absolute inset-0 grid place-items-center text-[15px] text-ink-muted">
+      <span ref={label} className="slide-shimmer pointer-events-none absolute inset-0 grid place-items-center text-[15px] font-medium">
         {fa.approveHint}
       </span>
       <button
@@ -70,7 +70,7 @@ export function ApprovalSlider({ onApprove, disabled = false }: { onApprove: () 
           if (e.key === "Enter" && !disabled) onApprove();
         }}
         style={{ touchAction: "pan-y" }}
-        className="relative grid size-12 cursor-grab place-items-center rounded-full bg-gradient-to-l from-amber to-[#ffd08a] text-on-amber outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-amber-soft active:cursor-grabbing"
+        className="go-knob relative grid size-12 cursor-grab place-items-center rounded-full bg-gradient-to-l from-go to-go-hi text-on-go outline-none focus-visible:ring-2 focus-visible:ring-go focus-visible:ring-offset-2 focus-visible:ring-offset-go-soft active:cursor-grabbing"
       >
         <Icon name="arrow" />
       </button>

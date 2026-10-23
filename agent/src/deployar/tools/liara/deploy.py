@@ -33,9 +33,12 @@ PLATFORMS = ["node", "next", "docker", "static", "laravel", "php", "python", "dj
              "angular", "dotnet", "go"]  # fmt: skip
 MAX_SOURCE = 256 * 1024 * 1024  # Liara's upload limit
 # toman/hour read from /v1/me on 2026-10-22 (same ids for apps and DBs); only the approval card uses it
+# g2 plans include the basic bundle Liara now requires on create (plan + bundle, toman per hour)
 HOURLY = {"ir-small": 1319, "ir-medium": 2292, "standard-base": 4097, "standard-plus": 7361, "standard-pro": 7361,
-          "pro": 12778, "pro-plus": 22222, "pro-max": 38889}  # fmt: skip
-PRICE_SOURCE = {"source": "liara:/v1/me", "observed_at": "2026-10-22T10:00:00+00:00"}
+          "pro": 12778, "pro-plus": 22222, "pro-max": 38889,
+          "small-g2": 1042, "medium-g2": 1806, "standard-base-g2": 3195, "standard-plus-g2": 5729,
+          "standard-pro-g2": 5729, "pro-g2": 10069}  # fmt: skip
+PRICE_SOURCE = {"source": "liara:/v1/me", "observed_at": "2026-10-23T06:00:00+00:00"}
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$")
 
 

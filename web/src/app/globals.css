@@ -64,6 +64,11 @@
   --violet: #8e8af2;
   --red: #f26b6b;
   --red-soft: #2e1517;
+  /* approval: a bright green for the one deliberate yes (Mohammad, 2026-10-23; replaces amber on the card) */
+  --go: #2ee59d;
+  --go-hi: #b4ffdf;
+  --go-soft: #0d2a1f;
+  --on-go: #032015;
   --limit: #b4aebb;
   --limit-soft: #221f26;
   --shadow-shell: 0 40px 80px -20px rgba(0, 0, 0, 0.6);
@@ -90,6 +95,10 @@
     --violet: #5550c8;
     --red: #b03030;
     --red-soft: #f9e1e1;
+    --go: #0e9f6e;
+    --go-hi: #34d399;
+    --go-soft: #dcf7ea;
+    --on-go: #ffffff;
     --limit: #5e5965;
     --limit-soft: #eceae6;
     --shadow-shell: 0 30px 60px -24px rgba(23, 21, 26, 0.18);
@@ -115,6 +124,10 @@
   --color-violet: var(--violet);
   --color-red: var(--red);
   --color-red-soft: var(--red-soft);
+  --color-go: var(--go);
+  --color-go-hi: var(--go-hi);
+  --color-go-soft: var(--go-soft);
+  --color-on-go: var(--on-go);
   --color-limit: var(--limit);
   --color-limit-soft: var(--limit-soft);
   --font-sans: "Dana", "Vazirmatn", system-ui, -apple-system, sans-serif;
@@ -287,6 +300,28 @@ a,
   scrollbar-color: var(--line) transparent;
 }
 
+/* Approval card: a soft green halo, a glowing knob and a "slide to approve" shimmer on the label. */
+.approval-live {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--go) 28%, transparent),
+    0 18px 48px -24px color-mix(in oklab, var(--go) 55%, transparent);
+}
+.go-knob {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--go-hi) 50%, transparent),
+    0 6px 18px -4px color-mix(in oklab, var(--go) 70%, transparent);
+}
+.slide-shimmer {
+  color: transparent;
+  background: linear-gradient(90deg, var(--ink-muted) 40%, var(--go-hi) 50%, var(--ink-muted) 60%) 0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer 2.4s linear infinite;
+}
+@keyframes shimmer {
+  /* the glint runs right to left, the way the knob is dragged in RTL */
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tile-in {
     animation-name: fade-only;
@@ -302,6 +337,11 @@ a,
   }
   .ping::after {
     animation: none;
+  }
+  .slide-shimmer {
+    animation: none;
+    color: var(--ink-muted);
+    background: none;
   }
 
   .rise {

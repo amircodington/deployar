@@ -21,7 +21,7 @@ export const fa = {
   oneTime: "یک‌بار مصرف",
   expiresIn: (m: string) => `تا ${m} دقیقه معتبر`,
   expired: "مهلت تأیید تمام شد",
-  reject: "نه",
+  reject: "نه، انجامش نده",
   approved: "تأیید شد",
   rejected: "رد شد",
   invalidated: "ورودی‌ها عوض شد؛ دوباره تأیید لازم است",

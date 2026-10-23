@@ -55,7 +55,9 @@ outline on `red-soft`, never a red fill.
 The signature is the **two-weight greeting**: a light line in `ink-faint` above a heavy line in `ink`
 (`greeting-light` + `greeting`). Big metrics are light (`metric`, weight 300), never bold.
 
-**Color.** Dark-first. One accent, `amber`, reserved for approval. Charts use `peach` for ordinary
+**Color.** Dark-first. One accent, `amber`, reserved for approval (chips and costs); the ApprovalCard itself is a
+bright green (`go`, `go-soft`, glowing knob) with a separate red «نه، انجامش نده» button a full row below the
+slider (Mohammad, 2026-10-23). Charts use `peach` for ordinary
 bars with today's bar in `amber` only when it needs a decision, `mint` for healthy series, `violet`
 for a single metric line with its selected point. Semantic: `mint` healthy/automatic, `red`
 error, `limit` grey for API limitations. Light theme exists and is complete, but dark is the face.

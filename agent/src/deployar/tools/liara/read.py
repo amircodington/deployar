@@ -7,6 +7,7 @@ import time
 import uuid
 from typing import Any
 
+import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -28,6 +29,8 @@ STATIC_PLANS = [
     {"name": "زحل", "ram_mb": 4096, "cpu": 2, "disk_gb": 40, "toman_month": 5_300_000, "toman_hour": 7_360},
 ]
 STATIC_SOURCE = "static:liara-console-2026-10-22"
+
+log = structlog.get_logger()
 
 
 async def liara_client(ctx: ToolContext) -> LiaraClient:
@@ -65,6 +68,7 @@ async def _guard(call: Any) -> ToolResult:
         result: ToolResult = await call
         return result
     except DeployarError as e:
+        log.warning("liara_call_failed", code=e.code, detail=e.detail)  # Liara's own message, redacted by the logger
         return ToolError(e.code, e.message_fa, retryable=e.code == "liara_unreachable")
     except LiaraNotFound:
         return ToolError("app_not_found", fa.APP_NOT_FOUND)

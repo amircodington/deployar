@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Icon } from "@/components/Icon";
 import { RiskChip } from "@/components/RiskChip";
 import { fa } from "@/lib/fa";
 import { signedToman } from "@/lib/money";
@@ -45,9 +46,9 @@ export function ApprovalCard({
 
   return (
     <section
-      // amber means "your yes is needed" and nothing else, so a decided card goes neutral
-      className={`rise rounded-[24px] p-5 transition-colors duration-300 ${
-        state === "pending" || state === "approving" ? "bg-amber-soft" : "bg-raised/50"
+      // the green card means "your yes is needed" and nothing else, so a decided card goes neutral
+      className={`rise rounded-[24px] p-5 transition-[background-color,box-shadow] duration-300 ${
+        state === "pending" || state === "approving" ? "approval-live bg-go-soft" : "bg-raised/50"
       }`}
       aria-live="polite"
     >
@@ -58,7 +59,7 @@ export function ApprovalCard({
       {card.summary_fa !== card.tool && <p className="mono mb-2 text-[13px] text-ink-muted">{card.tool}</p>}
       {card.why_fa && <p className="mb-2 text-[15px] leading-6">{card.why_fa}</p>}
       {card.cost_delta_toman !== undefined && (
-        <p className="mb-2 text-[15px] font-medium text-amber-ink">
+        <p className="mb-2 text-[15px] font-medium text-go">
           {signedToman(card.cost_delta_toman)} در ماه
           {card.cost_source && (
             <span className="ms-2 text-xs font-normal text-ink-muted">
@@ -71,19 +72,21 @@ export function ApprovalCard({
         {open ? `${fa.expiresIn(toPersianDigits(left))}، ${fa.oneTime}` : (RESOLVED[state] ?? (state === "approving" ? fa.approving : fa.expired))}
       </p>
       {(state === "pending" || state === "approving") && (
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <ApprovalSlider key={error ?? "slider"} disabled={!open} onApprove={() => onDecide("approve")} />
+        <>
+          <ApprovalSlider key={error ?? "slider"} disabled={!open} onApprove={() => onDecide("approve")} />
+          {/* kept a full row away from the slider so a drag that overshoots never lands on it */}
+          <div className="mt-5 flex border-t border-go/15 pt-4">
+            <button
+              type="button"
+              disabled={!open}
+              onClick={() => onDecide("reject")}
+              className="pressable flex min-h-11 items-center gap-2 rounded-full border border-red/40 bg-red-soft px-5 text-[15px] font-medium text-red transition-colors duration-150 hover:border-red hover:bg-red/15 disabled:opacity-50"
+            >
+              <Icon name="x" size={18} />
+              {fa.reject}
+            </button>
           </div>
-          <button
-            type="button"
-            disabled={!open}
-            onClick={() => onDecide("reject")}
-            className="pressable min-h-11 rounded-full px-4 text-[15px] text-ink-muted hover:bg-raised disabled:opacity-50"
-          >
-            {fa.reject}
-          </button>
-        </div>
+        </>
       )}
       {error && <p className="mt-3 text-[13px] text-red">{error}</p>}
     </section>
