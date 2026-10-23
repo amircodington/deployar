@@ -11,5 +11,3 @@ docs/evidence/**/*.jpg
 .ruff_cache/
 .pytest_cache/
 
-# Dana is a licensed font: keep it local, never in the public repo
-web/public/fonts/Dana-*.woff2

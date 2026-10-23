@@ -6,7 +6,7 @@
   font-weight: 100 900;
   font-display: swap;
 }
-/* Dana is licensed, so its files stay out of the public repo (.gitignore); without them Vazirmatn takes over. */
+/* Vazirmatn (OFL) is the fallback if the licensed Dana files are ever removed from the repo. */
 @font-face {
   font-family: "Dana";
   src: url("/fonts/Dana-Light.woff2") format("woff2");
