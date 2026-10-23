@@ -121,7 +121,7 @@ export function Workspace({ projectId }: { projectId?: string }) {
   }, [openChat]);
   useEffect(() => {
     if (view.items.length) bottom.current?.scrollIntoView({ block: "end", behavior: "smooth" }); // never return it
-  }, [view.items.length]);
+  }, [view.items.length, view.phase]);
   useEffect(() => {
     if (view.phase === "succeeded" || view.phase === "failed") reload(); // an action may have changed credit or apps
   }, [view.phase, reload]);
@@ -165,6 +165,12 @@ export function Workspace({ projectId }: { projectId?: string }) {
   }, [view.items]);
 
   const busy = view.phase === "running" || view.phase === "awaiting_approval";
+  const last = view.items.at(-1);
+  // nothing streaming or spinning yet for this turn (a tool row or a growing answer shows its own progress)
+  const thinking =
+    view.phase === "running" &&
+    !(last?.kind === "assistant" && !last.done) &&
+    !(last?.kind === "tool" && last.status === "called");
 
   return (
     <div className="flex flex-1 flex-col gap-5 px-4 pb-4 pt-4 md:gap-6 md:px-8">
@@ -216,6 +222,7 @@ export function Workspace({ projectId }: { projectId?: string }) {
             ) : (
               <MessageList
                 items={view.items}
+                thinking={thinking}
                 onDecide={decide}
                 onSend={send}
                 onEnvDone={(id, refs) => {

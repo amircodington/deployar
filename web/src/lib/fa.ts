@@ -4,6 +4,7 @@ export const fa = {
   hello: "سلام",
   stateIdle: "بگو چه کار کنم",
   stateWorking: "دارم رویش کار می‌کنم",
+  thinking: "دارم فکر می‌کنم…",
   stateWaiting: "منتظر تأیید تو هستم",
   stateDone: "کار تمام شد",
   stateFailed: "کار نیمه‌کاره ماند",

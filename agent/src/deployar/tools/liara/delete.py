@@ -43,16 +43,39 @@ async def delete_app(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
                 before = await c.project(name)
             except LiaraNotFound:
                 return ToolError("app_not_found", fa.APP_NOT_FOUND)
+            linked = await _linked_databases(c, name)  # read before the app (and its env) is gone
             await c.delete_app(name)
             gone = await _gone(c.projects, lambda x: x.get("project_id") == name or x.get("name") == name)
         async with ctx.sessions.begin() as s:  # Deployar's own record of it is archived, never kept as live
             await s.execute(update(Project).where(Project.user_id == ctx.user_id, Project.liara_app_name == name)
                             .values(archived_at=datetime.now(UTC)))  # fmt: skip
-        out = {"app": name, "deleted": True, "verified_gone": gone, "was": {k: before.get(k) for k in
-               ("planID", "type", "status", "scale")}}  # fmt: skip
+        out = {"app": name, "deleted": True, "verified_gone": gone, "linked_databases": linked,
+               "was": {k: before.get(k) for k in ("planID", "type", "status", "scale")}}  # fmt: skip
         if not gone:
             out["note_fa"] = fa.DELETED_NOT_YET
+        elif linked:
+            out["note_fa"] = fa.LINKED_DBS.format(dbs="، ".join(linked))
         return Ok(out, source=f"liara:DELETE /v1/projects/{name} + GET /v1/projects")
+
+    return await _guard(run())
+
+
+async def _linked_databases(c: LiaraClient, app: str) -> list[str]:
+    """Databases this app uses: their hostname appears in one of its env values (DATABASE_URL and the like).
+    The values stay here; only hostnames go back to the model."""
+    values = " ".join(e["value"] for e in await c.env_pairs(app))
+    return [str(d["hostname"]) for d in await c.databases() if d.get("hostname") and str(d["hostname"]) in values]
+
+
+@deployar_tool("list_databases", group="liara", risk="read", description=fa.LIST_DBS_DESC,
+               input_schema={"type": "object", "properties": {}})  # fmt: skip
+async def list_databases(ctx: ToolContext, args: dict[str, Any]) -> ToolResult:
+    async def run() -> ToolResult:
+        async with await liara_client(ctx) as c:
+            dbs = await c.databases()
+        keep = ("type", "planID", "status", "version")  # never credentials: the list carries root_password
+        return Ok({"databases": [{"database": d.get("hostname"), "id": d.get("_id"), **{k: d.get(k) for k in keep}}
+                                 for d in dbs]}, source="liara:/v1/databases")  # fmt: skip
 
     return await _guard(run())
 

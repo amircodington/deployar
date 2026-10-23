@@ -32,11 +32,13 @@ function ToolRow({ item }: { item: Extract<ChatItem, { kind: "tool" }> }) {
 
 export function MessageList({
   items,
+  thinking,
   onDecide,
   onEnvDone,
   onSend,
 }: {
   items: ChatItem[];
+  thinking?: boolean; // the run is working and nothing new is on screen yet: say so under the last message
   onDecide: (approvalId: string, decision: "approve" | "reject", confirm?: string) => void;
   onEnvDone: (itemId: string, refs: { key: string; value_ref: string }[]) => void;
   onSend: (text: string) => void;
@@ -107,6 +109,12 @@ export function MessageList({
             );
         }
       })}
+      {thinking && (
+        <div role="status" className="rise flex items-center gap-2 self-end px-2 text-[13px] text-ink-muted">
+          <span className="spinner size-3.5 rounded-full border-[1.5px] border-ink-faint border-t-transparent" />
+          {fa.thinking}
+        </div>
+      )}
     </div>
   );
 }
